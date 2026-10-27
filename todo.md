@@ -28,30 +28,41 @@
   - 目标：确认 D1 Windows 验证条件、D2 模型规模、D3 样本来源、D4 交付/脱敏范围、D5 是否预留 F6。
   - 文件：`plan.md`（已更新 0.1/5.3）、`docs/issue-log.md`。
   - 前置：T0.2。
-  - 完成标准：5 项均有明确结论；未决项标注默认方案与影响。
-  - 验证：D1 无 Windows 11 实机；D2 small；D3 本人录音；D4 Git 仓库；D5 做实时识别；已回填计划。
-  - 结论：已完成（2026-10-27），残余项 D6（Git 托管平台/CI）见 T0.6。
+  - 完成标准：D1–D7 均有明确结论；未决项标注默认方案与影响。
+  - 验证：D1 无 Windows 11 实机；D2 small；D3 本人录音；D4 Git 仓库；D5 做实时识别；D6 GitHub；D7 模型路线 A；已回填计划。
+  - 结论：已完成（2026-10-27）。D6 的本地提交见 T0.6，push 后 remote/Actions 验证见 T0.7；D7 见 T3.11。
 
-- [ ] **T0.4 冻结规划基线并初始化版本管理**
+- [x] **T0.4 冻结规划基线并初始化版本管理**
   - 目标：建立可追溯的起点。
-  - 文件：`.gitignore`、`README.md`（占位）、`docs/opencode/` 目录。
+  - 文件：`.gitignore`（在 T1.1 补齐）、`README.md`（用户已有占位）、`docs/opencode/` 目录。
   - 前置：T0.3。
-  - 完成标准：`git init` 完成；首个提交只含题目、计划、任务清单和空骨架；`models/`、虚拟环境、缓存已忽略。
-  - 验证：`git status` 干净；`git log --oneline` 可见基线提交。
+  - 完成标准：`git init` 完成；首个提交包含题目、计划、任务清单；`.gitignore` 由 T1.1 补齐。
+  - 验证：用户已执行 `git init` 并完成 initial commit（`42485f6`）；当前 `main` 干净。
+  - 备注：`.gitignore` 与目录骨架仍由 T1.1 完成；`.DS_Store` 当前未跟踪，需在 T1.1 忽略。
 
-- [ ] **T0.5 导出规划阶段 OpenCode 会话**
+- [x] **T0.5 导出规划阶段 OpenCode 会话**
   - 目标：保存“需求理解与技术设计”阶段证据。
   - 文件：`docs/opencode/01-requirements-and-design.md`、`docs/opencode/README.md`。
   - 前置：T0.3（脱敏规则确定）。
-  - 完成标准：包含需求拆解、模型对比、方案选择、计划生成的关键对话；已移除绝对路径/用户名/密钥。
+  - 完成标准：包含需求拆解、模型对比、方案选择、计划生成的关键对话；已移除绝对路径/用户名/密钥；包含 D1–D7 决策与 SenseVoice 对比。
   - 验证：文件可读；人工检查无敏感信息；与 `docs/ai-development.md` 的阶段一描述一致。
+  - 结果：已完成（2026-10-27），使用会话 `ses_e838f4101ffet1mEwSYEGuuSMK` 的关键消息摘录；未包含内部推理/工具原始输出。
 
-- [ ] **T0.6 确认 Git 托管平台与 Windows CI 可行性**
-  - 目标：确定能否使用 GitHub Actions `windows-latest` 做无实机条件下的 Windows 兼容性验证。
-  - 文件：`plan.md` 0.1/5.3、`docs/issue-log.md`。
-  - 前置：T0.3、T0.4。
-  - 完成标准：明确仓库托管在 GitHub / GitLab / 仅本地；若 GitHub，确认可创建 Actions workflow；若不可用，记录 Windows 验证降级方式与残余风险。
-  - 验证：仓库远程地址可访问；手动触发一个最小 workflow 成功（或记录不可用原因）。
+- [x] **T0.6 本地提交规划阶段产物（push 由用户手动执行）**
+  - 目标：把计划、任务清单与阶段一证据提交到本地 Git，不执行 push。
+  - 文件：`plan.md`、`todo.md`、`docs/opencode/README.md`、`docs/opencode/01-requirements-and-design.md`。
+  - 前置：T0.5。
+  - 完成标准：上述文件全部进入本地提交；`models/`、`.venv/`、缓存、密钥、`.DS_Store` 未进入提交；不配置 remote、不 push。
+  - 验证：`git log --oneline -3` 可见本阶段提交；`git status` 干净（除未跟踪的本地文件）。
+  - 备注：用户明确要求“只提交，手动 push”；remote/Actions 验证见 T0.7。
+
+- [ ] **T0.7 用户 push 后验证 GitHub remote 与 Actions**
+  - 目标：确认 GitHub 仓库与 `windows-latest` Actions 可用。
+  - 文件：Git remote 配置、GitHub Actions 页面、`docs/evidence/github-actions.txt`。
+  - 前置：T0.6；用户已手动 push 并提供仓库 URL。
+  - 完成标准：`git remote -v` 显示 GitHub `origin`；`main` 已推送；GitHub 页面可见提交；workflow 可创建/手动触发。
+  - 验证：用户确认 push 成功；Actions 最小 workflow 运行/排队；失败则记录原因并调整 T1.8。
+  - 备注：`origin` 已由用户配置为 GitHub，`main` 当前 ahead 1；此任务不能由代理代替用户 push，需用户手动执行后确认。
 
 ---
 
@@ -111,7 +122,7 @@
 - [ ] **T1.8 建立 GitHub Actions Windows CI 骨架**
   - 目标：在无 Windows 实机条件下尽早发现 Windows 安装/启动问题。
   - 文件：`.github/workflows/windows.yml`、`docs/evidence/windows-ci.txt`。
-  - 前置：T0.6 确认 GitHub 可用；T1.2、T1.7。
+  - 前置：T0.7 确认 GitHub 可用；T1.2、T1.7。
   - 完成标准：workflow 使用 `windows-latest` + Python 3.12，执行 `pip install -r requirements.txt`、`python -m pytest -q`、启动 uvicorn、请求 `/health`；支持手动触发；失败日志可下载。
   - 验证：GitHub Actions 运行成功；截图/日志归档；若 D6 不可用，记录原因并升级 R19。
 
@@ -456,7 +467,7 @@
 - [ ] **T6.10 Windows 兼容性验证（GitHub Actions 替代，最高风险）**
   - 目标：在没有 Windows 11 实机的情况下，尽可能验证 Windows x64 + Python 3.12 的安装、启动与识别链路。
   - 文件：`.github/workflows/windows.yml`、`docs/test-report.md`、`docs/evidence/windows-ci.txt`。
-  - 前置：T0.6/T1.8（GitHub Actions 可用）；T1.2、T5.1、T5.4、T6.1–T6.9。
+  - 前置：T0.7/T1.8（GitHub Actions 可用）；T1.2、T5.1、T5.4、T6.1–T6.9。
   - 完成标准：`windows-latest` 上全新 venv 执行 `pip install -r requirements.txt`；启动 uvicorn；`/health` 200；运行默认 pytest；下载真实模型并上传中英文样本成功；Playwright 使用 Chromium/Edge 假麦克风完成页面加载 + 上传 + 录音流程；记录 Python/浏览器版本、安装耗时、模型加载/推理耗时；无缺失 DLL/编译错误。
   - 验证：GitHub Actions 日志归档；截图或 Playwright trace；失败则修复后重跑。
   - 备注：CI 是 Windows Server，不是 Windows 11 桌面；CI 通过**不能**写成“Windows 11 实机通过”。真实桌面/麦克风未验证要写入测试报告和 README。

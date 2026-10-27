@@ -1,9 +1,9 @@
 # Local AI Speech-to-Text Web Application 实施计划
 
-- 文档版本：v0.2（用户决策已回填）
+- 文档版本：v0.3（D6/GitHub 与 D7/模型路线已确认）
 - 编制日期：2026-10-27
 - 输入依据：`面试考核题-v1.md`（v1）
-- 当前状态：需求分析与计划编制完成；用户已确认 D1–D5；尚未编写业务代码、未安装依赖、未下载模型
+- 当前状态：需求分析与计划编制完成；D1–D7 已确认；尚未编写业务代码、未安装依赖、未下载模型
 - 配套任务清单：`todo.md`
 
 ---
@@ -13,7 +13,7 @@
 1. 技术路线：**FastAPI（Python 3.12）+ 原生 HTML/CSS/JavaScript + faster-whisper（Whisper small，CTranslate2 CPU int8）+ PyAV 解码 + pytest**。
 2. 交付策略：先用假模型打通接口、错误处理和前端流程，再接入真实模型并单独验证中英文；所有必做项、真实模型测试、离线验证、Windows 兼容性验证和文档完成后，才开始实时识别（F6）。
 3. 时间策略：按 2 个自然日、约 18–22 小时有效工时安排，预留约 15–20% 缓冲。F6 已确认要做，但仍必须先通过 G4 门禁；若 G4 延迟，优先保必做与文档，F6 降级并书面说明。
-4. 已确认决策：D1 无 Windows 11 实机；D2 模型 small；D3 本人录制样本；D4 Git 仓库；D5 要做实时识别。Windows 采用 **GitHub Actions `windows-latest` + 浏览器假麦克风**做部分替代验证，真实 Windows 11 桌面/麦克风仍是未验证项。详见 0.1 与 5.3。
+4. 已确认决策：D1 无 Windows 11 实机；D2 模型 small；D3 本人录制样本；D4 Git 仓库；D5 要做实时识别；D6 Git 托管在 GitHub（本地已初始化，remote/Actions 待配置）；D7 采用路线 A（Whisper 主 + SenseVoice 条件评估）。Windows 采用 **GitHub Actions `windows-latest` + 浏览器假麦克风**做部分替代验证，真实 Windows 11 桌面/麦克风仍是未验证项。详见 0.1 与 5.3。
 
 ### 0.1 决策记录（2026-10-27）
 
@@ -22,10 +22,12 @@
 | D1 | 目前没有 Windows 11 实机 | 用 CI `windows-latest` 验证安装、启动、API、真实模型上传、浏览器假麦克风；真实 Windows 11 桌面/Edge/麦克风无法完全验证，作为残余风险明确披露 |
 | D2 | 模型规模用 **small** | 默认 `faster-whisper` Whisper small，int8 CPU；若实测不达标，按 G2 规则评估备用方案 |
 | D3 | 测试音频用**本人录音** | 录制中英文各 5–15 秒清晰语音；不使用 TTS 作为主方案；`reference.txt` 注明本人录制、授权与无敏感信息 |
-| D4 | 交付 **Git 仓库** | 分阶段提交、`.gitignore`、tag；OpenCode 会话脱敏后入库；仓库托管平台待确认（影响 Windows CI） |
+| D4 | 交付 **Git 仓库** | 分阶段提交、`.gitignore`、tag；OpenCode 会话脱敏后入库；D6 已确认 GitHub |
 | D5 | **要做实时识别** | F6 从“可选”提升为“已确认交付目标”，但仍受 G4 门禁；预留约 3–4 小时，失败可回滚 |
+| D6 | **GitHub**，仓库已本地初始化 | T0.6 只提交本地；`origin` 已由用户配置；push 由用户手动执行；push 后验证 `windows-latest` Actions（T0.7） |
+| D7 | **模型路线 A**：Whisper small 为主，SenseVoice 为条件备选 | 先交付 Whisper 基线；T3.11 仅在中文/速度/F6 延迟不达标时做 60–90 分钟评估，按数据决定是否切换 |
 
-> 新增待确认项 D6：Git 仓库托管在 GitHub、GitLab 还是仅本地？只有 GitHub 才能直接使用 `windows-latest` Actions 做 Windows 替代验证；若不能使用，Windows 项只能标为未验证。
+> D6 当前状态：本地 `main` 已有 initial commit；`origin` 已由用户配置为 GitHub；T0.6 只做本地提交，不 push。用户手动 push 后，T0.7 验证 remote 与 Actions；未 push 时 T1.8/T6.10 顺延。
 
 ---
 
@@ -561,7 +563,7 @@ SenseVoiceSmall 是本次选型的**主要备选**，不是被排除的方案。
 
 | 阶段 | 目标 | 前置条件 | 交付成果 | 退出条件 | 主要风险 |
 | --- | --- | --- | --- | --- | --- |
-| P0 规划确认 | 冻结范围、假设、验收 | 题目已读 | `plan.md`、`todo.md` | D1–D5 已确认；（D6 Git 托管）确认 | 需求理解偏差 |
+| P0 规划确认 | 冻结范围、假设、验收 | 题目已读 | `plan.md`、`todo.md`、OpenCode 阶段一记录 | D1–D7 已确认；本地提交完成（push 由用户手动） | 需求理解偏差 |
 | P1 脚手架 | 可启动空服务、测试框架、Windows CI 骨架 | P0 | 目录、配置、`/health`、`/`、pytest 配置、`windows.yml` | `pytest -q` 通过健康检查 | 依赖/Windows 兼容 |
 | P2 音频与接口 | 上传/解码/错误处理/假模型全链路 | P1 | `/api/transcribe` + 假引擎 + Mock 测试 | 接口契约与异常测试全绿 | 格式/大小/时长边界 |
 | P3 真实模型 | 本地模型加载、中英文真实识别 | P2、模型下载 | 下载脚本、CLI 验证、真实结果 | 中英文非空且耗时记录 | 下载失败、CPU 慢、准确率 |
@@ -595,7 +597,7 @@ SenseVoiceSmall 是本次选型的**主要备选**，不是被排除的方案。
 
 ### 4.3 关键门禁
 
-- **G0**：D1–D5 已确认；Git 托管与 Windows CI 方式（D6）确认；`plan.md`/`todo.md` 一致。
+- **G0**：D1–D7 已确认；本地规划提交完成（push 由用户手动执行）；`plan.md`/`todo.md` 一致。
 - **G1**：`pytest -q` 在未下载模型的环境通过，且不触发下载/麦克风。
 - **G2**：真实 small 模型在开发机完成中文、英文识别，记录原始文本、耗时、CER/WER；决定是否维持 small。若触发条件成立，执行 T3.11 的 SenseVoice 时间盒评估。
 - **G3**：Chrome 中完成麦克风中文/英文、WAV/webm 上传、复制、错误提示、再次录音。
@@ -655,7 +657,8 @@ SenseVoiceSmall 是本次选型的**主要备选**，不是被排除的方案。
 | D3 | 样本来源 | **本人录音** | 录制中英文各 5–15 秒；不使用 TTS 作为主方案；注明本人授权、无敏感信息 |
 | D4 | 交付方式 | **Git 仓库** | 分阶段提交、tag、脱敏 OpenCode 证据；模型权重不入库 |
 | D5 | 实时识别 F6 | **要做** | 排在必做之后，G5 门禁 + 3 小时时间盒；失败回滚并说明 |
-| D6 | Git 托管平台 / Actions 可用性 | **待确认** | 若为 GitHub，可直接用 `windows-latest`；若 GitLab/仅本地，Windows CI 需另找 Runner 或接受未验证 |
+| D6 | Git 托管平台 / Actions | **GitHub**（本地已初始化，remote 待配置） | 补 remote URL/push 后可用 `windows-latest`；当前未配置 origin，Actions 尚不可执行 |
+| D7 | ASR 模型路线 | **A**：Whisper small 主 + SenseVoice 条件备选 | 先交付确定性基线；T3.11 仅在触发条件下做时间盒评估，按实测切换 |
 
 #### B. 可自行采用默认方案（不阻塞，已写入计划）
 
@@ -695,6 +698,7 @@ SenseVoiceSmall 是本次选型的**主要备选**，不是被排除的方案。
 8. 不要求识别标点绝对准确、不要求说话人分离、不要求翻译。
 9. 测试音频为本人录制，须注明授权且不含敏感个人信息。
 10. F6 已确认要做，但仍受 G4/G5 门禁；未能完成时必须在报告中说明，不能虚报。
+11. Git 仓库托管在 GitHub；本地已初始化，`origin` 已由用户配置；T0.6 只做本地提交，push 由用户手动执行；push 后由 T0.7 验证 remote 与 Actions。
 
 ---
 

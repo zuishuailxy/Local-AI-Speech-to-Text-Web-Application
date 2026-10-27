@@ -328,12 +328,14 @@
   - 验证：5 个结构测试通过；全量 157 passed；`/` 与 `/static/styles.css` 200；必需 ID、hidden/disabled 初始状态、aria/label、无外链均断言。
   - 结果：已完成（2026-10-27）；响应式布局、录音脉冲、pipeline/状态样式已定义；交互逻辑留给 T4.2。
 
-- [ ] **T4.2 实现麦克风采集与 MediaRecorder**
+- [x] **T4.2 实现麦克风采集与 MediaRecorder**
   - 目标：授权后录音，停止后得到可上传 Blob。
-  - 文件：`static/app.js`。
+  - 文件：`static/app.js`、`static/index.html`、`tests/test_frontend_recording.py`、`docs/evidence/t4.2-media-recorder.txt`、`docs/evidence/t4.1-page.png`。
   - 前置：T4.1。
   - 完成标准：`getUserMedia` 音频约束；按能力选择 webm/ogg/mp4；`timeslice` 收集分片；停止后合并 Blob；释放轨道；记录实际 MIME。
-  - 验证：Chrome 录音后 Network 看到 multipart 包含 `audio/webm` 文件；再次录音可成功。
+  - 验证：5 个 JS 静态契约测试 + 全量 162 passed；浏览器控制台无 error；`chooseMimeType()` = `audio/webm;codecs=opus`；Node 仅做语法检查。
+  - 结果：已完成（2026-10-27）；`window.__lastRecording` 暴露 Blob/MIME/扩展名/大小；空 Blob 报错；Start/Stop 状态切换。
+  - 备注：自动化环境未完成真实麦克风授权，实际录音与 Network multipart 验收待 T4.6/T6.1；不伪造录音结果。
 
 - [ ] **T4.3 实现计时、60 秒自动停止与状态机**
   - 目标：状态与时长准确，超限自动结束。

@@ -49,10 +49,8 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image: linear-gradient(
-    rgba(23, 32, 51, 0.025) 1px,
-    transparent 1px
-  );
+  background-image: linear-gradient(rgba(23, 32, 51, 0.025) 1px,
+      transparent 1px);
   background-size: 100% 30px;
   mask-image: linear-gradient(to bottom, black, transparent 75%);
 }
@@ -126,7 +124,7 @@ h2 {
 }
 
 .header-note {
-  max-width: 340px;
+  max-width: max-content;
   margin-bottom: 2px;
   color: var(--muted);
   font-size: 13px;
@@ -205,10 +203,8 @@ h2 {
   border-radius: var(--radius-md);
   padding: 0 42px 0 14px;
   background:
-    linear-gradient(45deg, transparent 50%, var(--muted) 50%) calc(100% - 18px)
-      22px / 6px 6px no-repeat,
-    linear-gradient(135deg, var(--muted) 50%, transparent 50%) calc(100% - 13px)
-      22px / 6px 6px no-repeat,
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%) calc(100% - 18px) 22px / 6px 6px no-repeat,
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%) calc(100% - 13px) 22px / 6px 6px no-repeat,
     #fff;
   color: var(--text);
   font: inherit;
@@ -364,7 +360,7 @@ h2 {
   margin: 20px 0 14px;
 }
 
-.timer-row > div {
+.timer-row>div {
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -555,7 +551,7 @@ h2 {
   margin: 0 0 14px;
 }
 
-.result-meta > div {
+.result-meta>div {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
@@ -695,11 +691,13 @@ h2 {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.5;
     transform: scale(0.86);
@@ -734,6 +732,7 @@ h2 {
 }
 
 @media (max-width: 560px) {
+
   .site-header,
   .app-shell,
   .site-footer {
@@ -767,6 +766,7 @@ h2 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

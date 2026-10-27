@@ -101,6 +101,7 @@ def test_no_external_assets() -> None:
     assert "http://" not in html
     assert "https://" not in html
     assert "/static/styles.css" in html
+    assert "/static/app.js" in html
     assert 'src="http' not in html
     assert 'href="http' not in html
 
@@ -110,9 +111,12 @@ def test_static_assets_are_served() -> None:
 
     page_response = client.get("/")
     css_response = client.get("/static/styles.css")
+    js_response = client.get("/static/app.js")
 
     assert page_response.status_code == 200
     assert "Local AI Speech-to-Text" in page_response.text
     assert css_response.status_code == 200
     assert "text/css" in css_response.headers["content-type"]
     assert "[data-state=\"recording\"]" in css_response.text
+    assert js_response.status_code == 200
+    assert "javascript" in js_response.headers["content-type"]

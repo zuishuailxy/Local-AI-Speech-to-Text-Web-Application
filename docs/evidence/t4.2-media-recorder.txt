@@ -1,0 +1,80 @@
+# T4.2 麦克风采集与 MediaRecorder 验证
+
+- 日期：2026-10-27
+- 文件：`static/app.js`、`static/index.html`
+- 状态：录音核心实现完成；真实麦克风授权/录音待人工验收（T6.1）
+- 未实现上传请求（T4.6），因此本轮未产生 Network multipart
+
+## 实现
+
+- 点击 Start 后才调用 `navigator.mediaDevices.getUserMedia`。
+- 音频约束：
+  - `channelCount: 1`
+  - `echoCancellation: true`
+  - `noiseSuppression: true`
+  - `autoGainControl: true`
+- MIME 能力检测顺序：
+  1. `audio/webm;codecs=opus`
+  2. `audio/webm`
+  3. `audio/ogg;codecs=opus`
+  4. `audio/ogg`
+  5. `audio/mp4`
+- `MediaRecorder.start(1000)`，通过 `dataavailable` 分片收集。
+- 停止后在 `stop` 事件合并 `Blob`，记录：
+  - `blob`
+  - 实际 `mimeType`
+  - 文件扩展名（webm/ogg/m4a）
+  - 字节数
+- 暴露 `window.__lastRecording` / `window.recordingApp.getState()` 供 T4.6 上传与浏览器冒烟使用。
+- `stop` 后释放所有 `MediaStreamTrack`，避免麦克风占用。
+- 空 Blob 显示错误；再次录音重新创建 MediaRecorder。
+- 权限/设备错误名称映射为中文提示；完整异常交互在 T4.4。
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_frontend_structure.py tests/test_frontend_recording.py
+```
+
+```text
+10 passed
+```
+
+全量：
+
+```text
+162 passed
+```
+
+JS 语法：
+
+```text
+node --check static/app.js
+```
+
+通过（Node 仅用于本地语法检查，不是项目运行依赖）。
+
+## 浏览器检查
+
+使用 Review 面板浏览器打开 `http://127.0.0.1:8014/`：
+
+- 页面加载成功，控制台无 error。
+- `recordingApp.chooseMimeType()` 返回：
+
+```text
+audio/webm;codecs=opus
+```
+
+- 初始状态 `idle`，Start 可用，Stop disabled。
+- 实际点击 Start 后浏览器进入麦克风权限请求；自动化环境未完成授权，因此没有伪造录音/Blob 结果。
+- 页面截图：`docs/evidence/t4.1-page.png`
+
+## 待人工验收
+
+- Chrome/Edge 允许麦克风后，录 5 秒、停止，确认：
+  - Start/Stop 状态正确；
+  - `window.__lastRecording.mimeType` 为实际 MIME；
+  - 释放麦克风后系统录音指示消失；
+  - 第二次录音可成功。
+- T4.6 上传后检查 Network 中 multipart 文件类型（预期 webm/opus）。
+- 完整手动步骤在 T6.1/T6.2。

@@ -182,12 +182,14 @@
   - 结果：已完成（2026-10-27）；静音 WAV 明确解码为 16000 个零采样（不是空文件），后续 VAD/ASR 返回空文本的路径由 T2.7/T3 验证；G1 通过。
   - 备注：WAV 全部由标准库生成；WebM fixture 仅用于容器格式测试，不依赖麦克风或 `samples/`。
 
-- [ ] **T2.6 浏览器录音格式（webm）解码测试**
+- [x] **T2.6 浏览器录音格式（webm）解码测试**
   - 目标：证明后端可处理前端实际录音格式。
-  - 文件：`tests/fixtures/sample.webm`、`tests/test_audio.py`、`docs/evidence/audio-format.txt`。
+  - 文件：`tests/fixtures/sample.webm`、`tests/fixtures/README.md`、`tests/test_audio.py`、`docs/evidence/audio-format.txt`。
   - 前置：T2.3。
   - 完成标准：提交一个短 webm/opus fixture（由 WAV 转码或浏览器录制，注明来源）；解码成功且时长合理；不要求运行期安装 ffmpeg。
-  - 验证：pytest 断言 webm 解码/时长；在无系统 ffmpeg 的干净环境复跑。
+  - 验证：`pytest -q tests/test_audio.py`（42 passed）；WebM/Opus 容器、1s 时长、16 kHz mono float32 解码；`PATH=/usr/bin:/bin` 排除系统 ffmpeg 后仍通过；全量 89 passed。
+  - 结果：已完成（2026-10-27）；fixture 为项目自生成 1 秒合成 Opus，SHA-256 记录在证据中；真实浏览器 MIME/上传仍由 T6.8/T6.11 手动验证。
+  - 备注：系统 `/usr/local/bin/ffmpeg` 存在但不可执行（bad CPU type）；测试证明解码只依赖 PyAV wheel 自带库。
 
 - [ ] **T2.7 实现 Transcriber 协议、假引擎与 `POST /api/transcribe` 契约测试**
   - 目标：打通 multipart → 校验 → 解码 → 引擎 → JSON 全链路，并定义可注入的识别协议。

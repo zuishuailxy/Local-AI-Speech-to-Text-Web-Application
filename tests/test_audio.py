@@ -11,6 +11,7 @@ import asyncio
 import io
 from pathlib import Path
 
+import av
 import numpy as np
 import pytest
 from fastapi import File, Form, UploadFile
@@ -623,3 +624,14 @@ def test_audio_pipeline_matrix(
             )
 
     assert not upload_dir.exists() or not list(upload_dir.iterdir())
+
+
+def test_webm_fixture_container_and_codec() -> None:
+    path = Path(__file__).parent / "fixtures" / "sample.webm"
+
+    with av.open(str(path), mode="r") as container:
+        audio_streams = list(container.streams.audio)
+        assert audio_streams
+        assert audio_streams[0].codec_context.name == "opus"
+        assert container.duration is not None
+        assert container.duration / av.time_base == pytest.approx(1.0, abs=0.05)

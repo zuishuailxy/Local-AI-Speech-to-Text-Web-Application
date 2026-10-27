@@ -229,12 +229,14 @@
   - 验证：7 个 transcriber 测试通过；全量 123 passed；Fake 满足 runtime_checkable Protocol；导入模块不会加载 faster-whisper。
   - 结果：已完成（2026-10-27）；Fake 支持固定文本、持久异常、异常序列恢复、delay_seconds、calls 记录；真实引擎留给 T3.2。
 
-- [ ] **T3.2 实现 faster-whisper 引擎**
+- [x] **T3.2 实现 faster-whisper 引擎**
   - 目标：本地目录加载、CPU int8、语言参数、VAD、线程与锁、惰性单例。
-  - 文件：`app/services/transcriber.py`、`app/config.py`、`tests/test_transcriber_unit.py`。
+  - 文件：`app/services/transcriber.py`、`app/config.py`、`tests/test_transcriber_unit.py`、`docs/evidence/t3.2-whisper-engine.txt`。
   - 前置：T3.1、T1.3。
   - 完成标准：仅从 `ASR_MODEL_PATH` 加载；不传模型名；`device=cpu`、`compute_type=int8`；`language=zh/en`；`vad_filter` 可配置；并发加载只发生一次；加载失败转 `ModelUnavailableError`。
-  - 验证：无模型目录时抛可识别错误；Fake 路径不影响真实类；static review 确认无网络调用。
+  - 验证：8 个单元测试通过；全量 131 passed；缺失路径/加载失败→503，推理失败→500，空文本保留，4 线程并发只加载一次；导入模块不加载 faster-whisper。
+  - 结果：已完成（2026-10-27）；`WhisperTranscriber` 惰性加载、单锁串行化、本地路径、CPU/int8/threads/beam/VAD 从 Settings 读取；默认工厂内部延迟导入 WhisperModel。
+  - 备注：真实模型推理尚未执行；下载/加载/中英文验证见 T3.5/T3.6。
 
 - [ ] **T3.3 实现模型下载脚本**
   - 目标：一次性下载到 `models/faster-whisper-small`，支持镜像与校验。

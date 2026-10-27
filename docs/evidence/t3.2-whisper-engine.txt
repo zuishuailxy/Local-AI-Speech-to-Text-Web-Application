@@ -1,0 +1,64 @@
+# T3.2 faster-whisper 引擎验证
+
+- 日期：2026-10-27
+- 状态：单元测试通过；真实模型识别待 T3.5/T3.6
+- 未下载模型权重
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_transcriber_unit.py
+```
+
+```text
+8 passed in 0.14s
+```
+
+全量：
+
+```text
+131 passed in 0.90s
+```
+
+## 实现
+
+`WhisperTranscriber`：
+
+- 构造时不加载模型，只保存 `Settings` 与可选 `model_factory`。
+- 首次 `transcribe`/`warmup` 时惰性加载。
+- 只接受本地 `ASR_MODEL_PATH`，以路径字符串传给 `WhisperModel`。
+- CPU / int8 / `cpu_threads` / beam size / VAD 均来自 Settings。
+- 单实例单锁：加载和推理串行化，首次并发请求只加载一次。
+- 模型路径不存在 → `ModelUnavailableError` (503)。
+- 模型加载异常 → `ModelUnavailableError` (503)，记录异常但返回可读信息。
+- 推理异常 → `TranscriptionFailedError` (500)。
+- 空 segments 返回空文本，不崩溃。
+
+默认工厂在函数内部延迟导入：
+
+```python
+from faster_whisper import WhisperModel
+```
+
+因此 `import app.services.transcriber` / `import app.main` 不会加载 faster-whisper：
+
+```text
+faster_whisper_imported= False
+```
+
+## 单测覆盖
+
+- 构造时不加载、工厂参数正确（路径/CPU/int8/threads）。
+- 模型复用，多个请求只加载一次。
+- 模型路径缺失 → 503。
+- 加载异常 → 503。
+- 推理异常 → 500。
+- 空文本保留。
+- 4 线程并发首请求只加载一次。
+- warmup 只加载不推理。
+
+## 边界
+
+- 以上使用 FakeWhisperModel/工厂，不执行真实 CTranslate2 推理。
+- 真实 small 模型下载、加载、中英文识别和 RTF/CER 在 T3.5/T3.6 验证。
+- 真实模型测试必须使用 `pytest -m real_model`，不会在默认 `pytest -q` 中下载模型。

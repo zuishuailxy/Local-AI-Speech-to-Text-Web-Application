@@ -1,0 +1,41 @@
+# T1.7 P1 阶段收尾记录
+
+- 日期：2026-10-27
+
+## P1 完成范围
+
+- T1.1 目录骨架、.gitignore、.python-version
+- T1.2 Python 3.12.13、requirements 41 个精确版本、Windows wheel 预检
+- T1.3 配置模块 + 21 tests
+- T1.4 应用工厂/health/静态页 + 8 tests
+- T1.5 错误模型 + 10 tests
+- T1.6 pytest 隔离/FakeTranscriber/WAV fixture + 8 tests
+- T1.8 Windows CI 骨架，run 40483713787 success
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+...............................................                          [100%]
+47 passed in 0.25s
+```
+
+## 已知未完成
+
+- G1 仍需 T2.5（音频测试）完成后最终确认。
+- T1.7 只收尾 P1；P2 音频/API 尚未开始。
+- Windows CI 仅 Windows Server，不是 Windows 11 实机麦克风验证。
+
+## Git
+
+```text
+e6ca72c docs: record successful Windows CI run
+fc8e7f9 feat: unify error responses and isolate test fixtures
+97d38ca feat: add app factory, health endpoint and static index
+453c22a feat: add configuration module and Windows CI skeleton
+1cb1c4c chore: scaffold project and lock Python 3.12 dependencies
+421e460 docs: add OpenCode phase-one export and finalize planning decisions
+```

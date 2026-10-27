@@ -116,12 +116,13 @@
   - 验证：`python -m pytest -q`（47 passed，无模型/麦克风/下载）；临时 real_model probe 默认被排除，`pytest -q -m real_model` 可单独运行（1 passed）；probe 已删除。
   - 结果：已完成（2026-10-27）；G1 仍需 T2.5 完成后最终确认。
 
-- [ ] **T1.7 P1 阶段收尾**
+- [x] **T1.7 P1 阶段收尾**
   - 目标：提交脚手架并留痕。
-  - 文件：Git 提交、`docs/opencode/02-implementation.md`（起始记录）。
+  - 文件：Git 提交、`docs/opencode/02-implementation.md`、`docs/evidence/t1.7-p1-summary.txt`、`docs/opencode/README.md`。
   - 前置：T1.1–T1.6。
   - 完成标准：`git status` 干净；提交信息说明脚手架/配置/健康检查；记录本阶段命令与问题。
-  - 验证：`git log --oneline -5`；`pytest -q` 通过。
+  - 验证：`git log --oneline -5`；`python -m pytest -q`（47 passed）；阶段二记录与证据已归档。
+  - 结果：已完成（2026-10-27）；G1 仍需 T2.5 完成后最终确认。
 
 - [x] **T1.8 建立 GitHub Actions Windows CI 骨架**
   - 目标：在无 Windows 实机条件下尽早发现 Windows 安装/导入问题。

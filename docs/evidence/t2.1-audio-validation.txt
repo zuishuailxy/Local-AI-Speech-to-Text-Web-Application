@@ -1,0 +1,38 @@
+# T2.1 上传参数与格式校验验证
+
+- 日期：2026-10-27
+
+## 测试命令
+
+```bash
+.venv/bin/python -m pytest -q tests/test_audio.py
+```
+
+## 结果
+
+```text
+...............                                                          [100%]
+15 passed in 0.09s
+```
+
+## 全量测试
+
+```text
+..............................................................           [100%]
+62 passed in 0.19s
+```
+
+## 覆盖点
+
+- language 仅接受 zh/en（大小写归一），非法值 400 invalid_language
+- 缺失 file 或 language 返回 422 validation_error
+- 空文件返回 400 empty_file
+- .txt / 无扩展名返回 415 unsupported_format
+- 伪造 .wav（无 RIFF/WAVE 头）返回 400 invalid_audio
+- 合法 WAV（含大写扩展名）通过元数据校验
+- 允许扩展名：wav/webm/ogg/oga/mp3/m4a/mp4/flac
+
+## 说明
+
+- T2.1 只做元数据与 WAV 头校验；WebM/OGG/MP3 等完整解码、时长上限在 T2.3。
+- 生产路由 /api/transcribe 在 T2.7 接线；当前用等价测试路由验证校验逻辑。

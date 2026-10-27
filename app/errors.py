@@ -41,6 +41,27 @@ class ApiError(Exception):
         return {"detail": self.message, "code": self.code}
 
 
+class EmptyFileError(ApiError):
+    """The uploaded file is empty."""
+
+    def __init__(self, message: str = "上传文件为空，请选择包含语音的音频文件。") -> None:
+        super().__init__(400, "empty_file", message)
+
+
+class UnsupportedFormatError(ApiError):
+    """The file extension is not in the supported audio whitelist."""
+
+    def __init__(self, message: str = "不支持该文件格式，请上传 WAV、WebM、OGG、MP3、M4A、MP4 或 FLAC。") -> None:
+        super().__init__(415, "unsupported_format", message)
+
+
+class InvalidLanguageError(ApiError):
+    """The requested language is not supported."""
+
+    def __init__(self, message: str = "language 仅支持 zh 或 en。") -> None:
+        super().__init__(400, "invalid_language", message)
+
+
 class ModelUnavailableError(ApiError):
     """The ASR model is missing or failed to initialize."""
 
@@ -124,8 +145,11 @@ def register_exception_handlers(app: FastAPI) -> None:
 
 __all__ = [
     "ApiError",
+    "EmptyFileError",
     "InvalidAudioError",
+    "InvalidLanguageError",
     "ModelUnavailableError",
     "TranscriptionFailedError",
+    "UnsupportedFormatError",
     "register_exception_handlers",
 ]

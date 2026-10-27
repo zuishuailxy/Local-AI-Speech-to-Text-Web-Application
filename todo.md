@@ -137,12 +137,14 @@
 
 ## 阶段 P2：音频处理、识别接口与 Mock 测试
 
-- [ ] **T2.1 实现上传参数与格式校验**
+- [x] **T2.1 实现上传参数与格式校验**
   - 目标：校验 `file`、`language`、空文件、扩展名白名单。
-  - 文件：`app/services/audio.py`、`app/api/routes.py`、`app/errors.py`、`tests/test_audio.py`。
+  - 文件：`app/services/audio.py`、`app/errors.py`、`tests/test_audio.py`、`docs/evidence/t2.1-audio-validation.txt`。
   - 前置：T1.5。
   - 完成标准：`language` 仅接受 `zh`/`en`（扩展值另行门禁）；空文件 400；非白名单 415；缺失字段 422；错误信息可读。
-  - 验证：pytest 覆盖 `.txt`、伪 wav、空文件、非法语言、缺字段。
+  - 验证：pytest 覆盖 `.txt`、伪 wav、空文件、非法语言、缺字段；15 passed；全量 62 passed。
+  - 结果：已完成（2026-10-27）；增加 EmptyFileError / UnsupportedFormatError / InvalidLanguageError；WAV 头早期校验，其他容器留给 T2.3 解码。
+  - 备注：生产 `/api/transcribe` 路由在 T2.7 接线，当前用等价测试路由验证 FastAPI 缺失字段行为。
 
 - [ ] **T2.2 实现流式写入与 10 MB 上限**
   - 目标：避免一次性读入超大文件，服务端强制执行 10 MB。

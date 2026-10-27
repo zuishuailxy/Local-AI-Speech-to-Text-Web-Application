@@ -1,0 +1,99 @@
+# T1.2 环境与依赖验证记录
+
+- 日期：2026-10-27
+- 开发机：macOS arm64
+- 目标环境：Windows 11 x64 / Python 3.12 / CPU
+- 虚拟环境：`.venv`，由 uv 创建，CPython 3.12.13
+- 依赖入口：`requirements.txt`（`pip freeze` 精确锁版本）
+
+## 1. Python 与 pip
+
+```text
+Python 3.12.13
+pip 26.2.2
+```
+
+## 2. 已安装的关键版本
+
+```text
+fastapi 0.162.0
+uvicorn 0.54.0
+faster_whisper 1.2.1
+ctranslate2 4.8.4
+av 19.0.2
+onnxruntime 1.31.1
+websockets 17.3
+pytest 9.1.1
+httpx 0.28.1
+```
+
+`python -m pip check` 结果：
+
+```text
+No broken requirements found.
+```
+
+关键模块导入验证通过，未加载模型、未下载模型权重。
+
+## 3. Windows wheel 交叉下载预检
+
+命令：
+
+```bash
+.venv/bin/python -m pip download \
+  --only-binary=:all: \
+  --platform win_amd64 \
+  --python-version 3.12 \
+  --implementation cp \
+  --abi cp312 \
+  -r requirements.txt \
+  -d .wheelhouse-check
+```
+
+结果：成功，共 41 个 wheel；原始 pip 输出见 `windows-wheels.txt`。
+
+已确认存在 Windows x64 wheel 的关键二进制包：
+
+```text
+av-19.0.2-cp312-abi3-win_amd64.whl
+ctranslate2-4.8.4-cp312-cp312-win_amd64.whl
+onnxruntime-1.31.1-cp312-cp312-win_amd64.whl
+tokenizers-0.23.3-cp310-abi3-win_amd64.whl
+numpy-2.5.4-cp312-cp312-win_amd64.whl
+pydantic_core-2.50.1-cp312-cp312-win_amd64.whl
+protobuf-7.36.2-cp310-abi3-win_amd64.whl
+websockets-17.3-cp312-cp312-win_amd64.whl
+pyyaml-6.0.3-cp312-cp312-win_amd64.whl
+hf_xet-1.7.0-cp38-abi3-win_amd64.whl
+```
+
+纯 Python wheel（fastapi、uvicorn、faster-whisper 等）也全部下载成功。
+
+## 4. 干净虚拟环境复装
+
+在临时目录创建全新 CPython 3.12.13 虚拟环境，执行：
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+结果：成功；以下模块导入通过：
+
+```text
+fastapi 0.162.0
+faster_whisper 1.2.1
+ctranslate2 4.8.4
+av 19.0.2
+onnxruntime 1.31.1
+websockets 17.3
+pytest 9.1.1
+httpx 0.28.1
+```
+
+## 5. 结论与边界
+
+- 本机 Python 3.12 环境可安装/导入所有运行依赖。
+- Windows x64/Python 3.12 的 wheel 依赖图可完整下载，没有发现“只能源码编译”的包。
+- 这**不等于** Windows 实机安装/启动/推理已通过；Windows 兼容性仍由 T1.8/T6.10 的 GitHub Actions 和 T6.13（若获得环境）验证。
+- 本次未下载任何 ASR 模型权重；`models/` 为空。
+- `.wheelhouse-check/` 仅用于预检，已被 `.gitignore` 排除，不提交。

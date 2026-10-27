@@ -1,0 +1,33 @@
+# T0.7 Git push 确认
+
+- 日期：2026-10-27
+
+```text
+$ git remote -v
+origin	<github-remote-url> (fetch)
+origin	<github-remote-url> (push)
+
+$ git fetch origin
+$ git rev-parse HEAD origin/main
+421e460227da42bda1ac30c423508e46503f9d7c
+421e460227da42bda1ac30c423508e46503f9d7c
+
+$ git status -sb
+## main...origin/main
+ M todo.md
+?? .gitignore
+?? .python-version
+?? app/
+?? docs/evidence/
+?? requirements.txt
+?? samples/
+?? scripts/
+?? static/
+?? tests/
+
+$ git log --oneline --decorate -2
+421e460 (HEAD -> main, origin/main, origin/HEAD) docs: add OpenCode phase-one export and finalize planning decisions
+42485f6 Initial commit
+```
+
+结论：本地 main 与 origin/main 在确认时一致（421e460）；remote 指向 GitHub。GitHub Actions 的实际运行将在 T1.8 创建 workflow 后验证。

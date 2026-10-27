@@ -27,7 +27,7 @@
 | D6 | **GitHub**，仓库已本地初始化 | T0.6 只提交本地；`origin` 已由用户配置；push 由用户手动执行；push 后验证 `windows-latest` Actions（T0.7） |
 | D7 | **模型路线 A**：Whisper small 为主，SenseVoice 为条件备选 | 先交付 Whisper 基线；T3.11 仅在中文/速度/F6 延迟不达标时做 60–90 分钟评估，按数据决定是否切换 |
 
-> D6 当前状态：本地 `main` 已有 initial commit；`origin` 已由用户配置为 GitHub；T0.6 只做本地提交，不 push。用户手动 push 后，T0.7 验证 remote 与 Actions；未 push 时 T1.8/T6.10 顺延。
+> D6 当前状态：本地 `main` 已有 initial commit；`origin` 已配置为 GitHub；用户已手动 push，T0.7 已确认本地与 `origin/main` 一致；Actions 的实际运行验证并入 T1.8。
 
 ---
 
@@ -698,7 +698,7 @@ SenseVoiceSmall 是本次选型的**主要备选**，不是被排除的方案。
 8. 不要求识别标点绝对准确、不要求说话人分离、不要求翻译。
 9. 测试音频为本人录制，须注明授权且不含敏感个人信息。
 10. F6 已确认要做，但仍受 G4/G5 门禁；未能完成时必须在报告中说明，不能虚报。
-11. Git 仓库托管在 GitHub；本地已初始化，`origin` 已由用户配置；T0.6 只做本地提交，push 由用户手动执行；push 后由 T0.7 验证 remote 与 Actions。
+11. Git 仓库托管在 GitHub；本地已初始化，`origin` 已由用户配置并完成首次 push；Actions 运行验证见 T1.8。
 
 ---
 

@@ -56,32 +56,33 @@
   - 验证：`git log --oneline -3` 可见本阶段提交；`git status` 干净（除未跟踪的本地文件）。
   - 备注：用户明确要求“只提交，手动 push”；remote/Actions 验证见 T0.7。
 
-- [ ] **T0.7 用户 push 后验证 GitHub remote 与 Actions**
-  - 目标：确认 GitHub 仓库与 `windows-latest` Actions 可用。
-  - 文件：Git remote 配置、GitHub Actions 页面、`docs/evidence/github-actions.txt`。
-  - 前置：T0.6；用户已手动 push 并提供仓库 URL。
-  - 完成标准：`git remote -v` 显示 GitHub `origin`；`main` 已推送；GitHub 页面可见提交；workflow 可创建/手动触发。
-  - 验证：用户确认 push 成功；Actions 最小 workflow 运行/排队；失败则记录原因并调整 T1.8。
-  - 备注：`origin` 已由用户配置为 GitHub，`main` 当前 ahead 1；此任务不能由代理代替用户 push，需用户手动执行后确认。
+- [x] **T0.7 用户 push 后确认 GitHub remote**
+  - 目标：确认本地提交已到达 GitHub，为 T1.8 创建 Actions 做准备。
+  - 文件：Git remote 配置、`docs/evidence/t0.7-git.txt`。
+  - 前置：T0.6；用户已手动 push。
+  - 完成标准：`git remote -v` 显示 GitHub `origin`；本地 `main` 与 `origin/main` 一致；GitHub 页面可见提交。
+  - 验证：`git fetch origin` 后 `git rev-parse HEAD origin/main` 均为 `421e460`；`git status -sb` 显示 `## main...origin/main`。
+  - 备注：Actions 的实际运行验证并入 T1.8（当前尚无 workflow）；T0.7 只确认 remote/push。
 
 ---
 
 ## 阶段 P1：项目脚手架与可启动空服务（门禁 G1 准备）
 
-- [ ] **T1.1 建立目录结构与基础文件**
+- [x] **T1.1 建立目录结构与基础文件**
   - 目标：按计划创建 `app/`、`static/`、`scripts/`、`tests/`、`samples/`、`docs/` 等骨架。
-  - 文件：目录、`app/__init__.py`、`app/api/__init__.py`、`app/services/__init__.py`、`.gitignore`。
+  - 文件：目录、`app/__init__.py`、`app/api/__init__.py`、`app/services/__init__.py`、`.gitignore`、`.python-version`、各空目录 `.gitkeep`。
   - 前置：T0.4。
-  - 完成标准：目录与 `plan.md` 2.2 一致；`.gitignore` 排除 `models/`、`.venv/`、`__pycache__/`、`.pytest_cache/`、`*.log`、`.DS_Store`、测试临时文件。
-  - 验证：`find`/`tree` 检查；`git check-ignore` 抽查。
+  - 完成标准：目录与 `plan.md` 2.2 一致；`.gitignore` 排除 `models/`、`.venv/`、`__pycache__/`、`.pytest_cache/`、`.wheelhouse-check/`、`*.log`、`.DS_Store` 等。
+  - 验证：`find` 输出归档到 `docs/evidence/t1.1-skeleton.txt`；`git check-ignore` 抽查通过。
+  - 结果：已完成（2026-10-27）；`.github/workflows/` 目录已预留，workflow 文件由 T1.8 创建。
 
-- [ ] **T1.2 创建 Python 3.12 虚拟环境、锁定依赖并预检 Windows wheel**
+- [x] **T1.2 创建 Python 3.12 虚拟环境、锁定依赖并预检 Windows wheel**
   - 目标：保证开发与目标环境一致（Python 3.12），并验证 Windows 11 可仅用 pip 安装。
-  - 文件：`.venv/`（不提交）、`requirements.txt`、`docs/evidence/windows-wheels.txt`。
+  - 文件：`.venv/`（不提交）、`requirements.txt`、`.python-version`、`docs/evidence/windows-wheels.txt`、`docs/evidence/t1.2-environment.txt`。
   - 前置：T1.1。
-  - 完成标准：使用 uv/pyenv 的 CPython 3.12 创建 `.venv`（本机系统 `python3` 为 3.9，禁止直接使用）；`python --version` 为 3.12.x；包含 fastapi、uvicorn、python-multipart、faster-whisper、pytest、httpx、websockets（F6 用）等运行/测试依赖并锁定可兼容版本；无 Docker/Node/DB/云 SDK；交叉下载检查所有包存在 cp312/abi3 win_amd64 wheel。
-  - 验证：`.venv/bin/python --version` 输出 3.12.x；`python -m pip download --only-binary=:all: --platform win_amd64 --python-version 3.12 --implementation cp --abi cp312 -r requirements.txt -d .wheelhouse-check` 成功；输出归档。
-  - 备注：若交叉下载不支持某包，记录并改用纯 Python/已提供 win wheel 的替代版本；不得引入需编译依赖。
+  - 完成标准：使用 CPython 3.12 创建 `.venv`（本机系统 `python3` 为 3.9，禁止直接使用）；`python --version` 为 3.12.x；包含 fastapi、uvicorn、python-multipart、faster-whisper、pytest、httpx、websockets（F6 用）等运行/测试依赖并锁定可兼容版本；无 Docker/Node/DB/云 SDK；交叉下载检查所有包存在 cp312/abi3 win_amd64 wheel。
+  - 验证：`.venv/bin/python --version` 输出 3.12.13；`pip download --only-binary=:all: --platform win_amd64 --python-version 3.12 --implementation cp --abi cp312 -r requirements.txt` 成功（41 个 wheel）；干净临时 venv 按 requirements 复装并导入关键模块成功；`pip check` 无冲突。
+  - 结果：已完成（2026-10-27）；`requirements.txt` 为 41 个精确锁版本；模型权重未下载。
 
 - [ ] **T1.3 实现配置模块**
   - 目标：集中管理模型路径、设备、线程、大小/时长限制、预热开关。

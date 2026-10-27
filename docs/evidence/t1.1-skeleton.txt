@@ -1,0 +1,27 @@
+app
+app/__init__.py
+app/api
+app/api/__init__.py
+app/services
+app/services/__init__.py
+docs/evidence
+docs/evidence/.gitkeep
+docs/evidence/t1.1-skeleton.txt
+docs/evidence/t1.2-environment.txt
+docs/evidence/windows-wheels.txt
+samples
+samples/.gitkeep
+scripts
+scripts/.gitkeep
+static
+static/.gitkeep
+tests
+tests/e2e
+tests/e2e/.gitkeep
+tests/fixtures
+tests/fixtures/.gitkeep
+--- git check-ignore ---
+.gitignore:5:.venv/	.venv
+.gitignore:22:models/	models
+.gitignore:23:.wheelhouse-check/	.wheelhouse-check
+.gitignore:32:.DS_Store	.DS_Store

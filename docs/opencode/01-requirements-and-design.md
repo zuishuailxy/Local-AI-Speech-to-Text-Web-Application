@@ -119,15 +119,15 @@ OpenCode 生成：
 | D3 | 本人录制样本 | 中英文各 5–15 秒，注明授权、无敏感信息 |
 | D4 | Git 仓库 | 分阶段提交、脱敏证据、模型权重不入库 |
 | D5 | 要做 F6 | 必做通过后启动，3 小时时间盒，失败可回滚 |
-| D6 | GitHub | 本地已初始化，`origin` 已由用户配置；push 由用户手动完成；Actions 待 push 后验证 |
+| D6 | GitHub | 本地已初始化，`origin` 已由用户配置；push 已由用户完成；Actions 待 T1.8 验证 |
 | D7 | 路线 A | Whisper small 为主，SenseVoiceSmall 作为条件备选；仅 T3.11 触发时评估 |
 
 ## 6. 产物与验证
 
 - `plan.md` v0.3：包含 F1–F6、接口、环境、测试、文档映射；两天排期；风险 R1–R20；事实/假设区分。
-- `todo.md`：83 项编号任务；T0.1–T0.6 已完成；T0.7（用户 push）待执行。
-- 本地 Git：`main` 已有 initial commit；本阶段只做本地提交，不执行 push。
-- 未执行：依赖安装、模型下载、业务代码、Windows CI（需 GitHub push 后配置）。
+- `todo.md`：83 项编号任务；T0.1–T0.7 已完成。
+- 本地 Git：`main` 已有 initial commit；本阶段代理只做本地提交，用户已手动 push；Actions 实际运行待 T1.8。
+- 未执行：依赖安装、模型下载、业务代码、Windows CI（需 T1.8 workflow）。
 
 ## 7. 备注
 

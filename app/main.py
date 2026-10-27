@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
 from app.config import PROJECT_ROOT
+from app.errors import register_exception_handlers
 
 STATIC_DIR = PROJECT_ROOT / "static"
 
@@ -25,6 +26,7 @@ def create_app(transcriber: object | None = None) -> FastAPI:
     )
     app.state.transcriber = transcriber
 
+    register_exception_handlers(app)
     app.include_router(router)
 
     @app.get("/", include_in_schema=False)

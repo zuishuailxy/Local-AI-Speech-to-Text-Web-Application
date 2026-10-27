@@ -100,20 +100,21 @@
   - 验证：`python -m pytest -q`（29 passed）；实际 uvicorn 启动后 `/health` 200、`/` 200。
   - 结果：已完成（2026-10-27）；transcriber 通过 `app.state.transcriber` 注入，默认 None。
 
-- [ ] **T1.5 实现统一错误模型与异常处理器**
+- [x] **T1.5 实现统一错误模型与异常处理器**
   - 目标：所有可预期错误返回 `{"detail","code"}`，不泄漏堆栈。
-  - 文件：`app/errors.py`、`app/main.py`、`tests/test_errors.py`。
+  - 文件：`app/errors.py`、`app/main.py`、`tests/test_errors.py`、`docs/evidence/t1.5-errors.txt`。
   - 前置：T1.4。
   - 完成标准：覆盖 400/413/415/422/500/503 映射；未捕获异常返回 `internal_error`；日志记录异常类型。
-  - 验证：触发各错误码的测试；响应 JSON 结构与状态码断言。
+  - 验证：触发各错误码的测试；响应 JSON 结构与状态码断言；10 passed。
+  - 结果：已完成（2026-10-27）；定义 ApiError、ModelUnavailableError、TranscriptionFailedError、InvalidAudioError，并统一处理 404/405/422。
 
-- [ ] **T1.6 配置 pytest（Mock/真实模型隔离）**
+- [x] **T1.6 配置 pytest（Mock/真实模型隔离）**
   - 目标：`python -m pytest -q` 默认不加载模型、不下载、不依赖麦克风。
-  - 文件：`pytest.ini`、`tests/conftest.py`。
+  - 文件：`pytest.ini`、`tests/conftest.py`、`tests/test_fixtures.py`、`docs/evidence/t1.6-pytest.txt`。
   - 前置：T1.4、T1.5。
   - 完成标准：注册 `real_model`、`e2e` 标记；默认排除两者；提供 `FakeTranscriber` 与生成 WAV 的 fixture；`pythonpath` 指向仓库根。
-  - 验证：删除/改名 `models/` 后执行 `python -m pytest -q`，全部通过且无网络请求；确认 `pytest -m real_model` 的覆盖方式（若 `-m` 冲突改用 `ASR_RUN_REAL=1` 门控）。
-  - 门禁：**G1**——此任务与 T2.5 完成后确认。
+  - 验证：`python -m pytest -q`（47 passed，无模型/麦克风/下载）；临时 real_model probe 默认被排除，`pytest -q -m real_model` 可单独运行（1 passed）；probe 已删除。
+  - 结果：已完成（2026-10-27）；G1 仍需 T2.5 完成后最终确认。
 
 - [ ] **T1.7 P1 阶段收尾**
   - 目标：提交脚手架并留痕。

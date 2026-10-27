@@ -1,0 +1,25 @@
+# T1.5 统一错误模型验证
+
+- 日期：2026-10-27
+
+## 测试命令
+
+```bash
+.venv/bin/python -m pytest -q tests/test_errors.py
+```
+
+## 结果
+
+```text
+..........                                                               [100%]
+10 passed in 0.05s
+```
+
+## 覆盖点
+
+- ApiError 自定义状态码/错误码/消息
+- 400 invalid_language、413 file_too_large、415 unsupported_format、503 model_unavailable
+- 422 RequestValidationError，detail 为可读字符串
+- 404 路由不存在、405 方法不允许
+- 500 未捕获异常返回 internal_error，不泄漏堆栈/secret
+- 领域错误 ModelUnavailableError / TranscriptionFailedError / InvalidAudioError

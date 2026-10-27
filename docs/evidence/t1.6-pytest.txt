@@ -1,0 +1,32 @@
+# T1.6 pytest 配置与测试隔离验证
+
+- 日期：2026-10-27
+
+## 默认命令（临时 real_model probe 被排除）
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+...............................................                          [100%]
+47 passed, 1 deselected in 0.11s
+```
+
+## 显式选择真实模型标记
+
+```bash
+.venv/bin/python -m pytest -q -m real_model
+```
+
+```text
+.                                                                        [100%]
+1 passed, 47 deselected in 0.01s
+```
+
+## 隔离性
+
+- 默认 47 个常规测试通过，临时 real_model probe 被排除；显式 -m real_model 只跑 probe。
+- 临时 probe 已删除，未进入提交。
+- models/ 目录为空；测试未加载 faster-whisper、未下载模型、未访问麦克风。
+- Fixture：FakeTranscriber、1 秒 16 kHz WAV、静音 WAV、损坏音频、TestClient。

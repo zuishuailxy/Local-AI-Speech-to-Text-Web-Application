@@ -25,6 +25,8 @@
     permissionNote: document.getElementById("permission-note"),
     errorPanel: document.getElementById("error-panel"),
     errorMessage: document.getElementById("error-message"),
+    retryButton: document.getElementById("retry-button"),
+    dismissErrorButton: document.getElementById("dismiss-error-button"),
   };
 
   const state = {
@@ -39,6 +41,7 @@
     timerId: null,
     stoppedByLimit: false,
     recordedMs: 0,
+    recordingFailed: false,
   };
 
   function chooseMimeType() {
@@ -182,6 +185,12 @@
     if (name === "SecurityError") {
       return "当前页面不是安全上下文，请通过 localhost 访问。";
     }
+    if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
+      return "麦克风不支持所需的音频参数，请更换设备或浏览器后重试。";
+    }
+    if (name === "AbortError") {
+      return "麦克风启动被中止，请关闭占用设备的程序后重试。";
+    }
     return `录音失败：${error && error.message ? error.message : name}`;
   }
 
@@ -225,6 +234,12 @@
   function handleRecorderStop() {
     stopTimer();
     state.recording = false;
+    if (state.recordingFailed) {
+      state.chunks = [];
+      state.recordingFailed = false;
+      releaseStream();
+      return;
+    }
     const mimeType = state.mimeType || "audio/webm";
     const blob = new Blob(state.chunks, { type: mimeType });
     state.chunks = [];
@@ -268,19 +283,25 @@
     if (ACTIVE_PHASES.has(state.phase)) {
       return;
     }
+    if (typeof window.isSecureContext === "boolean" && !window.isSecureContext) {
+      showError("当前页面不是安全上下文，请通过 http://127.0.0.1:8000 或 localhost 访问。");
+      setStatus("非安全上下文，无法录音", "error");
+      return;
+    }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showError("当前浏览器不支持麦克风录音。");
+      showError("当前浏览器不支持麦克风录音，请使用最新 Chrome 或 Edge。");
       setStatus("浏览器不支持录音", "error");
       return;
     }
     if (typeof MediaRecorder === "undefined") {
-      showError("当前浏览器不支持 MediaRecorder。");
+      showError("当前浏览器不支持 MediaRecorder，请使用最新 Chrome 或 Edge。");
       setStatus("浏览器不支持录音", "error");
       return;
     }
 
     clearError();
     state.stoppedByLimit = false;
+    state.recordingFailed = false;
     state.recordedMs = 0;
     state.startTimeMs = 0;
     if (elements.recordingTimer) {
@@ -317,10 +338,19 @@
       recorder.addEventListener("stop", handleRecorderStop);
       recorder.addEventListener("error", (event) => {
         stopTimer();
+        state.recordingFailed = true;
+        state.chunks = [];
         releaseStream();
         const error = event.error || new Error("MediaRecorder error");
         setStatus("录音失败", "error");
         showError(describeMediaError(error));
+        try {
+          if (recorder.state !== "inactive") {
+            recorder.stop();
+          }
+        } catch (_) {
+          // The error is already surfaced; stop is best-effort.
+        }
       });
 
       recorder.start(1000);
@@ -365,6 +395,7 @@
     try {
       state.recorder.stop();
     } catch (error) {
+      state.recordingFailed = true;
       releaseStream();
       setStatus("录音结束失败", "error");
       showError(describeMediaError(error));
@@ -388,11 +419,30 @@
 
   window.addEventListener("pagehide", stopTimer);
 
+  function dismissError() {
+    clearError();
+    if (state.phase === "error") {
+      setPhase("idle");
+      setStatus("准备就绪，可以开始录音或上传音频。", "idle");
+    }
+  }
+
+  function retryRecording() {
+    clearError();
+    startRecording();
+  }
+
   if (elements.startButton) {
     elements.startButton.addEventListener("click", startRecording);
   }
   if (elements.stopButton) {
     elements.stopButton.addEventListener("click", () => stopRecording("manual"));
+  }
+  if (elements.retryButton) {
+    elements.retryButton.addEventListener("click", retryRecording);
+  }
+  if (elements.dismissErrorButton) {
+    elements.dismissErrorButton.addEventListener("click", dismissError);
   }
 
   // Exposed for upload/timer tasks and browser smoke tests.

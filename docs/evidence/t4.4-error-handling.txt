@@ -1,0 +1,97 @@
+# T4.4 麦克风与录音异常提示验证
+
+- 日期：2026-10-27
+- 文件：`static/app.js`
+- 浏览器：Review 面板 Chromium（注入假 getUserMedia / MediaRecorder）
+- 说明：不伪造真实麦克风设备错误；使用浏览器异常与假记录器模拟
+
+## 异常映射
+
+| 场景 | 提示 |
+| --- | --- |
+| `NotAllowedError` / `PermissionDeniedError` | 麦克风权限被拒绝，请允许本站访问麦克风后重试 |
+| `NotFoundError` / `DevicesNotFoundError` | 未检测到可用麦克风，请连接麦克风后重试 |
+| `NotReadableError` / `TrackStartError` | 麦克风无法读取，可能被其他程序占用 |
+| `SecurityError` | 当前页面不是安全上下文，请通过 localhost 访问 |
+| `OverconstrainedError` | 麦克风不支持所需音频参数 |
+| `AbortError` | 麦克风启动被中止，请关闭占用设备的程序 |
+| MediaRecorder error | 显示可读错误，释放轨道，保持错误状态 |
+| 空 Blob | 没有录到音频，请检查麦克风后重试 |
+| 浏览器不支持 | 提示使用最新 Chrome 或 Edge |
+
+## 状态与恢复
+
+- 错误状态：`app.data-state=error`，错误面板 `role=alert` 显示
+- Start 恢复可用，Stop disabled
+- 重试按钮再次调用 `startRecording`
+- 关闭提示回到 idle
+- 权限拒绝时额外显示 `#permission-note`
+- 录音错误后设置 `recordingFailed`，防止后续 stop 事件把空 Blob 误判为成功
+- 错误路径释放 MediaStreamTrack
+
+## 浏览器验证结果
+
+### 权限拒绝
+
+```text
+phase: error
+error: 麦克风权限被拒绝。请允许本站访问麦克风后重试。
+permissionNote visible: true
+startDisabled: false
+stopDisabled: true
+```
+
+### 无设备 → 关闭 → 重试为设备占用
+
+```text
+首次: 未检测到可用麦克风，请连接麦克风后重试。
+关闭后: phase=idle, error hidden, start enabled
+重试: 麦克风无法读取，可能被其他程序占用。
+```
+
+### 空 Blob
+
+```text
+phase: error
+error: 没有录到音频，请检查麦克风后重试。
+trackStopped: true
+startDisabled: false
+```
+
+### MediaRecorder error
+
+```text
+phase: error
+error: 麦克风启动被中止，请关闭占用设备的程序后重试。
+trackStopped: true
+lastRecording: undefined
+startDisabled: false
+```
+
+没有出现错误后被 stop 事件覆盖为 success 的情况。
+
+截图：`docs/evidence/t4.4-error-state.png`
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_frontend_recording.py
+```
+
+```text
+7 passed
+```
+
+全量：
+
+```text
+164 passed
+```
+
+JS 语法：`node --check static/app.js` 通过。
+
+## 待人工验证
+
+- Chrome 站点设置阻止麦克风：T6.5
+- 系统禁用/占用麦克风：T6.6
+- 真实设备异常与恢复；本轮模拟不替代真实硬件测试

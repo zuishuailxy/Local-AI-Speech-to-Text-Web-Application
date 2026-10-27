@@ -54,3 +54,15 @@ def test_timer_and_sixty_second_limit_contract() -> None:
     assert "stoppedByLimit" in JS
     assert "recordedMs" in JS
     assert "recorder.start(1000)" in JS
+
+
+def test_error_recovery_hooks_and_guards() -> None:
+    assert 'getElementById("retry-button")' in JS
+    assert 'getElementById("dismiss-error-button")' in JS
+    assert 'addEventListener("click", retryRecording)' in JS
+    assert 'addEventListener("click", dismissError)' in JS
+    assert "recordingFailed" in JS
+    assert "window.isSecureContext" in JS
+    assert "OverconstrainedError" in JS
+    assert "AbortError" in JS
+    assert "没有录到音频" in JS

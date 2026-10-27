@@ -346,12 +346,14 @@
   - 结果：已完成（2026-10-27）；Start/Stop 按钮由状态机统一控制；计时使用 Date.now 差值；后台节流回前台会补检 60 秒上限。
   - 备注：真实 5 秒/60 秒/切后台手动录音待 T6.1/T6.7；本轮不伪造真实麦克风音频。
 
-- [ ] **T4.4 实现麦克风与录音异常提示**
+- [x] **T4.4 实现麦克风与录音异常提示**
   - 目标：权限拒绝、无设备、设备占用、非安全上下文、MediaRecorder 错误均有明确提示。
-  - 文件：`static/app.js`。
+  - 文件：`static/app.js`、`tests/test_frontend_recording.py`、`docs/evidence/t4.4-error-handling.txt`、`docs/evidence/t4.4-error-state.png`。
   - 前置：T4.2。
   - 完成标准：按 `DOMException.name` 映射中文提示与恢复建议；处理 `MediaRecorder.onerror`、空 Blob/无数据；页面不崩溃；可重试。
-  - 验证：Chrome 站点设置阻止麦克风；系统禁用输入设备；占用设备（如会议软件）；模拟 recorder 错误。
+  - 验证：模拟权限拒绝/无设备/占用/空 Blob/记录器错误均进入 error 状态且 Start 可用；关闭提示回 idle；重试可再次触发；7 前端测试/全量 164 passed。
+  - 结果：已完成（2026-10-27）；新增 retry/dismiss 事件、recordingFailed 防覆盖、安全上下文检查。
+  - 备注：真实 Chrome 权限/设备异常手动验收在 T6.5/T6.6；模拟不替代真实硬件。
 
 - [ ] **T4.5 实现文件上传**
   - 目标：选择 WAV/webm 等文件并提交，客户端预检。

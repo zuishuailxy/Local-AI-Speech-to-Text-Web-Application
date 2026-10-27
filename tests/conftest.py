@@ -107,3 +107,20 @@ def wav_file(tmp_path: Path, wav_bytes: bytes) -> Path:
     path = tmp_path / "sample.wav"
     path.write_bytes(wav_bytes)
     return path
+
+
+@pytest.fixture
+def wav_file_factory(tmp_path: Path):
+    def make(
+        duration_seconds: float = 1.0,
+        *,
+        silent: bool = False,
+        name: str | None = None,
+    ) -> Path:
+        path = tmp_path / (
+            name or f"sample-{duration_seconds}-{'silent' if silent else 'tone'}.wav"
+        )
+        path.write_bytes(make_wav_bytes(duration_seconds, silent=silent))
+        return path
+
+    return make

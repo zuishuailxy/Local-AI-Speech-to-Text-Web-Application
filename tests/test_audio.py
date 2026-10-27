@@ -2,15 +2,25 @@ from __future__ import annotations
 
 import asyncio
 import io
+from pathlib import Path
 
+import numpy as np
 import pytest
 from fastapi import File, Form, UploadFile
 from fastapi.testclient import TestClient
 
 from app.config import Settings
-from app.errors import EmptyFileError, FileTooLargeError, InvalidLanguageError
+from app.errors import (
+    AudioTooLongError,
+    EmptyFileError,
+    FileTooLargeError,
+    InvalidAudioError,
+    InvalidLanguageError,
+)
 from app.main import create_app
 from app.services.audio import (
+    ASR_SAMPLE_RATE,
+    decode_audio,
     save_upload_to_temp,
     validate_content_length,
     validate_language,
@@ -320,3 +330,97 @@ def test_default_ten_mb_plus_one_is_rejected(tmp_path) -> None:
 
     with pytest.raises(FileTooLargeError):
         asyncio.run(save_upload_to_temp(upload, "zh", settings))
+
+
+def test_decode_one_second_wav(tmp_path, wav_file_factory) -> None:
+    path = wav_file_factory(1.0)
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+
+    decoded = decode_audio(path, settings)
+
+    assert decoded.sample_rate == ASR_SAMPLE_RATE
+    assert decoded.samples.ndim == 1
+    assert decoded.samples.dtype == np.float32
+    assert len(decoded.samples) == 16_000
+    assert decoded.duration_seconds == pytest.approx(1.0, abs=0.001)
+    assert np.max(np.abs(decoded.samples)) > 0
+
+
+def test_decode_five_second_wav(tmp_path, wav_file_factory) -> None:
+    path = wav_file_factory(5.0)
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+
+    decoded = decode_audio(path, settings)
+
+    assert len(decoded.samples) == 80_000
+    assert decoded.duration_seconds == pytest.approx(5.0, abs=0.001)
+
+
+def test_decode_silent_wav_keeps_samples(tmp_path, wav_file_factory) -> None:
+    path = wav_file_factory(1.0, silent=True)
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+
+    decoded = decode_audio(path, settings)
+
+    assert len(decoded.samples) == 16_000
+    assert np.max(np.abs(decoded.samples)) == 0
+
+
+def test_decode_corrupt_audio_raises_invalid_audio(tmp_path) -> None:
+    path = tmp_path / "corrupt.wav"
+    path.write_bytes(b"this is not an audio container")
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+
+    with pytest.raises(InvalidAudioError):
+        decode_audio(path, settings)
+
+
+def test_decode_empty_audio_raises_invalid_audio(tmp_path) -> None:
+    path = tmp_path / "empty.wav"
+    path.write_bytes(b"")
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+
+    with pytest.raises(InvalidAudioError):
+        decode_audio(path, settings)
+
+
+def test_decode_zero_frame_wav_raises_invalid_audio(tmp_path) -> None:
+    import wave
+
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wav_file:
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(16_000)
+        wav_file.writeframes(b"")
+    path = tmp_path / "zero-frames.wav"
+    path.write_bytes(buffer.getvalue())
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+
+    with pytest.raises(InvalidAudioError):
+        decode_audio(path, settings)
+
+
+def test_decode_too_long_audio_raises(tmp_path, wav_file_factory) -> None:
+    path = wav_file_factory(2.0)
+    settings = Settings.from_env(
+        environ={"MAX_AUDIO_SECONDS": "1"}, project_root=tmp_path
+    )
+
+    with pytest.raises(AudioTooLongError) as exc_info:
+        decode_audio(path, settings)
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.code == "audio_too_long"
+
+
+def test_decode_webm_fixture(tmp_path) -> None:
+    path = Path(__file__).parent / "fixtures" / "sample.webm"
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+
+    decoded = decode_audio(path, settings)
+
+    assert decoded.sample_rate == ASR_SAMPLE_RATE
+    assert decoded.samples.dtype == np.float32
+    assert decoded.samples.ndim == 1
+    assert decoded.duration_seconds == pytest.approx(1.0, abs=0.02)

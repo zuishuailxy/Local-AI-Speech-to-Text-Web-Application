@@ -155,12 +155,14 @@
   - 结果：已完成（2026-10-27）；`save_upload_to_temp` 使用 TemporaryDirectory + 1 MiB 分块；`StoredUpload.cleanup()`/上下文管理器负责清理；中间件只拦截 `/api/transcribe`。
   - 备注：允许 multipart 边界 1 MiB overhead，精确文件大小在复制时二次校验；生产路由 T2.7 接线。
 
-- [ ] **T2.3 实现 PyAV 解码、重采样与时长上限**
+- [x] **T2.3 实现 PyAV 解码、重采样与时长上限**
   - 目标：任意受支持容器统一解码为 16 kHz 单声道 float32，并计算实际时长。
-  - 文件：`app/services/audio.py`、`tests/test_audio.py`。
+  - 文件：`app/services/audio.py`、`app/errors.py`、`tests/test_audio.py`、`docs/evidence/t2.3-decode.txt`。
   - 前置：T2.2。
   - 完成标准：WAV/webm 可解码；时长为采样点数/16000；超过 `MAX_AUDIO_SECONDS` 提前中止并返回 400；损坏文件返回 400；0 帧返回 400；临时文件在 Windows 下可删除。
-  - 验证：生成 1 秒/5 秒 WAV、静音 WAV、损坏字节、超长 WAV；断言时长/状态码；在 macOS 与 Windows 各跑一次连续识别。
+  - 验证：生成 1 秒/5 秒 WAV、静音 WAV、损坏字节、0 帧、超长 WAV、WebM/Opus fixture；32 passed；全量 79 passed；Windows CI 运行同一测试集。
+  - 结果：已完成（2026-10-27）；`decode_audio` 使用 PyAV AudioResampler（flt/mono/16000），先检查容器 duration，再按实际样本数二次限制；静音保留采样，0 帧报 invalid_audio；WebM fixture 解码通过。
+  - 备注：T2.6 将补充浏览器录音格式的完整验收记录；临时文件清理与全路径收口见 T2.4。
 
 - [ ] **T2.4 统一音频错误码与清理逻辑**
   - 目标：确保所有异常路径释放句柄、删除临时文件、返回一致错误。

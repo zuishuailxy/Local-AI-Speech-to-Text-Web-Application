@@ -1,8 +1,7 @@
-"""Audio upload validation and (later) decoding helpers.
+"""Audio upload validation, streaming and decoding helpers.
 
-T2.1 deliberately validates metadata and the WAV container header only.  Full
-decoding, duration checks and temporary-file streaming are implemented in T2.2
-and T2.3.
+T2.1 validates metadata; T2.2 copies uploads with a size limit; T2.3 decodes
+supported containers to 16 kHz mono float32 and enforces the duration limit.
 """
 
 from __future__ import annotations
@@ -12,10 +11,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+import av
+import numpy as np
 from fastapi import UploadFile
 
 from app.config import SUPPORTED_LANGUAGES, Settings
 from app.errors import (
+    ApiError,
+    AudioTooLongError,
     EmptyFileError,
     FileTooLargeError,
     InvalidAudioError,
@@ -37,6 +40,7 @@ ALLOWED_AUDIO_EXTENSIONS: Final[frozenset[str]] = frozenset(
 )
 
 _WAV_HEADER_SIZE = 12
+ASR_SAMPLE_RATE: Final[int] = 16_000
 MAX_MULTIPART_OVERHEAD_BYTES: Final[int] = 1024 * 1024
 DEFAULT_CHUNK_SIZE: Final[int] = 1024 * 1024
 
@@ -228,11 +232,93 @@ async def save_upload_to_temp(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class DecodedAudio:
+    """Decoded mono float32 audio at the ASR sample rate."""
+
+    samples: np.ndarray
+    sample_rate: int = ASR_SAMPLE_RATE
+
+    @property
+    def duration_seconds(self) -> float:
+        return len(self.samples) / self.sample_rate
+
+
+def _frame_to_float_samples(frame: av.AudioFrame) -> np.ndarray:
+    array = np.asarray(frame.to_ndarray(), dtype=np.float32)
+    if array.ndim == 2:
+        # PyAV returns (channels, samples) for planar/2-D frames.  The resampler
+        # is configured for mono, but averaging keeps this safe for odd inputs.
+        array = array.mean(axis=0) if array.shape[0] > 1 else array[0]
+    return np.asarray(array, dtype=np.float32).reshape(-1)
+
+
+def decode_audio(path: Path, settings: Settings) -> DecodedAudio:
+    """Decode an audio file to 16 kHz mono float32.
+
+    The container duration is checked before decoding when available, then the
+    actual decoded sample count is capped to ``settings.max_audio_seconds``.
+    The caller owns the input file and must clean up its temporary directory.
+    """
+
+    max_seconds = settings.max_audio_seconds
+    max_samples = int(max_seconds * ASR_SAMPLE_RATE)
+    chunks: list[np.ndarray] = []
+    total_samples = 0
+
+    try:
+        with av.open(str(path), mode="r") as container:
+            if not container.streams.audio:
+                raise InvalidAudioError("文件中没有可识别的音频流。")
+
+            if container.duration is not None:
+                container_seconds = container.duration / av.time_base
+                if container_seconds > max_seconds + 0.05:
+                    raise AudioTooLongError(max_seconds)
+
+            stream = container.streams.audio[0]
+            resampler = av.AudioResampler(
+                format="flt",
+                layout="mono",
+                rate=ASR_SAMPLE_RATE,
+            )
+
+            for frame in container.decode(stream):
+                for resampled in resampler.resample(frame):
+                    samples = _frame_to_float_samples(resampled)
+                    total_samples += len(samples)
+                    if total_samples > max_samples:
+                        raise AudioTooLongError(max_seconds)
+                    chunks.append(samples)
+
+            for resampled in resampler.resample(None):
+                samples = _frame_to_float_samples(resampled)
+                total_samples += len(samples)
+                if total_samples > max_samples:
+                    raise AudioTooLongError(max_seconds)
+                chunks.append(samples)
+    except ApiError:
+        raise
+    except (av.FFmpegError, OSError, ValueError, IndexError) as exc:
+        raise InvalidAudioError(
+            "无法解码该音频文件，请检查文件是否损坏或格式是否受支持。"
+        ) from exc
+
+    if not chunks or total_samples == 0:
+        raise InvalidAudioError("音频中没有可解码的采样数据。")
+
+    samples = np.concatenate(chunks) if len(chunks) > 1 else chunks[0]
+    return DecodedAudio(samples=samples, sample_rate=ASR_SAMPLE_RATE)
+
+
 __all__ = [
     "ALLOWED_AUDIO_EXTENSIONS",
+    "ASR_SAMPLE_RATE",
     "DEFAULT_CHUNK_SIZE",
+    "DecodedAudio",
     "MAX_MULTIPART_OVERHEAD_BYTES",
     "StoredUpload",
+    "decode_audio",
     "save_upload_to_temp",
     "validate_content_length",
     "validate_language",

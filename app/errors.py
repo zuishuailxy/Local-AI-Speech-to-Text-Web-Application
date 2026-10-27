@@ -66,6 +66,17 @@ class FileTooLargeError(ApiError):
         )
 
 
+class AudioTooLongError(ApiError):
+    """The decoded audio exceeds the configured duration limit."""
+
+    def __init__(self, max_seconds: int = 120) -> None:
+        super().__init__(
+            400,
+            "audio_too_long",
+            f"音频超过 {max_seconds} 秒上限，请缩短音频后重试。",
+        )
+
+
 class InvalidLanguageError(ApiError):
     """The requested language is not supported."""
 
@@ -156,6 +167,7 @@ def register_exception_handlers(app: FastAPI) -> None:
 
 __all__ = [
     "ApiError",
+    "AudioTooLongError",
     "EmptyFileError",
     "FileTooLargeError",
     "InvalidAudioError",

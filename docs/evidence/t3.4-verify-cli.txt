@@ -1,0 +1,68 @@
+# T3.4 CLI 冒烟脚本验证
+
+- 日期：2026-10-27
+- 脚本：`scripts/verify_asr.py`
+- 状态：脚本与单测完成；真实样本运行待 T3.5 模型下载、T5.1 样本录制后执行
+
+## 用法
+
+```bash
+python scripts/verify_asr.py samples/chinese.wav --language zh
+python scripts/verify_asr.py samples/english.wav --language en
+```
+
+可选：
+
+```bash
+python scripts/verify_asr.py audio.webm --language zh --model-path models/faster-whisper-small
+```
+
+## 输出
+
+```text
+text: ...
+language: zh
+duration_seconds: 1.000
+processing_seconds: 0.123
+```
+
+## 错误提示
+
+模型缺失时：
+
+```text
+ERROR: 本地识别模型不存在：<path>。请先运行模型下载脚本。
+提示：先运行 python scripts/download_model.py --model small，或通过 --model-path 指定本地模型目录。
+```
+
+退出码 1；不会自动下载模型。
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_verify_asr.py
+```
+
+```text
+6 passed
+```
+
+全量：
+
+```text
+145 passed
+```
+
+覆盖：
+
+- 注入 FakeTranscriber 的端到端 helper；
+- 文件缺失；
+- 非法语言；
+- 真实模型缺失时的可操作错误；
+- main 成功输出四字段；
+- 从仓库根以 `python scripts/verify_asr.py --help` 子进程运行成功（修复了 scripts 目录导致 app 不在 sys.path 的问题）。
+
+## 边界
+
+- 当前还没有 `samples/chinese.wav` / `english.wav` 和真实模型权重，因此没有伪造真实识别输出。
+- 真实中英文 CLI 运行将在 T3.5/T3.6 或 T5.1 之后执行并归档。

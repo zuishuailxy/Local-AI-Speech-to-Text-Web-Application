@@ -247,12 +247,14 @@
   - 结果：已完成（2026-10-27）；使用 snapshot_download，校验 model.bin/config.json/tokenizer.json/vocabulary.*；下载失败给出镜像/手动放置提示。
   - 备注：实际网络下载、复用与体积记录在 T3.5；`.gitignore` 已排除 `models/`。
 
-- [ ] **T3.4 实现 CLI 冒烟验证脚本**
+- [x] **T3.4 实现 CLI 冒烟验证脚本**
   - 目标：不启动 Web 也能验证真实模型中英文。
-  - 文件：`scripts/verify_asr.py`。
+  - 文件：`scripts/verify_asr.py`、`tests/test_verify_asr.py`、`docs/evidence/t3.4-verify-cli.txt`。
   - 前置：T3.2、T3.3。
   - 完成标准：`python scripts/verify_asr.py samples/chinese.wav --language zh` 输出文本/时长/耗时；支持 en；模型缺失时给出可操作错误。
-  - 验证：两份样本各跑一次并归档输出。
+  - 验证：6 个脚本测试通过；全量 145 passed；CLI help、缺文件、非法语言、模型缺失提示、Fake 成功输出均验证。
+  - 结果：脚本完成（2026-10-27）；修复 scripts 目录下 `app` 不在 sys.path 的启动问题（显式插入项目根）。
+  - 备注：真实 samples/chinese.wav 与 english.wav 的中英文运行待 T3.5/T3.6/T5.1，届时补归档，不伪造真实输出。
 
 - [ ] **T3.5 下载 small 模型并记录实验数据**
   - 目标：完成首次模型准备，取得真实基线。

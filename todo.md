@@ -337,12 +337,14 @@
   - 结果：已完成（2026-10-27）；`window.__lastRecording` 暴露 Blob/MIME/扩展名/大小；空 Blob 报错；Start/Stop 状态切换。
   - 备注：自动化环境未完成真实麦克风授权，实际录音与 Network multipart 验收待 T4.6/T6.1；不伪造录音结果。
 
-- [ ] **T4.3 实现计时、60 秒自动停止与状态机**
+- [x] **T4.3 实现计时、60 秒自动停止与状态机**
   - 目标：状态与时长准确，超限自动结束。
-  - 文件：`static/app.js`、`static/index.html`。
+  - 文件：`static/app.js`、`tests/test_frontend_recording.py`、`docs/evidence/t4.3-timer-state.txt`、`docs/evidence/t4.3-auto-stop.png`。
   - 前置：T4.2。
   - 完成标准：`idle/requesting/recording/transcribing/success/error` 文案与按钮禁用正确；每 200 ms 更新；60 秒自动 stop 并提示；`visibilitychange` 校正。
-  - 验证：录 5 秒/60 秒；切后台再回来；观察计时与自动停止。
+  - 验证：假麦克风+虚拟时钟模拟 60 秒，phase=success、recordedMs=60000、timer=01:00.0、stoppedByLimit=true、track 已 stop；6 个前端录音测试/全量 163 passed。
+  - 结果：已完成（2026-10-27）；Start/Stop 按钮由状态机统一控制；计时使用 Date.now 差值；后台节流回前台会补检 60 秒上限。
+  - 备注：真实 5 秒/60 秒/切后台手动录音待 T6.1/T6.7；本轮不伪造真实麦克风音频。
 
 - [ ] **T4.4 实现麦克风与录音异常提示**
   - 目标：权限拒绝、无设备、设备占用、非安全上下文、MediaRecorder 错误均有明确提示。

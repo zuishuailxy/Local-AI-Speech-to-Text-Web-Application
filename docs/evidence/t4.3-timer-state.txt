@@ -1,0 +1,87 @@
+# T4.3 计时、60 秒自动停止与状态机验证
+
+- 日期：2026-10-27
+- 文件：`static/app.js`
+- 浏览器：Review 面板 Chromium
+- 说明：使用注入的假 MediaStream/MediaRecorder + 加速虚拟时钟验证 60 秒逻辑；不是伪造真实麦克风录音
+
+## 状态机
+
+```text
+idle
+  → requesting  (getUserMedia)
+  → recording   (MediaRecorder.start)
+  → transcribing (stop)
+  → success | error
+```
+
+按钮控制：
+
+- `requesting` / `recording` / `transcribing`：Start disabled
+- 只有 `recording`：Stop enabled
+- `success` / `error` / `idle`：Start enabled
+- `error` 时错误面板可见，可重试
+
+## 计时与上限
+
+- 每 200 ms 更新 `#recording-timer`
+- 使用 `Date.now()` 差值，不受 setInterval 漂移累积影响
+- 60,000 ms 自动触发 stop
+- `visibilitychange` 时重新计算耗时；后台节流后回到前台若已超 60 秒，补触发 stop
+- 计时格式：`00:00.0` / `00:05.0` / `01:00.0`
+- 自动停止后状态文案明确提示“已达到 60 秒上限并自动停止”
+
+## 浏览器验证（假麦克风 + 虚拟时钟）
+
+注入：
+
+- `getUserMedia` 返回假 stream，track 记录 stop
+- 假 MediaRecorder：`start(1000)`、`dataavailable`、`stop` 事件
+- `Date.now` 以 100 倍速推进
+
+900ms 真实等待后结果：
+
+```text
+phase: success
+recordedMs: 60000
+timer: 01:00.0
+status: 已达到 60 秒上限并自动停止；录音 01:00.0，等待识别。
+startDisabled: false
+stopDisabled: true
+stoppedByLimit: true
+trackStopped: true
+lastMime: audio/webm;codecs=opus
+lastSize: 16
+```
+
+截图：`docs/evidence/t4.3-auto-stop.png`
+
+## 自动化测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_frontend_recording.py
+```
+
+```text
+6 passed
+```
+
+全量：
+
+```text
+163 passed
+```
+
+JS 语法：
+
+```text
+node --check static/app.js
+```
+
+通过（Node 仅本地检查，不是运行依赖）。
+
+## 待人工/后续验证
+
+- 真实麦克风录 5 秒、60 秒、切后台回来：T6.1/T6.7。
+- 上传 Network multipart：T4.6。
+- 错误提示文案与重试按钮：T4.4/T4.8。

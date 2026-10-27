@@ -43,3 +43,14 @@ def test_actual_mime_and_blob_are_kept_for_upload() -> None:
 def test_permission_error_names_are_mapped() -> None:
     for name in ("NotAllowedError", "NotFoundError", "NotReadableError", "SecurityError"):
         assert name in JS
+
+
+def test_timer_and_sixty_second_limit_contract() -> None:
+    assert "MAX_RECORDING_MS = 60_000" in JS
+    assert "TIMER_INTERVAL_MS = 200" in JS
+    assert "setInterval(updateRecordingTimer, TIMER_INTERVAL_MS)" in JS
+    assert "formatElapsed" in JS
+    assert 'document.addEventListener("visibilitychange"' in JS
+    assert "stoppedByLimit" in JS
+    assert "recordedMs" in JS
+    assert "recorder.start(1000)" in JS

@@ -291,12 +291,13 @@
   - 验证：真实服务缺失/损坏模型均 503，/health 仍 200；恢复目录后 POST 200；真实引擎适配器推理异常→500；全量 150 passed。
   - 结果：已完成（2026-10-27）；模型未缓存失败状态，恢复后重新加载成功；临时备份已还原。
 
-- [ ] **T3.9 完善 Mock API 测试矩阵**
+- [x] **T3.9 完善 Mock API 测试矩阵**
   - 目标：在不依赖真实模型的情况下覆盖 API 契约与错误。
-  - 文件：`tests/test_transcribe_api.py`、`tests/test_language.py`、`tests/test_errors.py`。
+  - 文件：`tests/test_transcribe_api.py`、`tests/test_language.py`、`tests/test_errors.py`、`docs/evidence/t3.9-mock-api-matrix.txt`。
   - 前置：T3.7。
   - 完成标准：健康检查、正常中英文、缺 file、缺 language、非法 language、空文件、损坏、超 10 MB、不支持格式、超时长、模型 503、推理 500、空文本全部覆盖。
-  - 验证：`pytest -q` 全绿；统计用例数与覆盖项。
+  - 验证：新增损坏 WebM 与 10 MB+1 API 测试；152 passed；矩阵逐项映射到测试文件。
+  - 结果：已完成（2026-10-27）；Mock 测试不加载真实模型、不下载权重、不访问麦克风。
 
 - [ ] **T3.10 P3 阶段收尾**
   - 目标：提交真实模型集成与实验数据。

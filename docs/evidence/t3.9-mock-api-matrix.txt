@@ -1,0 +1,67 @@
+# T3.9 Mock API 测试矩阵
+
+- 日期：2026-10-27
+- 默认测试不加载真实模型、不访问麦克风、不下载权重
+- 使用 FakeTranscriber / 临时路由 / 生成 WAV 与损坏字节
+
+## 结果
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+152 passed
+```
+
+## 覆盖矩阵
+
+| 范围 | 测试 | 结果 |
+| --- | --- | --- |
+| 健康检查 | `tests/test_health.py` | 200 / `{"status":"ok"}` |
+| 正常中文 | `test_transcribe_chinese_contract` | 200，四字段、时长、文本 |
+| 正常英文 | `test_transcribe_english_contract` | 200，language=en |
+| 连续请求 | `test_transcribe_twice_has_no_request_state` | 200/200 |
+| 缺 file | `test_missing_file_returns_422` | 422 validation_error |
+| 缺 language | `test_missing_language_returns_422` | 422 validation_error |
+| 非法 language | `test_invalid_language_returns_400` | 400 invalid_language |
+| 空文件 | `test_empty_file_returns_400` | 400 empty_file |
+| 损坏 WAV 头 | `test_fake_wav_returns_400` | 400 invalid_audio |
+| 损坏 WebM/解码失败 | `test_corrupt_webm_returns_400` | 400 invalid_audio |
+| 超 10 MB | `test_upload_over_ten_mb_returns_413` | 413 file_too_large |
+| 不支持格式 | `test_unsupported_format_returns_415` | 415 unsupported_format |
+| 超时长 | `test_too_long_audio_returns_400` | 400 audio_too_long |
+| 无模型 | `test_model_unavailable_returns_503` | 503 model_unavailable |
+| 推理异常 | `test_transcription_failure_returns_500` | 500 transcription_failed |
+| 真实引擎推理异常 | `test_real_engine_inference_failure_maps_500` | 500，不泄漏原文 |
+| 空文本 | `test_empty_text_is_returned_as_200` | 200，text="" |
+| 重试 500→200 | `test_retry_after_transcription_failure` | 通过 |
+| 重试 503→200 | `test_retry_after_model_unavailable` | 通过 |
+| 重试 400→200 | `test_retry_after_validation_error_is_stateless` | 通过 |
+| 语言规范化 | `tests/test_language.py` | zh/en/大小写/非法值 |
+| 统一错误模型 | `tests/test_errors.py` | 400/404/405/413/415/422/500/503 |
+
+## 分文件
+
+```text
+tests/test_health.py                 4
+tests/test_config.py                21
+tests/test_errors.py                10
+tests/test_fixtures.py               8
+tests/test_app_factory.py            5
+tests/test_audio.py                 42
+tests/test_language.py              10
+tests/test_transcribe_api.py        20
+tests/test_transcriber.py            7
+tests/test_transcriber_unit.py       9
+tests/test_download_model.py        10
+tests/test_verify_asr.py             6
+合计                                152
+```
+
+## 说明
+
+- 10 MB+1 测试会构造约 10 MB 内存载荷；仅在测试进程内使用，不写入仓库。
+- “损坏 WebM”使用非容器字节，验证解码失败映射到 `invalid_audio`。
+- 推理异常测试使用真实 `WhisperTranscriber` 类 + 抛异常的模型替身；不是真实模型推理失败。
+- 真实模型中英文识别由 T3.6/T5.2 单独验证，不混入默认 Mock 测试。

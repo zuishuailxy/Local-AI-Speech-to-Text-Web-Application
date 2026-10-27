@@ -299,3 +299,30 @@ def test_real_engine_inference_failure_maps_500(tmp_path, wav_bytes: bytes) -> N
     assert response.json()["detail"]
     assert "real-engine adapter failure" not in response.text
     assert client.get("/health").status_code == 200
+
+
+def test_corrupt_webm_returns_400(tmp_path) -> None:
+    client = make_transcribe_client(tmp_path, FakeTranscriber())
+
+    response = client.post(
+        "/api/transcribe",
+        data={"language": "zh"},
+        files={"file": ("broken.webm", b"not a real webm", "audio/webm")},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_audio"
+
+
+def test_upload_over_ten_mb_returns_413(tmp_path) -> None:
+    client = make_transcribe_client(tmp_path, FakeTranscriber())
+    payload = b"x" * (10 * 1024 * 1024 + 1)
+
+    response = client.post(
+        "/api/transcribe",
+        data={"language": "zh"},
+        files={"file": ("oversize.webm", payload, "audio/webm")},
+    )
+
+    assert response.status_code == 413
+    assert response.json()["code"] == "file_too_large"

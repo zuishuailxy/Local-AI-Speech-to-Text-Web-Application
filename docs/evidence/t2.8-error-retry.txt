@@ -1,0 +1,48 @@
+# T2.8 错误路径与重试语义验证
+
+- 日期：2026-10-27
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_transcribe_api.py tests/test_language.py tests/test_errors.py
+```
+
+```text
+37 passed in 0.32s
+```
+
+全量：
+
+```text
+116 passed in 0.71s
+```
+
+## 覆盖
+
+### 错误路径
+
+- Fake 抛 `ModelUnavailableError` → 503 `model_unavailable`，`detail` 非空
+- Fake 抛普通异常 → 500 `transcription_failed`，不泄漏异常原文
+- 无 transcriber → 503 `model_unavailable`
+- 空文本 → 200，`text == ""`
+- 非法语言 → 400 `invalid_language`
+- 文件/格式/空文件/伪 WAV/超时长 → 400/415（T2.1/T2.7 覆盖）
+
+### 重试语义
+
+- 第一次 500 `transcription_failed`，第二次同一客户端成功 200
+- 第一次 503 `model_unavailable`，第二次成功 200
+- 第一次 400 `invalid_language`，第二次成功 200；失败请求不进入模型
+- 每次请求独立，无残留状态；临时文件由 `process_audio_upload` 的 finally 清理
+
+## 实现
+
+- `app/services/transcriber.py` 的 FakeTranscriber 支持 `errors=[...]` 序列，用于模拟瞬时失败后恢复
+- `app/api/routes.py` 将 `ApiError` 原样抛出；其他异常转换为 `TranscriptionFailedError`
+- 统一异常处理器输出 `{detail, code}`
+
+## 边界
+
+- 真实模型加载失败/推理异常的恢复行为将在 T3.2/T3.8 用真实引擎复测。
+- 前端“重试按钮”的交互在 T4.8 验证；本任务验证后端无状态、可重试。

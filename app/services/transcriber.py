@@ -27,14 +27,24 @@ class Transcriber(Protocol):
 class FakeTranscriber:
     """Deterministic test double used by API tests and local smoke tests."""
 
-    def __init__(self, text: str = "这是一段测试识别文本。", error: Exception | None = None) -> None:
+    def __init__(
+        self,
+        text: str = "这是一段测试识别文本。",
+        error: Exception | None = None,
+        errors: list[Exception | None] | None = None,
+    ) -> None:
         self.text = text
         self.error = error
+        self._errors = list(errors) if errors is not None else None
         self.calls: list[tuple[np.ndarray, str]] = []
 
     def transcribe(self, samples: np.ndarray, language: str) -> TranscriptionResult:
         self.calls.append((samples, language))
-        if self.error is not None:
+        if self._errors is not None and self._errors:
+            error = self._errors.pop(0)
+            if error is not None:
+                raise error
+        elif self._errors is None and self.error is not None:
             raise self.error
         return TranscriptionResult(text=self.text, language=language)
 

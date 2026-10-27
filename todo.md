@@ -200,12 +200,14 @@
   - 结果：已完成（2026-10-27）；`Transcriber` 通过 `app.state.transcriber` 注入，`run_in_threadpool` 调用；临时文件在模型调用前已由 `process_audio_upload` 清理。
   - 备注：当前假引擎只验证契约；真实模型接入与真实文本在 T3.2/T3.6。
 
-- [ ] **T2.8 错误路径与重试语义测试**
+- [x] **T2.8 错误路径与重试语义测试**
   - 目标：模型加载失败 503、推理失败 500、空文本 200、请求可重试。
-  - 文件：`tests/test_errors.py`、`tests/test_transcribe_api.py`。
+  - 文件：`app/services/transcriber.py`、`tests/test_errors.py`、`tests/test_transcribe_api.py`、`docs/evidence/t2.8-error-retry.txt`。
   - 前置：T2.7。
-  - 完成标准：Fake 抛 `ModelUnavailableError` → 503 `model_unavailable`；抛其他异常 → 500 `transcription_failed`；空文本 → 200 且 `text == ""`；错误响应含可读 `detail`。
-  - 验证：pytest 全绿；前端错误展示在 T4.8 联调。
+  - 完成标准：Fake 抛 `ModelUnavailableError` → 503 `model_unavailable`；抛其他异常 → 500 `transcription_failed`；空文本 → 200 且 `text == ""`；错误响应含可读 `detail`；失败后可重试。
+  - 验证：37 passed（transcribe/language/errors）；全量 116 passed；500→200、503→200、400→200 三种重试路径通过；错误响应 detail 非空且不泄漏异常原文。
+  - 结果：已完成（2026-10-27）；FakeTranscriber 支持 `errors` 序列模拟瞬时失败；API 无状态，重试不会污染下一请求。
+  - 备注：前端错误展示与重试按钮在 T4.8 联调；真实模型失败恢复在 T3.2/T3.8。
 
 - [ ] **T2.9 P2 阶段收尾**
   - 目标：提交后端音频/接口/Mock 测试。

@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.errors import ModelUnavailableError
 from app.main import create_app
 from app.services.transcriber import FakeTranscriber
 
@@ -222,3 +223,56 @@ def test_empty_text_is_returned_as_200(tmp_path, wav_bytes: bytes) -> None:
 
     assert response.status_code == 200
     assert response.json()["text"] == ""
+
+
+def test_retry_after_transcription_failure(tmp_path, wav_bytes: bytes) -> None:
+    fake = FakeTranscriber(
+        text="recovered",
+        errors=[RuntimeError("transient failure"), None],
+    )
+    client = make_transcribe_client(tmp_path, fake)
+
+    failed = post_wav(client, wav_bytes)
+    succeeded = post_wav(client, wav_bytes)
+
+    assert failed.status_code == 500
+    assert failed.json()["code"] == "transcription_failed"
+    assert failed.json()["detail"]
+    assert succeeded.status_code == 200
+    assert succeeded.json()["text"] == "recovered"
+    assert len(fake.calls) == 2
+
+
+def test_retry_after_model_unavailable(tmp_path, wav_bytes: bytes) -> None:
+    fake = FakeTranscriber(
+        text="model ready",
+        errors=[ModelUnavailableError("model still loading"), None],
+    )
+    client = make_transcribe_client(tmp_path, fake)
+
+    unavailable = post_wav(client, wav_bytes)
+    succeeded = post_wav(client, wav_bytes)
+
+    assert unavailable.status_code == 503
+    assert unavailable.json()["code"] == "model_unavailable"
+    assert unavailable.json()["detail"]
+    assert succeeded.status_code == 200
+    assert succeeded.json()["text"] == "model ready"
+    assert len(fake.calls) == 2
+
+
+def test_retry_after_validation_error_is_stateless(
+    tmp_path, wav_bytes: bytes
+) -> None:
+    fake = FakeTranscriber(text="valid after retry")
+    client = make_transcribe_client(tmp_path, fake)
+
+    invalid = post_wav(client, wav_bytes, language="fr")
+    valid = post_wav(client, wav_bytes, language="zh")
+
+    assert invalid.status_code == 400
+    assert invalid.json()["code"] == "invalid_language"
+    assert valid.status_code == 200
+    assert valid.json()["text"] == "valid after retry"
+    assert len(fake.calls) == 1
+    assert fake.calls[0][1] == "zh"

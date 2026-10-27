@@ -1,7 +1,7 @@
 # 阶段二：功能开发与集成
 
-> 状态：进行中（P1 脚手架与 P2 音频/识别接口已完成；P3 真实模型待接入）。
-> 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；会随 P3/P4 继续补充。
+> 状态：进行中（P1/P2/P3 已完成；P4 前端待开始）。
+> 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；会随 P4 继续补充。
 > 会话：`ses_e838f4101ffet1mEwSYEGuuSMK`（OpenCode Desktop，`deepseek-flash` high）
 > 日期：2026-10-27
 
@@ -188,7 +188,74 @@ httpx 0.28.1
 - 500/503/400 后同一客户端再次请求均成功，验证 API 无状态、可重试。
 - 普通异常原文不外泄；错误响应保持 `{detail, code}`。
 
-## 5. 测试矩阵（P1 + P2）
+## 5. P3 真实模型集成
+
+### 5.1 T3.1 协议、结果对象与 Fake
+
+- `Transcriber` Protocol、`TranscriptionResult(text, language)`。
+- FakeTranscriber 支持文本、持久异常、异常序列恢复、`delay_seconds`、调用记录。
+- 7 个测试；导入模块不加载 faster-whisper。
+
+### 5.2 T3.2 faster-whisper 适配器
+
+- `WhisperTranscriber`：惰性加载、本地 ASR_MODEL_PATH、CPU/int8、threads/beam/VAD 来自 Settings。
+- 单锁串行化加载与推理；并发首请求只加载一次。
+- 缺失路径/加载失败 → `ModelUnavailableError`；推理失败 → `TranscriptionFailedError`。
+- 9 个单元测试，含 `model_load_seconds=` 日志断言。
+
+### 5.3 T3.3 模型下载脚本
+
+- `scripts/download_model.py` 支持 HuggingFace 与 ModelScope。
+- 校验 `model.bin/config.json/tokenizer.json/vocabulary.*`；
+- 下载失败提供镜像/手动放置提示；`models/` 不入 Git。
+- 10 个脚本测试。
+
+### 5.4 T3.4 CLI 冒烟
+
+- `scripts/verify_asr.py` 支持中文/英文、`--model-path`、模型缺失提示。
+- 修复从 `scripts/` 启动时 `app` 不在 sys.path 的问题。
+- 6 个测试；真实中英文 CLI 运行已执行。
+
+### 5.5 T3.5 模型准备
+
+- 因 HuggingFace/hf-mirror 超时，使用 ModelScope 公共源下载 `Systran/faster-whisper-small`。
+- 约 468 MB；强制复测下载 25.60 s；M1/16 GB。
+- `model.bin` 483,546,902 bytes；SHA-256 `3e3059...d671`。
+- 首次真实加载和中英文识别成功；权重未提交。
+
+### 5.6 T3.6 真实基线（G2）
+
+- 中文 12s：推理中位数 3.430s，RTF 0.286，CER 0.231。
+- 英文 9s：推理中位数 1.608s，RTF 0.179，WER 0.000。
+- 模型加载 0.987s；英文准确，中文有同音错误但可辨认。
+- 决策：维持 small，不触发 T3.11 SenseVoice 评估。G2 通过。
+
+### 5.7 T3.7 真实 API 接线
+
+- 生产 `app.main:app` 创建 `WhisperTranscriber`，但不加载。
+- 首次中文请求 4.456s，第二次 3.484s，英文 1.674s；均 200，文本与 CLI 一致。
+- `processing_seconds` 包含解码、首次加载、推理，不含下载。
+- 149 tests；`model_load_seconds` 日志由 caplog 覆盖。
+
+### 5.8 T3.8 真实异常与恢复
+
+- 模型缺失：503 `model_unavailable`，`/health` 200。
+- 模型损坏：503，服务存活。
+- 恢复目录后再次请求 200，失败状态未永久缓存。
+- 真实引擎适配器推理异常 → 500，不泄漏原文。
+- 150 tests。
+
+### 5.9 T3.9 Mock API 矩阵
+
+- 补齐损坏 WebM、10 MB+1 API 测试。
+- 覆盖健康、正常中英文、缺参、非法语言、空/损坏、超大小、不支持格式、超时长、503、500、空文本、重试。
+- 152 tests。
+
+### T3.11 状态
+
+未触发：G2 已通过，small 的中英文结果可辨认、RTF 可接受；不进行 SenseVoice 时间盒评估。
+
+## 6. 测试矩阵（P1 + P2 + P3）
 
 | 模块 | 文件 | 测试数 |
 | --- | --- | --- |
@@ -196,11 +263,15 @@ httpx 0.28.1
 | 错误处理 | `tests/test_errors.py` | 10 |
 | fixture/隔离 | `tests/test_fixtures.py` | 8 |
 | 健康检查/静态页 | `tests/test_health.py` | 4 |
-| 应用工厂 | `tests/test_app_factory.py` | 4 |
+| 应用工厂 | `tests/test_app_factory.py` | 5 |
 | 音频校验/流式/解码/清理 | `tests/test_audio.py` | 42 |
 | 语言 | `tests/test_language.py` | 10 |
-| `/api/transcribe` 契约/错误/重试 | `tests/test_transcribe_api.py` | 17 |
-| 合计 | | **116** |
+| `/api/transcribe` 契约/错误/重试 | `tests/test_transcribe_api.py` | 20 |
+| Transcriber 协议/Fake | `tests/test_transcriber.py` | 7 |
+| WhisperTranscriber 单元 | `tests/test_transcriber_unit.py` | 9 |
+| 模型下载脚本 | `tests/test_download_model.py` | 10 |
+| CLI 冒烟 | `tests/test_verify_asr.py` | 6 |
+| 合计 | | **152** |
 
 命令：
 
@@ -208,11 +279,11 @@ httpx 0.28.1
 python -m pytest -q
 ```
 
-结果：`116 passed`。
+结果：`152 passed`。
 
-P2 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc9587c`、`8722b7e`、`d5f97d4` 均有 green run；具体 run ID 见 `docs/evidence/p2-test-output.txt`。
+P2/P3 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc9587c`、`8722b7e`、`d5f97d4`、`46c75ed`、`02829b9`、`7c15d98`、`b0a402e`、`9038ef3`、`586da57`、`d90c04a` 均有 green run；具体 run ID 见证据目录。
 
-## 6. 遇到的问题与处理
+## 7. 遇到的问题与处理
 
 1. **默认 Python 3.9**：改用 uv 管理的 CPython 3.12，避免依赖/类型差异。
 2. **PyPI 下载超时**：pip 多次 retry 后成功；requirements 已完整锁定。
@@ -223,16 +294,19 @@ P2 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc9587c`、
 7. **系统 ffmpeg 不可执行**：本机 `/usr/local/bin/ffmpeg` 报 bad CPU type；改用 PyAV 内置库，并在 `PATH=/usr/bin:/bin` 下复跑测试。
 8. **WebM fixture 非真实录音**：明确标注为合成 1 秒 Opus，真实浏览器 MediaRecorder 仍在 T6 手动验证。
 9. **无模型时的错误优先级**：`/api/transcribe` 先完成文件/语言校验与解码，再检查 transcriber；因此非法文件仍返回 4xx，合法音频在无模型时返回 503。
+10. **HuggingFace/镜像不可达**：本机 HF 与 hf-mirror 超时，增加 ModelScope 下载源；实际 461 MiB 权重 25.6s 完成。
+11. **faster-whisper 直接传文件与 PyAV 19 不兼容**：`WhisperModel.transcribe(path)` 内部 `av.open(metadata_errors=...)` 报 TypeError；应用统一先用自有 `decode_audio` 解码为 ndarray，再交给模型，因此主流程不受影响。CLI 走 ndarray 路径。
+12. **faster-whisper 脚本路径问题**：`python scripts/verify_asr.py` 的 sys.path 默认是 scripts 目录，已显式插入项目根。
+13. **中文同音错误**：small 对《再别康桥》片段有近音替换；CER 0.231 在阈值内，记录而不掩盖。
 
-## 7. 待补充
+## 8. 待补充
 
-- P3 真实 faster-whisper 模型下载、加载、中英文识别；
 - P4 前端录音/上传/展示；
 - P6 手动验证、断网、Windows 实机/云 VM；
 - 阶段三测试报告与问题修复记录。
 
-## 8. 备注
+## 9. 备注
 
-- P2 没有下载 ASR 模型权重，`models/` 为空。
-- 生产 `/api/transcribe` 当前必须注入 transcriber；默认启动时返回 503，P3 接入真实引擎。
-- 下一步为 P3：T3.1 → T3.2 → T3.3/T3.5 → T3.6（G2）。
+- P3 已下载并验证 small 模型；模型权重保留本地，`models/` 未进入 Git。
+- 生产 `app.main:app` 已接入真实引擎；默认 `create_app()` 仍不注入引擎，测试不加载模型。
+- 下一步为 P4：T4.1 → T4.9（页面、录音、上传、结果展示、错误/复制）。

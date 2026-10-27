@@ -299,14 +299,16 @@
   - 验证：新增损坏 WebM 与 10 MB+1 API 测试；152 passed；矩阵逐项映射到测试文件。
   - 结果：已完成（2026-10-27）；Mock 测试不加载真实模型、不下载权重、不访问麦克风。
 
-- [ ] **T3.10 P3 阶段收尾**
+- [x] **T3.10 P3 阶段收尾**
   - 目标：提交真实模型集成与实验数据。
-  - 文件：Git 提交、`docs/opencode/02-implementation.md`、`docs/evidence/`。
+  - 文件：Git 提交、`docs/opencode/02-implementation.md`、`docs/opencode/README.md`、`docs/evidence/p3-test-output.txt`。
   - 前置：T3.1–T3.9。
   - 完成标准：真实模型不进入 Git；实验数据可追溯；`pytest -q` 仍不触发下载。
-  - 验证：`git status`；干净环境测试。
+  - 验证：152 passed；`git ls-files models` 为空；模型目录 4 个文件约 468 MB；P3 7 个 Windows run 均 success；阶段二记录已更新 P3。
+  - 结果：已完成（2026-10-27）；真实模型与样本数据完整，T3.11 未触发。
 
 - [ ] **T3.11 条件触发：sherpa-onnx + SenseVoiceSmall 时间盒评估（非必做）**
+  - 状态：**未触发**（G2 已通过、small 中英文可辨认、RTF 可接受；不占用时间）。
   - 目标：在 Whisper 中文/速度或 F6 延迟不达标时，用 60–90 分钟判断是否切换备选模型。
   - 文件：`scripts/spike_sensevoice.py`、`docs/evidence/model-bakeoff.md`、`docs/issue-log.md`。
   - 前置：T3.6 失败或 F6 实测延迟不可接受；G4 不因此延期；用户/时间允许。

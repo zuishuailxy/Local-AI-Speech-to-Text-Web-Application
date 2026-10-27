@@ -1,0 +1,90 @@
+# P3 阶段测试输出与收尾证据
+
+- 日期：2026-10-27
+- 阶段：P3 真实本地 ASR 集成
+- 模型：`Systran/faster-whisper-small`（本地，未提交）
+- 默认测试不加载真实模型、不下载权重、不访问麦克风
+
+## 全量测试
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+152 passed
+```
+
+## 分文件
+
+```text
+tests/test_config.py                21
+tests/test_errors.py                10
+tests/test_fixtures.py               8
+tests/test_health.py                 4
+tests/test_app_factory.py            5
+tests/test_audio.py                 42
+tests/test_language.py              10
+tests/test_transcribe_api.py        20
+tests/test_transcriber.py            7
+tests/test_transcriber_unit.py       9
+tests/test_download_model.py        10
+tests/test_verify_asr.py             6
+合计                                152
+```
+
+## 无模型隔离复测
+
+临时把 `models/faster-whisper-small` 移走后执行默认 pytest：
+
+```text
+152 passed
+```
+
+说明默认测试不加载真实模型、不下载权重；测试后模型目录已恢复。
+
+## 模型与仓库边界
+
+```text
+models/faster-whisper-small/ 文件数: 4
+git ls-files models: 空
+```
+
+- 权重约 468 MB，`models/` 已被 `.gitignore` 排除。
+- 原始 M4A 录音保留本地，`samples/*.m4a` 已被 `.gitignore` 排除；仓库只提交 WAV/reference。
+- 下载脚本支持 HuggingFace 与 ModelScope；实际使用 ModelScope。
+
+## P3 Windows CI
+
+| commit | 内容 | run id | 结果 |
+| --- | --- | --- | --- |
+| 46c75ed | T3.1 协议/Fake | 40510433634 | success |
+| 02829b9 | T3.2 引擎 | 40512276820 | success |
+| 7c15d98 | T3.4 CLI | 40514884818 | success |
+| b0a402e | T3.5/T3.6 模型与基线 | 40520885582 | success |
+| 9038ef3 | T3.7 真实 API | 40522540211 | success |
+| 586da57 | T3.8 异常恢复 | 40524047988 | success |
+| d90c04a | T3.9 Mock 矩阵 | 40525166552 | success |
+
+T3.3 脚本 commit 与 T3.4 相邻推送，未单独保留 run；其代码包含在 T3.4 run 及后续 run 中。
+
+## 真实模型基线摘要
+
+- 中文 12s：RTF 0.286，CER 0.231
+- 英文 9s：RTF 0.179，WER 0.000
+- 模型加载 0.987s
+- 决策：维持 small；G2 通过；T3.11 不触发
+
+证据：
+
+- `docs/evidence/model-download.txt`
+- `docs/evidence/asr-baseline.md`
+- `docs/evidence/t3.7-real-api.txt`
+- `docs/evidence/model-failure.txt`
+- `docs/evidence/t3.9-mock-api-matrix.txt`
+
+## 备注
+
+- 真实 Windows 11 桌面/麦克风仍未验证；CI 为 Windows Server。
+- 断网验证、手动浏览器录音在 P6。
+- 下一步 P4 前端页面与浏览器录音。

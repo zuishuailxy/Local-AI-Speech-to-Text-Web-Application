@@ -1,0 +1,667 @@
+# Local AI Speech-to-Text Web Application 实施任务清单
+
+- 对应计划：`plan.md` v0.1
+- 编制日期：2026-10-27
+- 状态说明：`[x]` 表示已完成；`[ ]` 表示待执行。**只有实际执行并通过验证后才勾选。**
+- 使用方式：按编号顺序执行；每个阶段结束做一次提交与留痕；门禁未通过不得进入下一阶段或 F6 加分功能。
+- 时间基线：2 个自然日、约 18–22 小时有效工时；F6 已确认要做，但仅在 G4 通过、文档基线完成且剩余 ≥3.5 小时时启动。
+
+---
+
+## 阶段 P0：规划与基线
+
+- [x] **T0.1 完整读取并拆解考核题**
+  - 目标：提取 F1–F6、接口、环境、测试、文档与提交要求，识别范围边界。
+  - 文件：`面试考核题-v1.md`（只读）、`plan.md`。
+  - 前置：无。
+  - 完成标准：F1–F5、F6、三个接口、Windows 启动、pytest、6 项手动验证、5 份文档全部有对应条目。
+  - 验证：对照题目第 2–9 节逐项检查，无遗漏。
+
+- [x] **T0.2 编制实施计划与任务清单**
+  - 目标：形成技术方案、验收映射、两天排期、风险与任务拆解。
+  - 文件：`plan.md`、`todo.md`。
+  - 前置：T0.1。
+  - 完成标准：计划包含模型选型对比、事实/假设区分、必做/加分/不做范围、风险与决策分类；任务含目标/文件/前置/完成标准/验证。
+  - 验证：交叉检查 `plan.md` 与 `todo.md` 的阶段、编号、门禁一致。
+
+- [x] **T0.3 确认关键决策（用户）**
+  - 目标：确认 D1 Windows 验证条件、D2 模型规模、D3 样本来源、D4 交付/脱敏范围、D5 是否预留 F6。
+  - 文件：`plan.md`（已更新 0.1/5.3）、`docs/issue-log.md`。
+  - 前置：T0.2。
+  - 完成标准：5 项均有明确结论；未决项标注默认方案与影响。
+  - 验证：D1 无 Windows 11 实机；D2 small；D3 本人录音；D4 Git 仓库；D5 做实时识别；已回填计划。
+  - 结论：已完成（2026-10-27），残余项 D6（Git 托管平台/CI）见 T0.6。
+
+- [ ] **T0.4 冻结规划基线并初始化版本管理**
+  - 目标：建立可追溯的起点。
+  - 文件：`.gitignore`、`README.md`（占位）、`docs/opencode/` 目录。
+  - 前置：T0.3。
+  - 完成标准：`git init` 完成；首个提交只含题目、计划、任务清单和空骨架；`models/`、虚拟环境、缓存已忽略。
+  - 验证：`git status` 干净；`git log --oneline` 可见基线提交。
+
+- [ ] **T0.5 导出规划阶段 OpenCode 会话**
+  - 目标：保存“需求理解与技术设计”阶段证据。
+  - 文件：`docs/opencode/01-requirements-and-design.md`、`docs/opencode/README.md`。
+  - 前置：T0.3（脱敏规则确定）。
+  - 完成标准：包含需求拆解、模型对比、方案选择、计划生成的关键对话；已移除绝对路径/用户名/密钥。
+  - 验证：文件可读；人工检查无敏感信息；与 `docs/ai-development.md` 的阶段一描述一致。
+
+- [ ] **T0.6 确认 Git 托管平台与 Windows CI 可行性**
+  - 目标：确定能否使用 GitHub Actions `windows-latest` 做无实机条件下的 Windows 兼容性验证。
+  - 文件：`plan.md` 0.1/5.3、`docs/issue-log.md`。
+  - 前置：T0.3、T0.4。
+  - 完成标准：明确仓库托管在 GitHub / GitLab / 仅本地；若 GitHub，确认可创建 Actions workflow；若不可用，记录 Windows 验证降级方式与残余风险。
+  - 验证：仓库远程地址可访问；手动触发一个最小 workflow 成功（或记录不可用原因）。
+
+---
+
+## 阶段 P1：项目脚手架与可启动空服务（门禁 G1 准备）
+
+- [ ] **T1.1 建立目录结构与基础文件**
+  - 目标：按计划创建 `app/`、`static/`、`scripts/`、`tests/`、`samples/`、`docs/` 等骨架。
+  - 文件：目录、`app/__init__.py`、`app/api/__init__.py`、`app/services/__init__.py`、`.gitignore`。
+  - 前置：T0.4。
+  - 完成标准：目录与 `plan.md` 2.2 一致；`.gitignore` 排除 `models/`、`.venv/`、`__pycache__/`、`.pytest_cache/`、`*.log`、`.DS_Store`、测试临时文件。
+  - 验证：`find`/`tree` 检查；`git check-ignore` 抽查。
+
+- [ ] **T1.2 创建 Python 3.12 虚拟环境、锁定依赖并预检 Windows wheel**
+  - 目标：保证开发与目标环境一致（Python 3.12），并验证 Windows 11 可仅用 pip 安装。
+  - 文件：`.venv/`（不提交）、`requirements.txt`、`docs/evidence/windows-wheels.txt`。
+  - 前置：T1.1。
+  - 完成标准：使用 uv/pyenv 的 CPython 3.12 创建 `.venv`（本机系统 `python3` 为 3.9，禁止直接使用）；`python --version` 为 3.12.x；包含 fastapi、uvicorn、python-multipart、faster-whisper、pytest、httpx、websockets（F6 用）等运行/测试依赖并锁定可兼容版本；无 Docker/Node/DB/云 SDK；交叉下载检查所有包存在 cp312/abi3 win_amd64 wheel。
+  - 验证：`.venv/bin/python --version` 输出 3.12.x；`python -m pip download --only-binary=:all: --platform win_amd64 --python-version 3.12 --implementation cp --abi cp312 -r requirements.txt -d .wheelhouse-check` 成功；输出归档。
+  - 备注：若交叉下载不支持某包，记录并改用纯 Python/已提供 win wheel 的替代版本；不得引入需编译依赖。
+
+- [ ] **T1.3 实现配置模块**
+  - 目标：集中管理模型路径、设备、线程、大小/时长限制、预热开关。
+  - 文件：`app/config.py`、`tests/test_config.py`（可选）。
+  - 前置：T1.1。
+  - 完成标准：`plan.md` 2.3.4 的环境变量均有默认值；路径使用 `pathlib.Path`；可从测试覆盖。
+  - 验证：单元测试断言默认值与环境变量覆盖；代码无散落魔法数字。
+
+- [ ] **T1.4 实现应用工厂、静态页面与健康检查**
+  - 目标：`create_app()` 可注入假引擎；`GET /health` 与 `GET /` 可用。
+  - 文件：`app/main.py`、`app/api/routes.py`、`static/index.html`（占位）、`tests/test_health.py`。
+  - 前置：T1.2、T1.3。
+  - 完成标准：`GET /health` 返回 200 且 JSON 为 `{"status":"ok"}`；`GET /` 返回 HTML；静态资源可访问；生产入口仍为 `app.main:app`。
+  - 验证：pytest + `python -m uvicorn app.main:app --port 8000` 后 `curl http://127.0.0.1:8000/health`。
+
+- [ ] **T1.5 实现统一错误模型与异常处理器**
+  - 目标：所有可预期错误返回 `{"detail","code"}`，不泄漏堆栈。
+  - 文件：`app/errors.py`、`app/main.py`、`tests/test_errors.py`。
+  - 前置：T1.4。
+  - 完成标准：覆盖 400/413/415/422/500/503 映射；未捕获异常返回 `internal_error`；日志记录异常类型。
+  - 验证：触发各错误码的测试；响应 JSON 结构与状态码断言。
+
+- [ ] **T1.6 配置 pytest（Mock/真实模型隔离）**
+  - 目标：`python -m pytest -q` 默认不加载模型、不下载、不依赖麦克风。
+  - 文件：`pytest.ini`、`tests/conftest.py`。
+  - 前置：T1.4、T1.5。
+  - 完成标准：注册 `real_model`、`e2e` 标记；默认排除两者；提供 `FakeTranscriber` 与生成 WAV 的 fixture；`pythonpath` 指向仓库根。
+  - 验证：删除/改名 `models/` 后执行 `python -m pytest -q`，全部通过且无网络请求；确认 `pytest -m real_model` 的覆盖方式（若 `-m` 冲突改用 `ASR_RUN_REAL=1` 门控）。
+  - 门禁：**G1**——此任务与 T2.5 完成后确认。
+
+- [ ] **T1.7 P1 阶段收尾**
+  - 目标：提交脚手架并留痕。
+  - 文件：Git 提交、`docs/opencode/02-implementation.md`（起始记录）。
+  - 前置：T1.1–T1.6。
+  - 完成标准：`git status` 干净；提交信息说明脚手架/配置/健康检查；记录本阶段命令与问题。
+  - 验证：`git log --oneline -5`；`pytest -q` 通过。
+
+- [ ] **T1.8 建立 GitHub Actions Windows CI 骨架**
+  - 目标：在无 Windows 实机条件下尽早发现 Windows 安装/启动问题。
+  - 文件：`.github/workflows/windows.yml`、`docs/evidence/windows-ci.txt`。
+  - 前置：T0.6 确认 GitHub 可用；T1.2、T1.7。
+  - 完成标准：workflow 使用 `windows-latest` + Python 3.12，执行 `pip install -r requirements.txt`、`python -m pytest -q`、启动 uvicorn、请求 `/health`；支持手动触发；失败日志可下载。
+  - 验证：GitHub Actions 运行成功；截图/日志归档；若 D6 不可用，记录原因并升级 R19。
+
+---
+
+## 阶段 P2：音频处理、识别接口与 Mock 测试
+
+- [ ] **T2.1 实现上传参数与格式校验**
+  - 目标：校验 `file`、`language`、空文件、扩展名白名单。
+  - 文件：`app/services/audio.py`、`app/api/routes.py`、`app/errors.py`、`tests/test_audio.py`。
+  - 前置：T1.5。
+  - 完成标准：`language` 仅接受 `zh`/`en`（扩展值另行门禁）；空文件 400；非白名单 415；缺失字段 422；错误信息可读。
+  - 验证：pytest 覆盖 `.txt`、伪 wav、空文件、非法语言、缺字段。
+
+- [ ] **T2.2 实现流式写入与 10 MB 上限**
+  - 目标：避免一次性读入超大文件，服务端强制执行 10 MB。
+  - 文件：`app/services/audio.py`、`tests/test_audio.py`。
+  - 前置：T2.1。
+  - 完成标准：分块读取并累计字节；超过 `MAX_UPLOAD_MB` 返回 413 并清理临时文件；Content-Length 预检作为第一道防线。
+  - 验证：构造 10 MB+1 字节请求返回 413；临时目录无残留。
+
+- [ ] **T2.3 实现 PyAV 解码、重采样与时长上限**
+  - 目标：任意受支持容器统一解码为 16 kHz 单声道 float32，并计算实际时长。
+  - 文件：`app/services/audio.py`、`tests/test_audio.py`。
+  - 前置：T2.2。
+  - 完成标准：WAV/webm 可解码；时长为采样点数/16000；超过 `MAX_AUDIO_SECONDS` 提前中止并返回 400；损坏文件返回 400；0 帧返回 400；临时文件在 Windows 下可删除。
+  - 验证：生成 1 秒/5 秒 WAV、静音 WAV、损坏字节、超长 WAV；断言时长/状态码；在 macOS 与 Windows 各跑一次连续识别。
+
+- [ ] **T2.4 统一音频错误码与清理逻辑**
+  - 目标：确保所有异常路径释放句柄、删除临时文件、返回一致错误。
+  - 文件：`app/services/audio.py`、`app/errors.py`、`tests/test_audio.py`。
+  - 前置：T2.3。
+  - 完成标准：`finally` 清理；异常不泄漏堆栈；错误码与 `plan.md` 2.3.3 一致。
+  - 验证：失败用例后检查临时目录；断言 JSON `code`。
+
+- [ ] **T2.5 Mock 层音频单元测试**
+  - 目标：覆盖正常/空/损坏/超长/静音。
+  - 文件：`tests/conftest.py`、`tests/test_audio.py`。
+  - 前置：T2.1–T2.4。
+  - 完成标准：测试不依赖样本文件/麦克风；生成 WAV 使用标准库；静音用例返回 0 帧或空文本路径明确。
+  - 验证：`python -m pytest -q tests/test_audio.py` 全绿。
+
+- [ ] **T2.6 浏览器录音格式（webm）解码测试**
+  - 目标：证明后端可处理前端实际录音格式。
+  - 文件：`tests/fixtures/sample.webm`、`tests/test_audio.py`、`docs/evidence/audio-format.txt`。
+  - 前置：T2.3。
+  - 完成标准：提交一个短 webm/opus fixture（由 WAV 转码或浏览器录制，注明来源）；解码成功且时长合理；不要求运行期安装 ffmpeg。
+  - 验证：pytest 断言 webm 解码/时长；在无系统 ffmpeg 的干净环境复跑。
+
+- [ ] **T2.7 实现 Transcriber 协议、假引擎与 `POST /api/transcribe` 契约测试**
+  - 目标：打通 multipart → 校验 → 解码 → 引擎 → JSON 全链路，并定义可注入的识别协议。
+  - 文件：`app/services/transcriber.py`（最小协议 + Fake）、`app/api/routes.py`、`app/schemas.py`、`app/errors.py`、`tests/test_transcribe_api.py`、`tests/test_language.py`。
+  - 前置：T2.5。
+  - 完成标准：定义 `Transcriber.transcribe(...)` 与 `ModelUnavailableError`；成功响应含 `text/language/duration_seconds/processing_seconds`；`duration_seconds` 来自真实解码；`processing_seconds` 为服务端耗时；中英文均返回；非法语言 400。
+  - 验证：pytest 断言字段类型/数值范围；`curl -F` 手工冒烟。
+  - 备注：T3.1 在本任务基础上完善 Fake 的可配置行为，不重复定义协议。
+
+- [ ] **T2.8 错误路径与重试语义测试**
+  - 目标：模型加载失败 503、推理失败 500、空文本 200、请求可重试。
+  - 文件：`tests/test_errors.py`、`tests/test_transcribe_api.py`。
+  - 前置：T2.7。
+  - 完成标准：Fake 抛 `ModelUnavailableError` → 503 `model_unavailable`；抛其他异常 → 500 `transcription_failed`；空文本 → 200 且 `text == ""`；错误响应含可读 `detail`。
+  - 验证：pytest 全绿；前端错误展示在 T4.8 联调。
+
+- [ ] **T2.9 P2 阶段收尾**
+  - 目标：提交后端音频/接口/Mock 测试。
+  - 文件：Git 提交、`docs/evidence/p2-test-output.txt`、`docs/opencode/02-implementation.md`。
+  - 前置：T2.1–T2.8。
+  - 完成标准：`pytest -q` 全绿；无模型下载；阶段问题记录。
+  - 验证：归档 pytest 输出；`git status` 干净。
+
+---
+
+## 阶段 P3：真实本地 ASR 集成（门禁 G2）
+
+- [ ] **T3.1 完善识别协议、结果对象与假实现**
+  - 目标：业务层不依赖 faster-whisper 具体类，便于测试/替换。
+  - 文件：`app/services/transcriber.py`、`tests/conftest.py`。
+  - 前置：T2.7。
+  - 完成标准：`Transcriber.transcribe(audio: np.ndarray, language: str) -> TranscriptionResult`（或等价签名）稳定；Fake 可配置文本/异常/延迟；真实实现独立。
+  - 验证：类型/单元测试；API 测试可注入 Fake。
+
+- [ ] **T3.2 实现 faster-whisper 引擎**
+  - 目标：本地目录加载、CPU int8、语言参数、VAD、线程与锁、惰性单例。
+  - 文件：`app/services/transcriber.py`、`app/config.py`、`tests/test_transcriber_unit.py`。
+  - 前置：T3.1、T1.3。
+  - 完成标准：仅从 `ASR_MODEL_PATH` 加载；不传模型名；`device=cpu`、`compute_type=int8`；`language=zh/en`；`vad_filter` 可配置；并发加载只发生一次；加载失败转 `ModelUnavailableError`。
+  - 验证：无模型目录时抛可识别错误；Fake 路径不影响真实类；static review 确认无网络调用。
+
+- [ ] **T3.3 实现模型下载脚本**
+  - 目标：一次性下载到 `models/faster-whisper-small`，支持镜像与校验。
+  - 文件：`scripts/download_model.py`、`README.md`（模型章节占位）。
+  - 前置：T1.2。
+  - 完成标准：`--model small`、`--output` 可用；下载后校验关键文件；失败给出 `HF_ENDPOINT`/手动放置提示；不把权重写入 Git。
+  - 验证：在干净 `models/` 下执行成功；重复执行可跳过/复用；`git status` 不含权重。
+
+- [ ] **T3.4 实现 CLI 冒烟验证脚本**
+  - 目标：不启动 Web 也能验证真实模型中英文。
+  - 文件：`scripts/verify_asr.py`。
+  - 前置：T3.2、T3.3。
+  - 完成标准：`python scripts/verify_asr.py samples/chinese.wav --language zh` 输出文本/时长/耗时；支持 en；模型缺失时给出可操作错误。
+  - 验证：两份样本各跑一次并归档输出。
+
+- [ ] **T3.5 下载 small 模型并记录实验数据**
+  - 目标：完成首次模型准备，取得真实基线。
+  - 文件：`models/`（不提交）、`docs/evidence/model-download.txt`。
+  - 前置：T3.3、网络可用。
+  - 完成标准：模型文件完整；记录下载耗时、体积、来源、日期；记录目标 CPU/内存。
+  - 验证：下载脚本校验通过；断网前先完成一次加载。
+
+- [ ] **T3.6 真实模型中英文首轮验证与选型确认**
+  - 目标：确认 small 的文本质量/速度，决定是否回退 base 或评估 SenseVoice。
+  - 文件：`docs/evidence/asr-baseline.md`。
+  - 前置：T3.5、临时样本（可用 TTS/自录）。
+  - 完成标准：中文、英文各至少 1 条文本；记录耗时、RTF、明显错误（简繁/标点/幻觉）；给出“维持 small / 回退 base / 换模型”的结论。
+  - 验证：人工对照参考文本；保存原始输出。
+  - 门禁：**G2**——中英文均非空且可辨认；若不可接受，先解决模型问题再继续前端验收。
+
+- [ ] **T3.7 接入真实引擎到 `/api/transcribe`**
+  - 目标：路由使用真实引擎，响应口径符合契约。
+  - 文件：`app/api/routes.py`、`app/main.py`、`app/schemas.py`。
+  - 前置：T2.7、T3.2。
+  - 完成标准：真实请求走本地模型；`processing_seconds` 含解码、模型加载（若首次请求触发）与推理，不含首次下载；模型加载耗时另记日志；请求间无状态。
+  - 验证：curl 上传 WAV 中英文各一次；对比 CLI 结果；连续两次请求成功。
+
+- [ ] **T3.8 真实模型异常路径**
+  - 目标：模型缺失/损坏/推理失败均可理解。
+  - 文件：`app/services/transcriber.py`、`tests/test_errors.py`、`docs/evidence/model-failure.txt`。
+  - 前置：T3.7。
+  - 完成标准：临时重命名模型目录 → 503 且提示下载脚本；推理异常 → 500；服务不崩溃，恢复目录后可继续识别。
+  - 验证：手动/自动化各一次；记录响应。
+
+- [ ] **T3.9 完善 Mock API 测试矩阵**
+  - 目标：在不依赖真实模型的情况下覆盖 API 契约与错误。
+  - 文件：`tests/test_transcribe_api.py`、`tests/test_language.py`、`tests/test_errors.py`。
+  - 前置：T3.7。
+  - 完成标准：健康检查、正常中英文、缺 file、缺 language、非法 language、空文件、损坏、超 10 MB、不支持格式、超时长、模型 503、推理 500、空文本全部覆盖。
+  - 验证：`pytest -q` 全绿；统计用例数与覆盖项。
+
+- [ ] **T3.10 P3 阶段收尾**
+  - 目标：提交真实模型集成与实验数据。
+  - 文件：Git 提交、`docs/opencode/02-implementation.md`、`docs/evidence/`。
+  - 前置：T3.1–T3.9。
+  - 完成标准：真实模型不进入 Git；实验数据可追溯；`pytest -q` 仍不触发下载。
+  - 验证：`git status`；干净环境测试。
+
+- [ ] **T3.11 条件触发：sherpa-onnx + SenseVoiceSmall 时间盒评估（非必做）**
+  - 目标：在 Whisper 中文/速度或 F6 延迟不达标时，用 60–90 分钟判断是否切换备选模型。
+  - 文件：`scripts/spike_sensevoice.py`、`docs/evidence/model-bakeoff.md`、`docs/issue-log.md`。
+  - 前置：T3.6 失败或 F6 实测延迟不可接受；G4 不因此延期；用户/时间允许。
+  - 完成标准：安装 sherpa-onnx、获取 int8 ONNX 模型（sherpa-onnx 转换版）、跑中英文样本；记录 CER/WER、RTF、ITN 输出、WebM 解码；给出“切换/不切换”结论；若切换，只改 `Transcriber` 实现，API/前端不动；许可证与模型来源写入 `docs/design.md`。
+  - 验证：对照 T3.6 的 Whisper 数据；时间盒内未完成则放弃并保留 Whisper；不提交模型权重。
+  - 门禁：不阻塞 P4/P5；若切换，必须重跑 T5.2/T5.3/T6.x 相关验证。
+
+---
+
+## 阶段 P4：前端页面与交互
+
+- [ ] **T4.1 实现页面结构与视觉状态**
+  - 目标：语言选择、录音区、上传区、状态区、结果区、错误区齐全。
+  - 文件：`static/index.html`、`static/styles.css`。
+  - 前置：T1.4。
+  - 完成标准：桌面布局清晰；按钮含 Start/Stop Recording；显示当前语言、状态、计时、结果、复制；无外部字体/CDN。
+  - 验证：浏览器打开 `http://127.0.0.1:8000`，元素齐全；窄窗口不严重错位（不要求手机适配）。
+
+- [ ] **T4.2 实现麦克风采集与 MediaRecorder**
+  - 目标：授权后录音，停止后得到可上传 Blob。
+  - 文件：`static/app.js`。
+  - 前置：T4.1。
+  - 完成标准：`getUserMedia` 音频约束；按能力选择 webm/ogg/mp4；`timeslice` 收集分片；停止后合并 Blob；释放轨道；记录实际 MIME。
+  - 验证：Chrome 录音后 Network 看到 multipart 包含 `audio/webm` 文件；再次录音可成功。
+
+- [ ] **T4.3 实现计时、60 秒自动停止与状态机**
+  - 目标：状态与时长准确，超限自动结束。
+  - 文件：`static/app.js`、`static/index.html`。
+  - 前置：T4.2。
+  - 完成标准：`idle/requesting/recording/transcribing/success/error` 文案与按钮禁用正确；每 200 ms 更新；60 秒自动 stop 并提示；`visibilitychange` 校正。
+  - 验证：录 5 秒/60 秒；切后台再回来；观察计时与自动停止。
+
+- [ ] **T4.4 实现麦克风与录音异常提示**
+  - 目标：权限拒绝、无设备、设备占用、非安全上下文、MediaRecorder 错误均有明确提示。
+  - 文件：`static/app.js`。
+  - 前置：T4.2。
+  - 完成标准：按 `DOMException.name` 映射中文提示与恢复建议；处理 `MediaRecorder.onerror`、空 Blob/无数据；页面不崩溃；可重试。
+  - 验证：Chrome 站点设置阻止麦克风；系统禁用输入设备；占用设备（如会议软件）；模拟 recorder 错误。
+
+- [ ] **T4.5 实现文件上传**
+  - 目标：选择 WAV/webm 等文件并提交，客户端预检。
+  - 文件：`static/index.html`、`static/app.js`。
+  - 前置：T4.1。
+  - 完成标准：`accept` 覆盖格式；空文件/超 10 MB 前端提示；显示文件名/大小；上传复用 `/api/transcribe`；不因扩展名误判而绕过服务端校验。
+  - 验证：上传 `samples/*.wav`、webm fixture、`.txt`、大文件。
+
+- [ ] **T4.6 实现请求、状态与结果展示**
+  - 目标：调用 API 并展示全部必填字段。
+  - 文件：`static/app.js`、`static/index.html`。
+  - 前置：T3.7、T4.5。
+  - 完成标准：正确构造 `FormData`（file、language）；识别中显示已耗时；成功后展示文本、语言、音频时长、处理耗时；请求期间禁止重复提交。
+  - 验证：Chrome/Edge 手动中英文；Network 响应与页面字段一致。
+
+- [ ] **T4.7 实现复制功能**
+  - 目标：一键复制识别文本。
+  - 文件：`static/app.js`。
+  - 前置：T4.6。
+  - 完成标准：Clipboard API 成功提示；权限失败回退 textarea；空文本禁用。
+  - 验证：复制后粘贴到编辑器比对。
+
+- [ ] **T4.8 实现错误展示、重试与重置**
+  - 目标：4xx/5xx 可读展示，失败后可重试/重新录音。
+  - 文件：`static/app.js`、`static/index.html`。
+  - 前置：T4.6。
+  - 完成标准：解析 `detail`/`code`；网络错误有提示；失败不丢失语言选择；重试按钮可用；成功后可再次录音/上传。
+  - 验证：上传损坏文件、停后端、模型目录改名；观察提示与恢复。
+
+- [ ] **T4.9 P4 阶段收尾与可访问性检查**
+  - 目标：提交前端并做基础可用性检查。
+  - 文件：Git 提交、`static/*`、`docs/evidence/frontend-smoke.txt`。
+  - 前置：T4.1–T4.8。
+  - 完成标准：按钮/输入有 label 或 aria-label；键盘可操作；控制台无报错；`getUserMedia` 仅在点击后调用。
+  - 验证：Chrome 控制台、键盘 Tab、`GET /` 冒烟测试。
+
+---
+
+## 阶段 P5：样本、真实模型测试与自动化收口
+
+- [ ] **T5.1 录制并准备测试音频与参考文本**
+  - 目标：提供本人录制、合法、清晰、5–15 秒的中英文 WAV。
+  - 文件：`samples/chinese.wav`、`samples/english.wav`、`samples/reference.txt`。
+  - 前置：T3.6（模型可识别）；用户已确认 D3 使用本人录音。
+  - 完成标准：16 kHz/单声道/PCM16（或明确说明）；各 5–15 秒；一至两句完整语音；`reference.txt` 含参考文本、录制人授权说明、时长、录制环境；注明“本人录制”，不含敏感个人信息；保留原始录音备份（不提交）。
+  - 验证：播放检查；`wave` 读取参数；真实模型先跑一遍确认可识别；人工朗读稿与识别文本对照。
+
+- [ ] **T5.2 真实模型集成测试（中/英）**
+  - 目标：用真实本地模型断言可识别且质量达标。
+  - 文件：`tests/test_real_model.py`、`pytest.ini`。
+  - 前置：T5.1、T3.5、T3.6。
+  - 完成标准：`@pytest.mark.real_model`；模型缺失时 skip 并提示下载；中文/英文各断言非空、语言脚本合理；计算并打印 CER/WER 与耗时；阈值按首轮实测校准（初定中文 CER ≤0.3、英文 WER ≤0.3）。
+  - 验证：`python -m pytest -q -m real_model tests/test_real_model.py` 通过；输出归档。
+
+- [ ] **T5.3 真实上传 API 流程测试**
+  - 目标：验证“上传真实 WAV → 完整后端 → 文本”的端到端路径。
+  - 文件：`tests/test_e2e_upload.py`（`real_model` 标记）。
+  - 前置：T5.2、T3.7。
+  - 完成标准：TestClient 上传中英文样本；断言 200、文本非空、language 回显、duration 与样本一致、processing_seconds ≥0；另测 webm fixture。
+  - 验证：`pytest -q -m real_model` 全绿；保存输出。
+
+- [ ] **T5.4 Playwright 浏览器 E2E（Windows CI 需要，默认不随 `pytest -q` 执行）**
+  - 目标：自动验证页面加载、文件上传、假麦克风录音，作为无 Windows 实机时的浏览器证据。
+  - 文件：`tests/e2e/test_browser.py`、`requirements-e2e.txt`、`docs/evidence/e2e.txt`。
+  - 前置：T5.3、T4.6。
+  - 完成标准：`e2e` 标记，默认不执行；Chromium/Edge 使用 `--use-fake-device-for-media-stream` 与 WAV；覆盖页面加载 + 上传成功 + 录音后停止；不进入主 requirements；CI 中可单独执行。
+  - 验证：`pytest -q -m e2e`（本地或 CI）；失败时记录原因并保留 HTTP 上传流程作为兜底，但不能把“未跑”写成“通过”。
+
+- [ ] **T5.5 验证默认测试的隔离性与合规静态检查**
+  - 目标：证明 `pytest -q` 不依赖模型/麦克风/外网，并确认未使用被禁止的云端 ASR/Web Speech。
+  - 文件：`docs/evidence/pytest-default.txt`、`docs/evidence/compliance-check.txt`。
+  - 前置：T2.5、T3.9、T5.2。
+  - 完成标准：临时移走 `models/` 后在干净 venv 执行 `python -m pytest -q` 全绿；无下载日志；无麦克风访问；执行时间可接受；静态搜索确认前端无 `SpeechRecognition`/`webkitSpeechRecognition`，后端无 OpenAI/Azure/Google 云端 ASR SDK 或调用，无 CDN 依赖。
+  - 验证：命令输出归档；恢复模型目录；`grep -R` 结果归档。
+
+- [ ] **T5.6 执行真实模型统一命令并归档**
+  - 目标：满足“真实模型测试单独提供”。
+  - 文件：`README.md`（测试章节）、`docs/evidence/pytest-real-model.txt`。
+  - 前置：T5.2、T5.3、T3.5。
+  - 完成标准：README 写明 `python -m pytest -q -m real_model`（或环境变量门控）；实际执行通过；记录真实文本与耗时。
+  - 验证：照 README 从零执行一次。
+
+- [ ] **T5.7 P5 阶段收尾**
+  - 目标：提交样本、测试与结果。
+  - 文件：Git 提交、`docs/evidence/`、`docs/opencode/03-testing-and-fixes.md`（起始）。
+  - 前置：T5.1–T5.6。
+  - 完成标准：样本/测试进 Git；模型权重/临时文件未进 Git；测试输出归档。
+  - 验证：`git status`；`git ls-files samples tests` 检查。
+
+---
+
+## 阶段 P6：手动验证、离线与 Windows（门禁 G4）
+
+- [ ] **T6.1 手动：Chrome 麦克风录制中文并识别**
+  - 目标：验证 F1 + F3 中文主流程。
+  - 文件：`docs/test-report.md`、`docs/evidence/mic-zh.png`。
+  - 前置：T4.9、T5.1。
+  - 完成标准：授权、录音、计时、停止、识别、文本展示全流程成功；记录音频时长/处理耗时/文本。
+  - 验证：人工朗读中文 5–10 秒；截图 + 原始文本；无控制台错误。
+
+- [ ] **T6.2 手动：Chrome 麦克风录制英文并识别**
+  - 目标：验证英文主流程。
+  - 文件：`docs/test-report.md`、`docs/evidence/mic-en.png`。
+  - 前置：T6.1。
+  - 完成标准：英文模式识别成功；输出为英文；记录耗时。
+  - 验证：人工朗读英文 5–10 秒；截图。
+
+- [ ] **T6.3 手动：上传中文 WAV**
+  - 目标：验证 F2 + F3 中文上传。
+  - 文件：`docs/test-report.md`、`docs/evidence/upload-zh.png`。
+  - 前置：T5.1。
+  - 完成标准：选择 `samples/chinese.wav` 上传成功；结果与参考文本一致/接近。
+  - 验证：对比 `reference.txt`；记录 duration/processing。
+
+- [ ] **T6.4 手动：上传英文 WAV**
+  - 目标：验证英文上传。
+  - 文件：`docs/test-report.md`、`docs/evidence/upload-en.png`。
+  - 前置：T6.3。
+  - 完成标准：`samples/english.wav` 上传成功；输出英文。
+  - 验证：对比参考文本。
+
+- [ ] **T6.5 手动：麦克风权限被拒绝**
+  - 目标：验证 F5 权限异常。
+  - 文件：`docs/test-report.md`、`docs/evidence/permission-denied.png`。
+  - 前置：T4.4。
+  - 完成标准：Chrome 站点设置阻止麦克风后点击录音；页面显示明确权限提示；无崩溃；恢复权限后可录音。
+  - 验证：截图提示文案；刷新/恢复后重试成功。
+
+- [ ] **T6.6 手动：无可用麦克风/设备不可用**
+  - 目标：验证 `NotFoundError`/`NotReadableError` 分支。
+  - 文件：`docs/test-report.md`、`docs/evidence/no-mic.txt`。
+  - 前置：T4.4。
+  - 完成标准：禁用系统输入设备或占用麦克风；页面提示“未检测到麦克风/设备被占用”；上传识别仍可用。
+  - 验证：系统设置禁用设备；记录实际异常名与提示。
+
+- [ ] **T6.7 手动：异常上传与空语音**
+  - 目标：覆盖空文件、损坏、格式、超 10 MB、静音、超时长、模型不可用。
+  - 文件：`docs/test-report.md`、`docs/evidence/error-cases.txt`。
+  - 前置：T4.8、T2.5。
+  - 完成标准：每类场景均有明确提示且页面可继续操作；静音返回空文本/提示；模型不可用 503 提示下载/检查；另验证录音达到 60 秒时自动停止并给出提示。
+  - 验证：逐项操作并记录状态码/文案；恢复环境；录满 60 秒观察自动停止。
+
+- [ ] **T6.8 手动：复制、重试、再次录音、上传 webm**
+  - 目标：验证 F4 复制、失败恢复、连续识别，以及 F2 浏览器录音格式上传。
+  - 文件：`docs/test-report.md`、`docs/evidence/upload-webm.txt`。
+  - 前置：T6.1–T6.4。
+  - 完成标准：复制文本与页面一致；失败后重试成功；连续两次录音/上传均成功；在页面上传 webm fixture（或浏览器录制的 webm）识别成功。
+  - 验证：粘贴比对；连续操作；页面上传 webm 并记录文本/MIME。
+
+- [ ] **T6.9 断网验证（核心）**
+  - 目标：证明模型准备完成后完全离线识别。
+  - 文件：`docs/test-report.md`、`docs/evidence/offline.txt`。
+  - 前置：T5.6、T6.1–T6.4。
+  - 完成标准：断开网络/禁用网卡；设置 `HF_HUB_OFFLINE=1` 后重启服务；中英文各完成一次麦克风或上传识别；无外网请求；耗时正常。
+  - 验证：系统网络面板确认断网；记录时间、文本；可用抓包/防火墙辅助确认无出站。
+
+- [ ] **T6.10 Windows 兼容性验证（GitHub Actions 替代，最高风险）**
+  - 目标：在没有 Windows 11 实机的情况下，尽可能验证 Windows x64 + Python 3.12 的安装、启动与识别链路。
+  - 文件：`.github/workflows/windows.yml`、`docs/test-report.md`、`docs/evidence/windows-ci.txt`。
+  - 前置：T0.6/T1.8（GitHub Actions 可用）；T1.2、T5.1、T5.4、T6.1–T6.9。
+  - 完成标准：`windows-latest` 上全新 venv 执行 `pip install -r requirements.txt`；启动 uvicorn；`/health` 200；运行默认 pytest；下载真实模型并上传中英文样本成功；Playwright 使用 Chromium/Edge 假麦克风完成页面加载 + 上传 + 录音流程；记录 Python/浏览器版本、安装耗时、模型加载/推理耗时；无缺失 DLL/编译错误。
+  - 验证：GitHub Actions 日志归档；截图或 Playwright trace；失败则修复后重跑。
+  - 备注：CI 是 Windows Server，不是 Windows 11 桌面；CI 通过**不能**写成“Windows 11 实机通过”。真实桌面/麦克风未验证要写入测试报告和 README。
+
+- [ ] **T6.11 Edge 兼容性验证（本地/CI）**
+  - 目标：覆盖题目要求的 Chrome/Edge 最新稳定版。
+  - 文件：`docs/test-report.md`、`docs/evidence/edge.txt`。
+  - 前置：T6.1–T6.4；T6.10（CI）。
+  - 完成标准：Edge 打开页面、上传、识别、复制；记录实际 MediaRecorder MIME；有 Windows CI 时用 Playwright Edge 通道跑页面/上传；无 Windows 实机时在 macOS Edge 做 UI 验证并注明环境差异。
+  - 验证：手动/CI 记录；必要时用 T2.6 解码路径兜底。
+
+- [ ] **T6.12 P6 阶段收尾与证据归档**
+  - 目标：汇总手动/离线/Windows 结果，形成测试报告初稿。
+  - 文件：`docs/test-report.md`、`docs/evidence/`、Git 提交、`docs/opencode/03-testing-and-fixes.md`。
+  - 前置：T6.1–T6.11。
+  - 完成标准：6 项指定手动验证全部有结果；Windows CI 结果与真实 Windows 未验证项分开记录；已知问题分级；证据文件命名可追溯；失败项有修复记录或明确说明。
+  - 验证：对照题目 6.3 逐项打勾；检查截图/日志可打开。
+  - 门禁：**G4**——所有必做验收项通过（Windows 实机项明确标注未验证），才可进入文档收尾与 F6。
+
+- [ ] **T6.13 条件项：Windows 11 实机/云 VM 补验（无环境则记录阻塞）**
+  - 目标：若借用/租用 Windows 11，补做真实桌面 Chrome/Edge 麦克风验证。
+  - 文件：`docs/test-report.md`、`docs/evidence/windows11-real.txt`、截图。
+  - 前置：可获得 Windows 11 x64 实机或云 VM；T6.10 通过。
+  - 完成标准：按 README 启动；Chrome/Edge 录音中文/英文成功；上传样本；记录版本与耗时。
+  - 验证：逐字执行 README；截图 + 命令输出。
+  - 备注：当前 D1 无实机，默认不执行；未执行时在报告中标为“未验证”，不得勾选为通过；不阻塞 G4（G4 以 Windows CI 为替代）。
+
+---
+
+## 阶段 P7：文档、OpenCode 证据与交付
+
+- [ ] **T7.1 编写 README.md**
+  - 目标：让面试官按文档独立复现。
+  - 文件：`README.md`。
+  - 前置：T6.12。
+  - 完成标准：系统介绍、环境要求（Python 3.12、Windows 11、内存/磁盘）、安装、模型初始化（含离线/镜像）、启动、使用、API 示例、测试（默认/真实模型）、离线验证、故障排查、已知限制、项目结构；明确 Windows CI 替代验证与真实 Windows 11 未验证项。
+  - 验证：在干净环境按 README 从零执行；命令可复制。
+
+- [ ] **T7.2 编写 docs/requirements.md**
+  - 目标：记录需求理解、拆分、假设、边界。
+  - 文件：`docs/requirements.md`。
+  - 前置：T0.3。
+  - 完成标准：F1–F6 逐项理解；必做/加分/不做；假设（60/120 秒、10 MB、单用户等）；验收标准；与 `plan.md` 一致。
+  - 验证：交叉检查无遗漏/矛盾。
+
+- [ ] **T7.3 编写 docs/design.md**
+  - 目标：说明架构、模块、音频流程、模型选型与理由、错误码、限制。
+  - 文件：`docs/design.md`。
+  - 前置：T6.12。
+  - 完成标准：含架构图/时序（文本或 Mermaid）、模块职责、请求流程、模型对比与最终选择、CPU/离线策略、错误码表、并发与安全边界、未验证项。
+  - 验证：与代码/配置/README 一致；引用官方资料链接。
+
+- [ ] **T7.4 编写 docs/test-report.md（最终版）**
+  - 目标：记录实际执行的测试与结果。
+  - 文件：`docs/test-report.md`。
+  - 前置：T5.6、T6.12。
+  - 完成标准：环境信息；Mock 用例表；真实模型用例（文本、CER/WER、耗时）；6 项手动验证；异常/离线/Windows CI/Edge；真实 Windows 11 未验证项；F6 结果；已知问题与限制；命令输出路径。
+  - 验证：所有“通过”均有证据；未执行项明确标注，不冒充通过。
+
+- [ ] **T7.5 编写 docs/ai-development.md**
+  - 目标：回答题目 5 个问题并展示 AI Programming 能力。
+  - 文件：`docs/ai-development.md`。
+  - 前置：T7.6。
+  - 完成标准：OpenCode 承担的任务；人工做出的关键决策（模型、限制、错误策略等）；遇到的问题与修复；如何验证 AI 代码；后续优化优先级；三阶段证据索引。
+  - 验证：与 `docs/opencode/` 文件、Git 提交时间线一致。
+
+- [ ] **T7.6 导出/脱敏三阶段 OpenCode 会话**
+  - 目标：提供可审计的开发过程证据。
+  - 文件：`docs/opencode/01-requirements-and-design.md`、`02-implementation.md`、`03-testing-and-fixes.md`、`README.md`。
+  - 前置：各阶段会话已存在；T0.5。
+  - 完成标准：三阶段齐全；含关键命令、失败与修复；脱敏（路径/用户名/密钥/无关隐私）；索引说明日期、模型、范围。
+  - 验证：全文搜索敏感词；人工通读；链接/文件可打开。
+
+- [ ] **T7.7 整理问题修复记录**
+  - 目标：形成可追溯的 issue log。
+  - 文件：`docs/issue-log.md`。
+  - 前置：开发过程中持续记录。
+  - 完成标准：每个问题含现象、复现、定位、修复、验证、相关提交；至少包含一次真实测试失败/修复案例（满足阶段三要求）。
+  - 验证：与 `ai-development.md`、Git 提交对应。
+
+- [ ] **T7.8 最终 Git 整理与回归**
+  - 目标：交付干净、可复现的仓库。
+  - 文件：Git 历史、tag、`.gitignore`。
+  - 前置：T7.1–T7.7。
+  - 完成标准：分阶段提交可读；配置 GitHub remote（D4）；无模型权重/venv/缓存/密钥/大文件；最终 `pytest -q` 全绿；打必做版 tag（如 `v1.0-must-have`）；若进入 P8，P9 再打最终 tag（如 `v1.0-submission`）。
+  - 验证：`git status`、`git ls-files`、`git count-objects -vH`；干净克隆后跑测试；远程仓库可访问。
+
+- [ ] **T7.9 打包交付（如需压缩包）**
+  - 目标：提供无需 Git 也可运行的交付物。
+  - 文件：`local-speech-to-text.zip`（仓库外或按约定）。
+  - 前置：T7.8。
+  - 完成标准：排除 `models/`、`.venv/`、缓存；包含源码/样本/文档；解压后按 README 可启动；记录校验和。
+  - 验证：解压到新目录，执行安装/启动/健康检查。
+
+---
+
+## 阶段 P8：加分功能 F6（已确认要做，严格门禁）
+
+> **启动条件（全部满足）**：G4 所有必做验收通过；`pytest -q` 与真实模型测试通过；Windows CI/离线/文档基线完成；剩余至少 3.5 小时；有独立提交可回滚。未满足则冻结必做版本，在 `docs/test-report.md` 标注“F6 未完成（门禁未通过）”并说明原因。
+
+- [ ] **T8.0 F6 门禁检查**
+  - 目标：确认不会因实时识别伤害必做交付。
+  - 文件：`docs/issue-log.md`。
+  - 前置：T7.8（或至少 T6.12 + 文档基线）。
+  - 完成标准：逐项勾选 G5；记录剩余时间、3 小时时间盒与回滚方案。
+  - 验证：未满足任一项则停止，不创建 F6 代码。
+
+- [ ] **T8.1 条件项：自动语言检测（低成本加分，F6 之后）**
+  - 目标：支持中英文混合/自动识别。
+  - 文件：`app/services/transcriber.py`、`app/api/routes.py`、`static/app.js`、`tests/test_language.py`、`docs/design.md`。
+  - 前置：T8.0；F6 主流程稳定后。
+  - 完成标准：额外接受 `language=auto`（zh/en 契约不变）；自动检测；响应返回检测语言；页面增加“自动”选项；非法值仍 400。
+  - 验证：中英文样本自动识别；zh/en 回归；文档标注为扩展。
+  - 备注：如实现成本超 45 分钟或影响契约，放弃并记录。
+
+- [ ] **T8.2 实时识别后端（WebSocket + PCM 分片）**
+  - 目标：接收 PCM 分片并用本地模型滚动转写。
+  - 文件：`app/api/ws.py`、`app/services/streaming.py`、`app/main.py`、`tests/test_ws.py`。
+  - 前置：T8.0。
+  - 完成标准：WebSocket 协议定义清晰（采样率/格式/分片/结束）；复用当前主引擎；滚动窗口策略与最终全文策略明确；错误可关闭连接并提示；不影响 `/api/transcribe`。
+  - 验证：Mock 单测；真实模型手动说话看到中间文本；停止后最终文本完整。
+
+- [ ] **T8.3 实时识别前端**
+  - 目标：录音过程中持续显示文本。
+  - 文件：`static/app.js`、`static/index.html`、`static/styles.css`。
+  - 前置：T8.2。
+  - 完成标准：AudioWorklet 或 ScriptProcessor 采集 16 kHz 单声道 PCM；分片发送；中间结果更新；停止发送结束帧并展示最终文本；麦克风权限/断线错误可处理。
+  - 验证：Chrome 实时说中文/英文；观察文本更新；停止后最终结果与上传识别接近。
+
+- [ ] **T8.4 实时识别测试与回归**
+  - 目标：证明 F6 不破坏必做。
+  - 文件：`tests/test_ws.py`、`docs/test-report.md`、`docs/design.md`。
+  - 前置：T8.3。
+  - 完成标准：WS Mock 测试通过；`pytest -q` 全绿；真实模型实时手动验证记录；必做 6 项抽测不回归。
+  - 验证：全量回归 + 手动演示。
+
+- [ ] **T8.5 实时识别失败回滚**
+  - 目标：时间不足/不稳定时安全放弃。
+  - 文件：Git revert/feature flag、`docs/issue-log.md`、`docs/test-report.md`。
+  - 前置：T8.2–T8.4 任一失败或超时。
+  - 完成标准：必做功能恢复到 G4 状态；文档说明 F6 未完成原因；不留下半成品入口。
+  - 验证：`pytest -q` + 手动主流程复测。
+
+---
+
+## 阶段 P9：终验与交付确认
+
+- [ ] **T9.1 干净环境按 README 复现**
+  - 目标：验证交付物可独立复现。
+  - 文件：`docs/evidence/final-repro.txt`。
+  - 前置：T7.9（或 T7.8）；若进入 P8，则还需 T8.4 或 T8.5 完成。
+  - 完成标准：新目录/新 venv；执行 `python -m pip install -r requirements.txt`；执行 `python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`；`/health` 200；页面可开；上传识别成功。
+  - 验证：逐字照 README；记录耗时/问题。
+
+- [ ] **T9.2 必做需求逐项核对**
+  - 目标：确保 F1–F5、接口、环境、测试、文档无遗漏。
+  - 文件：`docs/test-report.md`、`plan.md` 第 3 节。
+  - 前置：T9.1。
+  - 完成标准：每条需求有“实现位置 + 验证证据”；F6 必须写明“已完成并演示”或“未完成及原因”，不能空泛带过；Windows 实机未验证单独标注。
+  - 验证：双人/自查逐行核对；无“计划即通过”的表述。
+
+- [ ] **T9.3 文档/代码/任务一致性检查**
+  - 目标：避免计划、实现、测试报告互相矛盾。
+  - 文件：`plan.md`、`todo.md`、`README.md`、`docs/*.md`。
+  - 前置：T9.2。
+  - 完成标准：启动命令、接口字段、错误码、限制值、模型名、测试命令一致；任务依赖无环；已完成项均有证据。
+  - 验证：搜索关键数字（60/120/10 MB/small/int8）与命令；对照检查。
+
+- [ ] **T9.4 最终交付与汇报**
+  - 目标：形成提交说明与后续建议。
+  - 文件：最终 Git tag/压缩包、`docs/ai-development.md`。
+  - 前置：T9.1–T9.3。
+  - 完成标准：交付物清单齐全；已知问题与未验证项透明；给出后续优化优先级（准确率、实时性、性能、UI）。
+  - 验证：按题目第 7、9 节清单最终核对；冻结代码。
+
+---
+
+## 交付前总检查（Definition of Done）
+
+- [ ] `python -m pytest -q` 在无模型、无麦克风、无外网环境通过。
+- [ ] `python -m pytest -q -m real_model` 使用真实本地模型通过（中英文），输出已归档。
+- [ ] 6 项手动验证全部实际执行并记录，不把“计划执行”写成“已通过”。
+- [ ] 断网后中英文识别成功。
+- [ ] Windows CI（`windows-latest`）按题目命令安装/启动并完成 API/真实模型/假麦克风验证；真实 Windows 11 桌面/麦克风未验证时明确标注。
+- [ ] `samples/chinese.wav`、`english.wav`、`reference.txt` 为本人录制、合法、可播放、5–15 秒。
+- [ ] README、requirements、design、test-report、ai-development 五份文档齐全且一致。
+- [ ] OpenCode 三阶段证据脱敏、可读、与 Git 时间线对应。
+- [ ] 仓库无模型权重、虚拟环境、缓存、密钥；Git 工作区干净。
+- [ ] F1–F5、三个接口、异常 8 类、10 MB 限制全部通过；F6 完成并演示，或明确记录未完成原因。
+
+---
+
+## 任务依赖速查
+
+```text
+P0（规划/决策，含 D6 仓库/CI）
+  └─> P1（脚手架/配置/健康检查/pytest/Windows CI 骨架）
+        └─> P2（音频/接口/Mock 测试）
+              ├─> P3（真实模型/下载/真实 API；T3.11 条件评估）──> G2
+              └─> P4（前端录音/上传/展示）──┐
+                                             ├─> P5（样本/真实测试）
+                                             └─> P6（手动/离线/Windows CI）──> G4
+                                                   └─> P7（文档/证据/交付）
+                                                         ├─> P8（F6 实时识别，仅 G5 通过）─┐
+                                                         └─────────────────────────────────┴─> P9（终验）
+```
+
+注意：P3 与 P4 可在 P2 完成后并行；P6 的 Windows 验证使用 GitHub Actions 替代实机，若 D6 不可用，先做其余项并将 Windows 标为未验证风险，不得默认为通过。P8 已确认要做，但只有 G5 通过才启动。

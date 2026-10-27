@@ -92,12 +92,13 @@
   - 验证：`python -m pytest -q tests/test_config.py`（21 passed）；默认值、环境变量覆盖、相对/绝对路径、布尔/整数校验均覆盖。
   - 结果：已完成（2026-10-27）；`Settings` 为 frozen dataclass，提供 `max_upload_bytes` 与 `supported_languages`。
 
-- [ ] **T1.4 实现应用工厂、静态页面与健康检查**
+- [x] **T1.4 实现应用工厂、静态页面与健康检查**
   - 目标：`create_app()` 可注入假引擎；`GET /health` 与 `GET /` 可用。
-  - 文件：`app/main.py`、`app/api/routes.py`、`static/index.html`（占位）、`tests/test_health.py`。
+  - 文件：`app/main.py`、`app/api/routes.py`、`static/index.html`、`tests/test_health.py`、`tests/test_app_factory.py`、`docs/evidence/t1.4-app-health.txt`。
   - 前置：T1.2、T1.3。
-  - 完成标准：`GET /health` 返回 200 且 JSON 为 `{"status":"ok"}`；`GET /` 返回 HTML；静态资源可访问；生产入口仍为 `app.main:app`。
-  - 验证：pytest + `python -m uvicorn app.main:app --port 8000` 后 `curl http://127.0.0.1:8000/health`。
+  - 完成标准：`GET /health` 返回 200 且 JSON 为 `{"status":"ok"}`；`GET /` 返回 HTML；静态资源可访问；生产入口仍为 `app.main:app`；导入不加载模型。
+  - 验证：`python -m pytest -q`（29 passed）；实际 uvicorn 启动后 `/health` 200、`/` 200。
+  - 结果：已完成（2026-10-27）；transcriber 通过 `app.state.transcriber` 注入，默认 None。
 
 - [ ] **T1.5 实现统一错误模型与异常处理器**
   - 目标：所有可预期错误返回 `{"detail","code"}`，不泄漏堆栈。
@@ -121,14 +122,14 @@
   - 完成标准：`git status` 干净；提交信息说明脚手架/配置/健康检查；记录本阶段命令与问题。
   - 验证：`git log --oneline -5`；`pytest -q` 通过。
 
-- [ ] **T1.8 建立 GitHub Actions Windows CI 骨架**
+- [x] **T1.8 建立 GitHub Actions Windows CI 骨架**
   - 目标：在无 Windows 实机条件下尽早发现 Windows 安装/导入问题。
   - 文件：`.github/workflows/windows.yml`、`docs/evidence/t1.8-windows-ci.txt`。
   - 前置：T0.7 确认 GitHub 可用；T1.2；用户 push。
   - 完成标准：workflow 使用 `windows-latest` + Python 3.12，执行 `pip install -r requirements.txt`、`pip check`、关键模块导入、`python -m pytest -q`；支持 push/PR/手动触发；失败日志可在 Actions 页面查看。
-  - 验证：YAML 本地解析通过；本地等价步骤通过（21 tests）；用户 push 后 Windows job 绿色；截图/日志归档。
-  - 状态：workflow 已创建并本地验证（2026-10-27），但**实际 windows-latest run 尚未执行**；本 commit 需用户 push 后才能确认，未通过前不得勾选。
-  - 后续：T1.4 完成后把 uvicorn + `/health` 加入 workflow；T6.10 再加入真实模型上传与 Playwright 假麦克风。
+  - 验证：YAML 本地解析通过；本地等价步骤通过；用户确认 push 后 Windows job 绿色（2026-10-27）。
+  - 结果：已完成（T1.8 骨架）。T1.4 的 uvicorn/health 与 T6.10 的真实模型/Playwright 步骤后续再加入 workflow。
+  - 备注：未保存 run URL/日志，仅记录用户确认，不伪造截图。
 
 ---
 

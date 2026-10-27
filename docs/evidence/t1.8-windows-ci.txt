@@ -26,6 +26,6 @@ steps: ['Checkout', 'Set up Python 3.12', 'Install dependencies', 'Verify depend
 
 ## 实际 GitHub Actions 状态
 
-尚未执行：本 commit 需要用户手动 push 后触发 windows-latest。匿名 GitHub API 无法读取该仓库的 Actions 状态（返回 404），代理无法替用户 push，也无法读取 Actions 运行日志。
+用户于 2026-10-27 确认：push 后 Windows job 为绿色。未提供 run URL 或完整日志，因此本记录只保留用户确认，不伪造截图/日志。
 
-因此：workflow 文件与本地等价步骤已验证，但 **不得把 T1.8 标记为 CI 已通过**；待 push 后查看 Windows job 结果。
+workflow 文件与本地等价步骤已验证；Windows job 已由用户确认通过。T1.4 之后若修改 workflow，需要重新确认新的 run。

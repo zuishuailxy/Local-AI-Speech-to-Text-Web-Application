@@ -1,0 +1,30 @@
+# T1.4 应用工厂、健康检查与首页验证
+
+- 日期：2026-10-27
+
+## 单元测试
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+.............................                                            [100%]
+29 passed in 0.28s
+```
+
+## 实际 uvicorn 启动
+
+```text
+GET /health -> 200 {"status":"ok"}
+GET / -> 200 text/html，包含 Local AI Speech-to-Text
+```
+
+## 覆盖点
+
+- create_app() 可注入 transcriber（sentinel 验证）
+- 默认不加载模型，state.transcriber 为 None
+- GET /health 精确返回 {"status":"ok"}
+- GET / 返回 HTML
+- /static/index.html 可访问，缺失静态文件 404
+- pytest 默认不依赖模型/麦克风/外网

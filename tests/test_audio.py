@@ -26,6 +26,7 @@ from app.errors import (
     InvalidLanguageError,
 )
 from app.main import create_app
+from app.services.transcriber import FakeTranscriber
 from app.services.audio import (
     ASR_SAMPLE_RATE,
     decode_audio,
@@ -201,10 +202,6 @@ def test_content_length_guard_runs_before_route(tmp_path) -> None:
     )
     app = create_app(settings=settings)
 
-    @app.post("/api/transcribe")
-    async def transcribe_probe() -> dict[str, bool]:
-        return {"ok": True}
-
     client = TestClient(app)
     response = client.post(
         "/api/transcribe",
@@ -215,20 +212,23 @@ def test_content_length_guard_runs_before_route(tmp_path) -> None:
     assert response.json()["code"] == "file_too_large"
 
 
-def test_small_request_passes_content_length_guard(tmp_path) -> None:
+def test_small_request_passes_content_length_guard(tmp_path, wav_bytes: bytes) -> None:
     settings = Settings.from_env(
         environ={"MAX_UPLOAD_MB": "1"}, project_root=tmp_path
     )
-    app = create_app(settings=settings)
+    app = create_app(
+        transcriber=FakeTranscriber(text="ok"),
+        settings=settings,
+    )
 
-    @app.post("/api/transcribe")
-    async def transcribe_probe() -> dict[str, bool]:
-        return {"ok": True}
-
-    response = TestClient(app).post("/api/transcribe", content=b"ok")
+    response = TestClient(app).post(
+        "/api/transcribe",
+        data={"language": "zh"},
+        files={"file": ("sample.wav", wav_bytes, "audio/wav")},
+    )
 
     assert response.status_code == 200
-    assert response.json() == {"ok": True}
+    assert response.json()["text"] == "ok"
 
 
 def test_save_upload_to_temp_writes_and_cleans(tmp_path, wav_bytes: bytes) -> None:

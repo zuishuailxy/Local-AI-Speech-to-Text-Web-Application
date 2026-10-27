@@ -191,13 +191,14 @@
   - 结果：已完成（2026-10-27）；fixture 为项目自生成 1 秒合成 Opus，SHA-256 记录在证据中；真实浏览器 MIME/上传仍由 T6.8/T6.11 手动验证。
   - 备注：系统 `/usr/local/bin/ffmpeg` 存在但不可执行（bad CPU type）；测试证明解码只依赖 PyAV wheel 自带库。
 
-- [ ] **T2.7 实现 Transcriber 协议、假引擎与 `POST /api/transcribe` 契约测试**
+- [x] **T2.7 实现 Transcriber 协议、假引擎与 `POST /api/transcribe` 契约测试**
   - 目标：打通 multipart → 校验 → 解码 → 引擎 → JSON 全链路，并定义可注入的识别协议。
-  - 文件：`app/services/transcriber.py`（最小协议 + Fake）、`app/api/routes.py`、`app/schemas.py`、`app/errors.py`、`tests/test_transcribe_api.py`、`tests/test_language.py`。
+  - 文件：`app/services/transcriber.py`、`app/schemas.py`、`app/api/routes.py`、`tests/test_transcribe_api.py`、`tests/test_language.py`、`docs/evidence/t2.7-transcribe-api.txt`。
   - 前置：T2.5。
   - 完成标准：定义 `Transcriber.transcribe(...)` 与 `ModelUnavailableError`；成功响应含 `text/language/duration_seconds/processing_seconds`；`duration_seconds` 来自真实解码；`processing_seconds` 为服务端耗时；中英文均返回；非法语言 400。
-  - 验证：pytest 断言字段类型/数值范围；`curl -F` 手工冒烟。
-  - 备注：T3.1 在本任务基础上完善 Fake 的可配置行为，不重复定义协议。
+  - 验证：24 个接口/语言测试通过；全量 113 passed；curl 上传 WebM 返回 200 与四字段；非法语言 400；缺字段 422；格式/空文件/伪 WAV/超时长/无模型/推理异常/空文本均有测试。
+  - 结果：已完成（2026-10-27）；`Transcriber` 通过 `app.state.transcriber` 注入，`run_in_threadpool` 调用；临时文件在模型调用前已由 `process_audio_upload` 清理。
+  - 备注：当前假引擎只验证契约；真实模型接入与真实文本在 T3.2/T3.6。
 
 - [ ] **T2.8 错误路径与重试语义测试**
   - 目标：模型加载失败 503、推理失败 500、空文本 200、请求可重试。

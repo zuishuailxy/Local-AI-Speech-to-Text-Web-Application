@@ -4,42 +4,13 @@ import io
 import math
 import struct
 import wave
-from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-
-
-@dataclass(frozen=True, slots=True)
-class FakeTranscription:
-    text: str
-    language: str
-
-
-class FakeTranscriber:
-    """Test double for the future ASR engine.
-
-    It records calls and can return text or raise an exception.  Tests must use
-    this instead of importing/loading faster-whisper.
-    """
-
-    def __init__(
-        self,
-        text: str = "这是一段测试识别文本。",
-        error: Exception | None = None,
-    ) -> None:
-        self.text = text
-        self.error = error
-        self.calls: list[tuple[object, str]] = []
-
-    def transcribe(self, audio: object, language: str) -> FakeTranscription:
-        self.calls.append((audio, language))
-        if self.error is not None:
-            raise self.error
-        return FakeTranscription(text=self.text, language=language)
+from app.services.transcriber import FakeTranscriber
 
 
 def make_wav_bytes(

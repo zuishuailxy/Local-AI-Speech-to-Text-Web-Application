@@ -8,12 +8,13 @@ from app.api.routes import router
 from app.config import PROJECT_ROOT, Settings
 from app.errors import FileTooLargeError, register_exception_handlers
 from app.services.audio import validate_content_length
+from app.services.transcriber import Transcriber
 
 STATIC_DIR = PROJECT_ROOT / "static"
 
 
 def create_app(
-    transcriber: object | None = None,
+    transcriber: Transcriber | None = None,
     settings: Settings | None = None,
 ) -> FastAPI:
     """Create the FastAPI application.

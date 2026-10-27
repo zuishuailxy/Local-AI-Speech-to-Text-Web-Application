@@ -1,0 +1,51 @@
+# T2.7 POST /api/transcribe 契约与 FakeTranscriber 验证
+
+- 日期：2026-10-27
+
+## 单元/接口测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_transcribe_api.py tests/test_language.py
+```
+
+```text
+24 passed in 0.20s
+```
+
+## 全量
+
+```text
+113 passed in 0.65s
+```
+
+## curl 冒烟（注入 FakeTranscriber，非真实模型）
+
+```text
+POST /api/transcribe, file=tests/fixtures/sample.webm, language=zh
+{"text":"curl smoke ok","language":"zh","duration_seconds":1.0,"processing_seconds":0.02}
+
+POST /api/transcribe, language=fr
+{"detail":"language 仅支持 zh, en，收到: 'fr'。","code":"invalid_language"}
+```
+
+## 契约
+
+- `text` / `language` / `duration_seconds` / `processing_seconds` 四个字段；
+- `duration_seconds` 来自 PyAV 实际解码；
+- `processing_seconds` 从路由开始计时，包含解码与模型调用；
+- 有效 WAV/WebM + FakeTranscriber → 200；
+- 非法语言 → 400 `invalid_language`；缺 file/language → 422 `validation_error`；
+- `.txt` → 415 `unsupported_format`；空文件 → 400 `empty_file`；伪 WAV → 400 `invalid_audio`；
+- 超时长 → 400 `audio_too_long`；无模型 → 503 `model_unavailable`；推理异常 → 500 `transcription_failed`；空文本 → 200。
+
+## 实现
+
+- `app/services/transcriber.py`：`Transcriber` Protocol / `TranscriptionResult` / `FakeTranscriber`
+- `app/schemas.py`：`TranscriptionResponse`
+- `app/api/routes.py`：`POST /api/transcribe`
+- `process_audio_upload` 负责解码与临时文件 `finally` 清理
+
+## 边界
+
+- 本任务使用 FakeTranscriber；真实 faster-whisper 模型在 T3.2/T3.6 接入并验证。
+- 本 smoke 使用 WebM fixture；真实浏览器录音仍由 T6 手动验证。

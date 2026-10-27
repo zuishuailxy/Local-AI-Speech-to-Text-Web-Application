@@ -55,6 +55,17 @@ class UnsupportedFormatError(ApiError):
         super().__init__(415, "unsupported_format", message)
 
 
+class FileTooLargeError(ApiError):
+    """The uploaded file exceeds the configured size limit."""
+
+    def __init__(self, limit_mb: int = 10) -> None:
+        super().__init__(
+            413,
+            "file_too_large",
+            f"上传文件超过 {limit_mb} MB 限制，请选择更短的音频。",
+        )
+
+
 class InvalidLanguageError(ApiError):
     """The requested language is not supported."""
 
@@ -146,6 +157,7 @@ def register_exception_handlers(app: FastAPI) -> None:
 __all__ = [
     "ApiError",
     "EmptyFileError",
+    "FileTooLargeError",
     "InvalidAudioError",
     "InvalidLanguageError",
     "ModelUnavailableError",

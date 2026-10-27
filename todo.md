@@ -146,12 +146,14 @@
   - 结果：已完成（2026-10-27）；增加 EmptyFileError / UnsupportedFormatError / InvalidLanguageError；WAV 头早期校验，其他容器留给 T2.3 解码。
   - 备注：生产 `/api/transcribe` 路由在 T2.7 接线，当前用等价测试路由验证 FastAPI 缺失字段行为。
 
-- [ ] **T2.2 实现流式写入与 10 MB 上限**
+- [x] **T2.2 实现流式写入与 10 MB 上限**
   - 目标：避免一次性读入超大文件，服务端强制执行 10 MB。
-  - 文件：`app/services/audio.py`、`tests/test_audio.py`。
+  - 文件：`app/services/audio.py`、`app/main.py`、`app/errors.py`、`tests/test_audio.py`、`docs/evidence/t2.2-upload-limit.txt`。
   - 前置：T2.1。
   - 完成标准：分块读取并累计字节；超过 `MAX_UPLOAD_MB` 返回 413 并清理临时文件；Content-Length 预检作为第一道防线。
-  - 验证：构造 10 MB+1 字节请求返回 413；临时目录无残留。
+  - 验证：构造 10 MB+1 请求返回 413；临时目录无残留；24 passed；全量 71 passed。
+  - 结果：已完成（2026-10-27）；`save_upload_to_temp` 使用 TemporaryDirectory + 1 MiB 分块；`StoredUpload.cleanup()`/上下文管理器负责清理；中间件只拦截 `/api/transcribe`。
+  - 备注：允许 multipart 边界 1 MiB overhead，精确文件大小在复制时二次校验；生产路由 T2.7 接线。
 
 - [ ] **T2.3 实现 PyAV 解码、重采样与时长上限**
   - 目标：任意受支持容器统一解码为 16 kHz 单声道 float32，并计算实际时长。

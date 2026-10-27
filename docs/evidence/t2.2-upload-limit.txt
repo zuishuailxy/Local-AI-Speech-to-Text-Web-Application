@@ -1,0 +1,43 @@
+# T2.2 流式写入与 10 MB 上限验证
+
+- 日期：2026-10-27
+
+## 测试命令
+
+```bash
+.venv/bin/python -m pytest -q tests/test_audio.py
+```
+
+```text
+........................                                                 [100%]
+24 passed in 0.14s
+```
+
+## 全量
+
+```text
+.......................................................................  [100%]
+71 passed in 0.27s
+```
+
+## 覆盖点
+
+- Content-Length 中间件在进入 /api/transcribe 路由前拒绝明显超大请求（413 file_too_large）
+- 允许 multipart 边界带来的 1 MiB overhead；精确文件字节数由复制时二次校验
+- UploadFile 分块读取到 TemporaryDirectory，不在内存中拼完整文件
+- 声明 size > 上限时预检拒绝，不创建临时目录
+- size 未知时边读边计数，超过上限立即中止并清理
+- 默认 10 MB + 1 字节被拒绝
+- 正常上传写入临时文件、size/扩展名正确，cleanup 后路径消失
+- StoredUpload 支持上下文管理器清理
+
+## 实现位置
+
+- app/services/audio.py: validate_content_length / save_upload_to_temp / StoredUpload
+- app/main.py: /api/transcribe 的 Content-Length 中间件
+- app/errors.py: FileTooLargeError (413)
+
+## 说明
+
+- 生产 /api/transcribe 路由仍在 T2.7 接线；本轮用临时路由验证中间件顺序。
+- T2.3 负责 PyAV 解码、实际时长和 120 秒上限；T2.4 负责全路径清理收口。

@@ -1,11 +1,22 @@
 from __future__ import annotations
 
+import asyncio
+import io
+
 import pytest
 from fastapi import File, Form, UploadFile
 from fastapi.testclient import TestClient
 
+from app.config import Settings
+from app.errors import EmptyFileError, FileTooLargeError, InvalidLanguageError
 from app.main import create_app
-from app.services.audio import validate_language, validate_upload, validate_upload_metadata
+from app.services.audio import (
+    save_upload_to_temp,
+    validate_content_length,
+    validate_language,
+    validate_upload,
+    validate_upload_metadata,
+)
 
 
 @pytest.fixture
@@ -61,8 +72,6 @@ def test_language_is_case_insensitive() -> None:
 
 
 def test_empty_language_is_rejected() -> None:
-    from app.errors import InvalidLanguageError
-
     with pytest.raises(InvalidLanguageError):
         validate_language("")
 
@@ -144,7 +153,170 @@ def test_validate_upload_metadata_directly() -> None:
 
 
 def test_zero_size_metadata_is_empty_file() -> None:
-    from app.errors import EmptyFileError
-
     with pytest.raises(EmptyFileError):
         validate_upload_metadata("clip.wav", 0, "zh")
+
+
+def test_validate_content_length_rejects_excess() -> None:
+    with pytest.raises(FileTooLargeError) as exc_info:
+        validate_content_length(
+            str(10 * 1024 * 1024 + 1),
+            10 * 1024 * 1024,
+            overhead_bytes=0,
+        )
+
+    assert exc_info.value.status_code == 413
+    assert exc_info.value.code == "file_too_large"
+
+
+def test_validate_content_length_allows_multipart_overhead() -> None:
+    validate_content_length(
+        str(10 * 1024 * 1024 + 512 * 1024),
+        10 * 1024 * 1024,
+    )
+
+
+def test_content_length_guard_runs_before_route(tmp_path) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_UPLOAD_MB": "1"}, project_root=tmp_path
+    )
+    app = create_app(settings=settings)
+
+    @app.post("/api/transcribe")
+    async def transcribe_probe() -> dict[str, bool]:
+        return {"ok": True}
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/transcribe",
+        content=b"x" * (3 * 1024 * 1024),
+    )
+
+    assert response.status_code == 413
+    assert response.json()["code"] == "file_too_large"
+
+
+def test_small_request_passes_content_length_guard(tmp_path) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_UPLOAD_MB": "1"}, project_root=tmp_path
+    )
+    app = create_app(settings=settings)
+
+    @app.post("/api/transcribe")
+    async def transcribe_probe() -> dict[str, bool]:
+        return {"ok": True}
+
+    response = TestClient(app).post("/api/transcribe", content=b"ok")
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+
+
+def test_save_upload_to_temp_writes_and_cleans(tmp_path, wav_bytes: bytes) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_UPLOAD_MB": "10"}, project_root=tmp_path
+    )
+    upload = UploadFile(
+        file=io.BytesIO(wav_bytes),
+        filename="sample.wav",
+        size=len(wav_bytes),
+    )
+    stored = asyncio.run(
+        save_upload_to_temp(
+            upload,
+            "zh",
+            settings,
+            temp_dir=tmp_path / "uploads",
+            chunk_size=1024,
+        )
+    )
+
+    assert stored.path.exists()
+    assert stored.path.read_bytes() == wav_bytes
+    assert stored.size == len(wav_bytes)
+    assert stored.extension == ".wav"
+
+    path = stored.path
+    stored.cleanup()
+    assert not path.exists()
+
+
+def test_save_upload_to_temp_rejects_declared_oversize(tmp_path) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_UPLOAD_MB": "1"}, project_root=tmp_path
+    )
+    payload = b"x" * (1024 * 1024 + 1)
+    upload = UploadFile(
+        file=io.BytesIO(payload),
+        filename="oversize.webm",
+        size=len(payload),
+    )
+    upload_dir = tmp_path / "uploads"
+
+    with pytest.raises(FileTooLargeError):
+        asyncio.run(
+            save_upload_to_temp(
+                upload,
+                "zh",
+                settings,
+                temp_dir=upload_dir,
+            )
+        )
+
+    assert not upload_dir.exists() or not list(upload_dir.iterdir())
+
+
+def test_save_upload_to_temp_enforces_limit_while_streaming(tmp_path) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_UPLOAD_MB": "1"}, project_root=tmp_path
+    )
+    payload = b"x" * (2 * 1024 * 1024)
+    upload = UploadFile(
+        file=io.BytesIO(payload),
+        filename="oversize.webm",
+        size=None,
+    )
+    upload_dir = tmp_path / "uploads"
+
+    with pytest.raises(FileTooLargeError):
+        asyncio.run(
+            save_upload_to_temp(
+                upload,
+                "zh",
+                settings,
+                temp_dir=upload_dir,
+                chunk_size=64 * 1024,
+            )
+        )
+
+    assert not upload_dir.exists() or not list(upload_dir.iterdir())
+
+
+def test_save_upload_to_temp_context_manager_cleans(tmp_path, wav_bytes: bytes) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_UPLOAD_MB": "10"}, project_root=tmp_path
+    )
+    upload = UploadFile(
+        file=io.BytesIO(wav_bytes),
+        filename="sample.wav",
+        size=len(wav_bytes),
+    )
+
+    with asyncio.run(save_upload_to_temp(upload, "en", settings)) as stored:
+        path = stored.path
+        assert path.exists()
+
+    assert not path.exists()
+
+
+def test_default_ten_mb_plus_one_is_rejected(tmp_path) -> None:
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+    payload = b"x" * (10 * 1024 * 1024 + 1)
+    upload = UploadFile(
+        file=io.BytesIO(payload),
+        filename="oversize.webm",
+        size=len(payload),
+    )
+
+    with pytest.raises(FileTooLargeError):
+        asyncio.run(save_upload_to_temp(upload, "zh", settings))

@@ -7,14 +7,17 @@ and T2.3.
 
 from __future__ import annotations
 
+import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
 from fastapi import UploadFile
 
-from app.config import SUPPORTED_LANGUAGES
+from app.config import SUPPORTED_LANGUAGES, Settings
 from app.errors import (
     EmptyFileError,
+    FileTooLargeError,
     InvalidAudioError,
     InvalidLanguageError,
     UnsupportedFormatError,
@@ -34,6 +37,8 @@ ALLOWED_AUDIO_EXTENSIONS: Final[frozenset[str]] = frozenset(
 )
 
 _WAV_HEADER_SIZE = 12
+MAX_MULTIPART_OVERHEAD_BYTES: Final[int] = 1024 * 1024
+DEFAULT_CHUNK_SIZE: Final[int] = 1024 * 1024
 
 
 def validate_language(
@@ -120,8 +125,116 @@ async def validate_upload(
     return extension
 
 
+def validate_content_length(
+    content_length: str | None,
+    max_upload_bytes: int,
+    *,
+    overhead_bytes: int = MAX_MULTIPART_OVERHEAD_BYTES,
+) -> None:
+    """Reject obviously oversized requests before multipart parsing.
+
+    Multipart boundaries add a small amount of overhead, so the header check
+    allows one MiB more than the file limit.  The exact byte limit is still
+    enforced while copying the file in ``save_upload_to_temp``.
+    """
+
+    if content_length is None:
+        return
+    try:
+        total_bytes = int(content_length)
+    except (TypeError, ValueError):
+        return
+    if total_bytes < 0:
+        return
+    if total_bytes > max_upload_bytes + overhead_bytes:
+        limit_mb = max(1, max_upload_bytes // (1024 * 1024))
+        raise FileTooLargeError(limit_mb)
+
+
+@dataclass
+class StoredUpload:
+    """A temporary upload that must be cleaned up by the caller."""
+
+    path: Path
+    size: int
+    extension: str
+    _tempdir: tempfile.TemporaryDirectory
+
+    def cleanup(self) -> None:
+        self._tempdir.cleanup()
+
+    def __enter__(self) -> "StoredUpload":
+        return self
+
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        self.cleanup()
+
+
+async def save_upload_to_temp(
+    file: UploadFile,
+    language: str,
+    settings: Settings,
+    *,
+    temp_dir: Path | None = None,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+) -> StoredUpload:
+    """Copy an upload to a temporary file while enforcing the byte limit.
+
+    The upload is never fully loaded into memory.  The returned object keeps
+    its temporary directory alive; callers must use it as a context manager or
+    call ``cleanup()`` in a ``finally`` block.
+    """
+
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be positive")
+
+    extension = await validate_upload(
+        file, language, settings.supported_languages
+    )
+    await file.seek(0)
+
+    max_bytes = settings.max_upload_bytes
+    if file.size is not None and file.size > max_bytes:
+        raise FileTooLargeError(settings.max_upload_mb)
+
+    if temp_dir is not None:
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+    tempdir = tempfile.TemporaryDirectory(prefix="local-stt-", dir=temp_dir)
+    target = Path(tempdir.name) / f"upload{extension}"
+    total = 0
+    try:
+        with target.open("wb") as destination:
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > max_bytes:
+                    raise FileTooLargeError(settings.max_upload_mb)
+                destination.write(chunk)
+
+        if total == 0:
+            raise EmptyFileError()
+    except Exception:
+        tempdir.cleanup()
+        raise
+
+    return StoredUpload(
+        path=target,
+        size=total,
+        extension=extension,
+        _tempdir=tempdir,
+    )
+
+
 __all__ = [
     "ALLOWED_AUDIO_EXTENSIONS",
+    "DEFAULT_CHUNK_SIZE",
+    "MAX_MULTIPART_OVERHEAD_BYTES",
+    "StoredUpload",
+    "save_upload_to_temp",
+    "validate_content_length",
     "validate_language",
     "validate_upload",
     "validate_upload_metadata",

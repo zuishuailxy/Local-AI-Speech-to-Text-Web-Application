@@ -274,12 +274,14 @@
   - 结果：维持 **small / CPU int8 / beam 5 / VAD on**；英文准确，中文有同音错误但可辨认且在 CER ≤0.3 内；不触发 SenseVoice 评估。
   - 门禁：**G2 通过**（中英文均非空、可辨认，数据已记录）。
 
-- [ ] **T3.7 接入真实引擎到 `/api/transcribe`**
+- [x] **T3.7 接入真实引擎到 `/api/transcribe`**
   - 目标：路由使用真实引擎，响应口径符合契约。
-  - 文件：`app/api/routes.py`、`app/main.py`、`app/schemas.py`。
+  - 文件：`app/api/routes.py`、`app/main.py`、`app/services/transcriber.py`、`tests/test_app_factory.py`、`tests/test_transcriber_unit.py`、`docs/evidence/t3.7-real-api.txt`。
   - 前置：T2.7、T3.2。
   - 完成标准：真实请求走本地模型；`processing_seconds` 含解码、模型加载（若首次请求触发）与推理，不含首次下载；模型加载耗时另记日志；请求间无状态。
-  - 验证：curl 上传 WAV 中英文各一次；对比 CLI 结果；连续两次请求成功。
+  - 验证：真实 uvicorn 下中文 4.456s→3.484s（首次含加载）、英文 1.674s，均 200；文本与 CLI 一致；连续请求成功；149 passed。
+  - 结果：已完成（2026-10-27）；生产 `app` 创建 `WhisperTranscriber` 但不在导入时加载；`create_app()` 默认仍不注入引擎；`model_load_seconds` 日志由 caplog 测试覆盖。
+  - 备注：uvicorn 默认 INFO 日志级别可能不显示加载日志；不影响响应与计时。
 
 - [ ] **T3.8 真实模型异常路径**
   - 目标：模型缺失/损坏/推理失败均可理解。

@@ -8,7 +8,7 @@ from app.api.routes import router
 from app.config import PROJECT_ROOT, Settings
 from app.errors import FileTooLargeError, register_exception_handlers
 from app.services.audio import validate_content_length
-from app.services.transcriber import Transcriber
+from app.services.transcriber import Transcriber, WhisperTranscriber
 
 STATIC_DIR = PROJECT_ROOT / "static"
 
@@ -60,4 +60,8 @@ def create_app(
     return app
 
 
-app = create_app()
+_production_settings = Settings.from_env()
+app = create_app(
+    transcriber=WhisperTranscriber(_production_settings),
+    settings=_production_settings,
+)

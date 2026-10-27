@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -183,3 +184,15 @@ def test_warmup_loads_without_inference(tmp_path) -> None:
     assert engine.is_loaded is True
     assert len(factory_calls) == 1
     assert model.calls == []
+
+
+def test_model_load_logs_seconds(tmp_path, caplog) -> None:
+    settings = make_settings(tmp_path)
+    model = FakeWhisperModel()
+    factory, _ = make_factory(model)
+    engine = WhisperTranscriber(settings, model_factory=factory)
+
+    with caplog.at_level(logging.INFO, logger="app.services.transcriber"):
+        engine.warmup()
+
+    assert "model_load_seconds=" in caplog.text

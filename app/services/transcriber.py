@@ -126,12 +126,14 @@ class WhisperTranscriber:
             )
 
         try:
+            started = time.perf_counter()
             model = self._model_factory(
                 str(path),
                 device=self._settings.asr_device,
                 compute_type=self._settings.asr_compute_type,
                 cpu_threads=self._settings.asr_cpu_threads,
             )
+            load_seconds = time.perf_counter() - started
         except ApiError:
             raise
         except Exception as exc:
@@ -141,7 +143,12 @@ class WhisperTranscriber:
             ) from exc
 
         self._model = model
-        logger.info("Loaded ASR model from %s (device=%s)", path, self._settings.asr_device)
+        logger.info(
+            "Loaded ASR model from %s (device=%s, model_load_seconds=%.3f)",
+            path,
+            self._settings.asr_device,
+            load_seconds,
+        )
         return model
 
     def warmup(self) -> None:

@@ -54,6 +54,11 @@ def fake_transcriber() -> FakeTranscriber:
 
 
 @pytest.fixture
+def delayed_transcriber() -> FakeTranscriber:
+    return FakeTranscriber(delay_seconds=0.01)
+
+
+@pytest.fixture
 def failing_transcriber() -> FakeTranscriber:
     return FakeTranscriber(error=RuntimeError("fake transcription failure"))
 

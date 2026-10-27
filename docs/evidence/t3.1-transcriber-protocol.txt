@@ -1,0 +1,47 @@
+# T3.1 Transcriber 协议、结果对象与 Fake 验证
+
+- 日期：2026-10-27
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_transcriber.py
+```
+
+```text
+7 passed in 0.03s
+```
+
+全量：
+
+```text
+123 passed in 0.74s
+```
+
+## 契约
+
+- `TranscriptionResult(text: str, language: str)`，frozen dataclass。
+- `Transcriber` 为 `runtime_checkable` Protocol：
+  `transcribe(samples: np.ndarray, language: str) -> TranscriptionResult`。
+- FakeTranscriber 支持：
+  - 固定文本；
+  - 持久异常 `error`；
+  - 异常序列 `errors=[RuntimeError(...), None]`，可模拟瞬时失败恢复；
+  - `delay_seconds` 延迟，用于并发/耗时测试；
+  - `calls` 记录每次 `(samples, language)`。
+- 负数 `delay_seconds` 立即 ValueError。
+
+## 独立性
+
+```text
+faster_whisper_imported= False
+```
+
+导入 `app.services.transcriber` 不会加载 faster-whisper 或模型；真实实现留给 T3.2。
+
+## 覆盖
+
+- Fake 满足 Protocol；
+- TranscriptionResult 字段与相等性；
+- 调用记录保留原始 ndarray 与语言；
+- 持久异常、异常序列恢复、延迟、非法延迟。

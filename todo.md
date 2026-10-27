@@ -221,12 +221,13 @@
 
 ## 阶段 P3：真实本地 ASR 集成（门禁 G2）
 
-- [ ] **T3.1 完善识别协议、结果对象与假实现**
+- [x] **T3.1 完善识别协议、结果对象与假实现**
   - 目标：业务层不依赖 faster-whisper 具体类，便于测试/替换。
-  - 文件：`app/services/transcriber.py`、`tests/conftest.py`。
+  - 文件：`app/services/transcriber.py`、`tests/conftest.py`、`tests/test_transcriber.py`、`docs/evidence/t3.1-transcriber-protocol.txt`。
   - 前置：T2.7。
   - 完成标准：`Transcriber.transcribe(audio: np.ndarray, language: str) -> TranscriptionResult`（或等价签名）稳定；Fake 可配置文本/异常/延迟；真实实现独立。
-  - 验证：类型/单元测试；API 测试可注入 Fake。
+  - 验证：7 个 transcriber 测试通过；全量 123 passed；Fake 满足 runtime_checkable Protocol；导入模块不会加载 faster-whisper。
+  - 结果：已完成（2026-10-27）；Fake 支持固定文本、持久异常、异常序列恢复、delay_seconds、calls 记录；真实引擎留给 T3.2。
 
 - [ ] **T3.2 实现 faster-whisper 引擎**
   - 目标：本地目录加载、CPU int8、语言参数、VAD、线程与锁、惰性单例。

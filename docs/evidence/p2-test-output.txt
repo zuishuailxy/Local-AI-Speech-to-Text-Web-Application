@@ -1,0 +1,54 @@
+# P2 阶段测试输出与收尾证据
+
+- 日期：2026-10-27
+- 命令：`python -m pytest -q`
+- 结果：116 passed（见下）
+- 模型权重：models/ 下文件数 = 0
+- 默认测试不加载模型、不下载权重、不访问麦克风
+
+## pytest 输出
+
+```text
+........................................................................ [ 62%]
+............................................                             [100%]
+116 passed in 0.67s
+```
+
+## 收集数量
+
+```text
+116 tests collected in 0.02s
+```
+
+## 分文件测试数
+
+```text
+tests/test_config.py                21
+tests/test_errors.py                10
+tests/test_fixtures.py               8
+tests/test_health.py                 4
+tests/test_app_factory.py            4
+tests/test_audio.py                 42
+tests/test_language.py              10
+tests/test_transcribe_api.py        17
+合计                                 116
+```
+
+## P2 Windows CI（公开仓库 run）
+
+| commit | 内容 | run id | 结果 |
+| --- | --- | --- | --- |
+| 98ca88e | T2.1 上传校验 | 40502222981 | success |
+| 2c55fe5 | T2.2 大小限制 | 40503010376 | success |
+| 30991d7 | T2.3 PyAV 解码 | 40504779907 | success |
+| 8f31ebc | T2.4 清理边界 | 40504918267 | success |
+| 52b41d4 | T2.5 音频矩阵 | 40505856878 | success |
+| cc9587c | T2.6 WebM/Opus | 40507265067 | success |
+| 8722b7e | T2.7 识别接口 | 40507634004 | success |
+| d5f97d4 | T2.8 错误/重试 | 40508136939 | success |
+
+## 阶段边界
+
+- 真实 faster-whisper 模型尚未接入；`/api/transcribe` 当前需要注入 FakeTranscriber 才能返回 200，默认启动时返回 503 model_unavailable。
+- 真实 Windows 11 桌面/麦克风未验证；CI 为 Windows Server。
+- 下一步：T3.1/T3.2/T3.5/T3.6。

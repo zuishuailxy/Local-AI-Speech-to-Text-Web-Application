@@ -209,12 +209,13 @@
   - 结果：已完成（2026-10-27）；FakeTranscriber 支持 `errors` 序列模拟瞬时失败；API 无状态，重试不会污染下一请求。
   - 备注：前端错误展示与重试按钮在 T4.8 联调；真实模型失败恢复在 T3.2/T3.8。
 
-- [ ] **T2.9 P2 阶段收尾**
+- [x] **T2.9 P2 阶段收尾**
   - 目标：提交后端音频/接口/Mock 测试。
-  - 文件：Git 提交、`docs/evidence/p2-test-output.txt`、`docs/opencode/02-implementation.md`。
+  - 文件：Git 提交、`docs/evidence/p2-test-output.txt`、`docs/opencode/02-implementation.md`、`docs/opencode/README.md`。
   - 前置：T2.1–T2.8。
   - 完成标准：`pytest -q` 全绿；无模型下载；阶段问题记录。
-  - 验证：归档 pytest 输出；`git status` 干净。
+  - 验证：全量 116 passed；`models/` 文件数 0；P2 的 8 个 Windows CI run 均 success；阶段二记录已更新 P2。
+  - 结果：已完成（2026-10-27）；G1 已通过；生产 `/api/transcribe` 仍需 P3 接入真实模型，默认无 transcriber 时返回 503。
 
 ---
 

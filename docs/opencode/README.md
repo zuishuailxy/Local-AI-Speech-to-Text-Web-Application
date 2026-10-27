@@ -7,7 +7,7 @@
 | 阶段 | 文件 | 状态 | 主要内容 |
 | --- | --- | --- | --- |
 | 阶段一：需求理解与技术设计 | [`01-requirements-and-design.md`](./01-requirements-and-design.md) | 已完成 | 读取题目、需求拆解、ASR 选型、实施计划、D1–D7 决策 |
-| 阶段二：功能开发与集成 | [`02-implementation.md`](./02-implementation.md) | 进行中（P1 已记录） | 脚手架、配置、健康检查、错误处理、测试隔离、Windows CI |
+| 阶段二：功能开发与集成 | [`02-implementation.md`](./02-implementation.md) | 进行中（P1/P2 已记录） | 脚手架、配置、健康检查、错误处理、音频处理、识别接口、测试隔离、Windows CI |
 | 阶段三：测试与问题修复 | `03-testing-and-fixes.md` | 待生成 | 测试失败、定位、修复与复测记录 |
 
 ## 导出原则

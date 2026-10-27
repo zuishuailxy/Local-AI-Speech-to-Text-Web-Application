@@ -171,7 +171,7 @@
   - 完成标准：`finally` 清理；异常不泄漏堆栈；错误码与 `plan.md` 2.3.3 一致。
   - 验证：成功/解码失败/超时长/超大小四条路径后临时目录为空；36 passed；全量 83 passed；HTTP 路由返回 400 audio_too_long、400 invalid_audio、413 file_too_large。
   - 结果：已完成（2026-10-27）；新增 `process_audio_upload` 作为统一 save→decode→finally cleanup 边界；容器与临时文件均用 with 关闭。
-  - 备注：Windows 同一测试集待本次 push 后由 windows-latest 确认。
+  - 备注：Windows CI run `40504918267`（commit `8f31ebc`）为 success，已确认临时文件测试在 windows-latest 通过。
 
 - [ ] **T2.5 Mock 层音频单元测试**
   - 目标：覆盖正常/空/损坏/超长/静音。

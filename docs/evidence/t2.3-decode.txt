@@ -42,4 +42,5 @@
 
 ## 边界
 
-- 临时文件清理与全路径收口由 T2.4 补充；Windows 端由 GitHub Actions 测试覆盖。
+- 临时文件清理与全路径收口由 T2.4 补充。
+- Windows CI：commit `30991d7` 的 run `40504779907` 为 success（windows-latest / Python 3.12，包含本文件测试集）。

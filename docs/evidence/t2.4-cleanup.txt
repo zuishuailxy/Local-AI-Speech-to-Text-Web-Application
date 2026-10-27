@@ -36,4 +36,4 @@
 ## Windows 说明
 
 - 代码使用 with 打开容器/临时文件，decode 完成后关闭，再由 TemporaryDirectory.cleanup() 删除。
-- 同一测试集会在 GitHub Actions windows-latest 运行；本次 commit push 后确认。
+- 同一测试集已在 GitHub Actions windows-latest 运行：commit `8f31ebc` 的 run `40504918267` 为 success，所有 step 通过。

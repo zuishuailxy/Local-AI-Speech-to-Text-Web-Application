@@ -16,5 +16,11 @@ python scripts/download_model.py --model small
 HF_ENDPOINT=https://hf-mirror.com python scripts/download_model.py --model small
 ```
 
+中国大陆网络也可直接使用 ModelScope 公共镜像：
+
+```bash
+python scripts/download_model.py --model small --source modelscope
+```
+
 也可以手动下载 `Systran/faster-whisper-small` 到该目录。模型准备完成后，识别过程不访问网络。
 

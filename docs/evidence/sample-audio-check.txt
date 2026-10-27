@@ -1,0 +1,61 @@
+# 用户自录测试音频评估与转换
+
+- 日期：2026-10-27
+- 原始文件：
+  - `samples/Chinese.m4a`：16.448 s，AAC，48 kHz，stereo，约 269 KB
+  - `samples/English.m4a`：19.605 s，AAC，48 kHz，stereo，约 320 KB
+- 解码：PyAV（无需系统 ffmpeg）
+- 转换：16 kHz mono PCM16 WAV，截取到 5–15 秒
+
+## 生成文件
+
+| 文件 | 时长 | 格式 | 说明 |
+| --- | --- | --- | --- |
+| `samples/chinese.wav` | 12.0 s | 16 kHz / mono / PCM16 | 原文件前 12 秒 |
+| `samples/english.wav` | 9.0 s | 16 kHz / mono / PCM16 | 原文件前 9 秒 |
+
+对应人工参考文本已写入 `samples/reference.txt`。
+
+## 真实模型结果（small, CPU int8）
+
+中文：
+
+```text
+轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+```
+
+参考：
+
+```text
+轻轻的我走了，正如我轻轻的来；我轻轻的招手，作别西天的云彩。
+那河畔的金柳，是夕阳中的新娘。
+```
+
+英文：
+
+```text
+Never give up. Never lose hope. Always have faith. It allows you to cope.
+```
+
+参考：
+
+```text
+Never give up. Never lose hope. Always have faith. It allows you to cope.
+```
+
+## 评估
+
+- 音频可用：容器/编码可解码，语速与音量可用于测试。
+- 英文识别基本正确。
+- 中文识别有同音/近音错误：正如→占如、招手→抓手、作别→做别、金柳→金牛、夕阳→西洋。
+- 说明 small 模型在清晰人声上可用，但不是逐字完美；参考文本不能直接用模型输出替代，需要人工确认。
+- 建议保留当前 12 秒/9 秒片段；如希望更短或换起始位置，可重新截取。
+
+## 待确认
+
+- 请用户确认 `samples/reference.txt` 中的中文文本是否与实际朗读一致（标准《再别康桥》文本）。
+- 确认后 T5.1 可标记完成；T5.2 将用这两份 WAV + reference 做真实模型自动化测试与 CER/WER 评估。
+
+## 原始文件
+
+`Chinese.m4a`、`English.m4a` 保留在 `samples/` 下，不删除、不修改；WAV 为测试用派生文件。

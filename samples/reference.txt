@@ -1,0 +1,24 @@
+Chinese sample
+==============
+file: samples/chinese.wav
+language: zh
+duration: 12.0 s
+source: 本人录制（原始文件 samples/Chinese.m4a，16.4 s，AAC/48 kHz/stereo；截取前 12 s 并转为 16 kHz mono PCM16）
+reference:
+轻轻的我走了，正如我轻轻的来；我轻轻的招手，作别西天的云彩。
+那河畔的金柳，是夕阳中的新娘。
+
+English sample
+==============
+file: samples/english.wav
+language: en
+duration: 9.0 s
+source: 本人录制（原始文件 samples/English.m4a，19.6 s，AAC/48 kHz/stereo；截取前 9 s 并转为 16 kHz mono PCM16）
+reference:
+Never give up. Never lose hope. Always have faith. It allows you to cope.
+
+Notes
+=====
+- 两段音频均为本人录制，用于本项目测试，不含敏感个人信息。
+- M4A 原文件保留在 samples/ 下，WAV 为测试用 16 kHz mono PCM16 版本。
+- 中文文本为《再别康桥》片段；英文为励志短文片段。

@@ -23,6 +23,9 @@ models/
 .wheelhouse-check/
 .cache/
 
+# Raw voice recordings: keep locally, only derived test WAVs are submitted
+samples/*.m4a
+
 # Logs and temporary files
 *.log
 *.tmp

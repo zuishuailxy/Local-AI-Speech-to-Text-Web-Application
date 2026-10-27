@@ -11,10 +11,13 @@ transcription loads the resulting local directory and never downloads weights.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+import urllib.parse
+import urllib.request
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Any, Callable, Sequence
 
 from huggingface_hub import snapshot_download
 
@@ -35,6 +38,8 @@ ALLOW_PATTERNS = [
     "vocabulary.*",
 ]
 REQUIRED_FILES = ("model.bin", "config.json", "tokenizer.json")
+MODELSCOPE_BASE = "https://www.modelscope.cn"
+DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 class ModelDownloadError(RuntimeError):
@@ -77,6 +82,109 @@ def verify_model_dir(output: Path) -> None:
         )
 
 
+def _wanted_model_file(path: str) -> bool:
+    name = Path(path).name
+    return name in {
+        "config.json",
+        "preprocessor_config.json",
+        "model.bin",
+        "tokenizer.json",
+        "vocabulary.txt",
+        "vocabulary.json",
+    }
+
+
+def modelscope_files(
+    repo_id: str,
+    *,
+    timeout: int = 60,
+    opener: Callable[..., Any] = urllib.request.urlopen,
+) -> list[dict[str, Any]]:
+    url = (
+        f"{MODELSCOPE_BASE}/api/v1/models/{repo_id}/repo/files"
+        "?Revision=master&Recursive=true"
+    )
+    request = urllib.request.Request(
+        url, headers={"User-Agent": "local-speech-to-text/0.1"}
+    )
+    try:
+        with opener(request, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        raise ModelDownloadError(
+            f"ModelScope 文件列表获取失败 ({repo_id}): {exc}"
+        ) from exc
+
+    if payload.get("Code") != 200:
+        raise ModelDownloadError(
+            f"ModelScope 返回异常: {payload.get('Message') or payload}"
+        )
+    files = payload.get("Data", {}).get("Files", [])
+    if not files:
+        raise ModelDownloadError(f"ModelScope 仓库没有文件: {repo_id}")
+    return files
+
+
+def download_modelscope(
+    repo_id: str,
+    destination: Path,
+    *,
+    force_download: bool = False,
+    timeout: int = 60,
+    opener: Callable[..., Any] = urllib.request.urlopen,
+) -> Path:
+    """Download selected files from ModelScope's public repo HTTP API."""
+
+    files = [
+        item
+        for item in modelscope_files(repo_id, timeout=timeout, opener=opener)
+        if _wanted_model_file(str(item.get("Path", "")))
+    ]
+    if not files:
+        raise ModelDownloadError(f"ModelScope 仓库没有所需模型文件: {repo_id}")
+
+    destination.mkdir(parents=True, exist_ok=True)
+    for item in files:
+        relative = Path(str(item["Path"]))
+        target = destination / relative
+        expected_size = int(item.get("Size") or 0)
+        if (
+            not force_download
+            and target.is_file()
+            and (expected_size == 0 or target.stat().st_size == expected_size)
+        ):
+            print(f"跳过已存在文件: {relative}")
+            continue
+
+        target.parent.mkdir(parents=True, exist_ok=True)
+        query = urllib.parse.urlencode(
+            {"Revision": "master", "FilePath": relative.as_posix()}
+        )
+        url = f"{MODELSCOPE_BASE}/api/v1/models/{repo_id}/repo?{query}"
+        temporary = target.with_name(target.name + ".part")
+        print(f"下载 {relative} ({expected_size / (1024 * 1024):.1f} MiB)...")
+        try:
+            request = urllib.request.Request(
+                url, headers={"User-Agent": "local-speech-to-text/0.1"}
+            )
+            with opener(request, timeout=timeout) as response, temporary.open(
+                "wb"
+            ) as output:
+                while True:
+                    chunk = response.read(DOWNLOAD_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    output.write(chunk)
+            os.replace(temporary, target)
+        except Exception as exc:
+            temporary.unlink(missing_ok=True)
+            raise ModelDownloadError(
+                f"ModelScope 下载失败 ({relative}): {exc}"
+            ) from exc
+
+    return destination
+
+
 def download_model(
     model: str = DEFAULT_MODEL,
     output: Path | None = None,
@@ -84,6 +192,7 @@ def download_model(
     revision: str | None = None,
     endpoint: str | None = None,
     force_download: bool = False,
+    source: str = "huggingface",
     downloader: Downloader = snapshot_download,
 ) -> Path:
     """Download and validate a model; ``downloader`` is injectable for tests."""
@@ -91,6 +200,25 @@ def download_model(
     repo_id = repo_for_model(model)
     destination = (output or default_output(model)).expanduser().resolve()
     destination.mkdir(parents=True, exist_ok=True)
+
+    if source == "modelscope":
+        try:
+            download_modelscope(
+                repo_id,
+                destination,
+                force_download=force_download,
+            )
+        except ModelDownloadError:
+            raise
+        except Exception as exc:
+            raise ModelDownloadError(
+                f"ModelScope 模型下载失败 ({repo_id}): {exc}"
+            ) from exc
+        verify_model_dir(destination)
+        return destination
+
+    if source != "huggingface":
+        raise ModelDownloadError(f"不支持的下载源: {source!r}")
 
     kwargs: dict[str, object] = {
         "repo_id": repo_id,
@@ -107,7 +235,8 @@ def download_model(
     except Exception as exc:
         raise ModelDownloadError(
             "模型下载失败。请检查网络/代理，或设置 HF_ENDPOINT 镜像后重试；"
-            f"也可以手动下载 {repo_id} 并放到 {destination}。原始错误: {exc}"
+            f"也可以使用 --source modelscope 或手动下载 {repo_id} 并放到 {destination}。"
+            f"原始错误: {exc}"
         ) from exc
 
     verify_model_dir(destination)
@@ -129,6 +258,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help="Destination directory (default: models/faster-whisper-<model>)",
+    )
+    parser.add_argument(
+        "--source",
+        choices=("huggingface", "modelscope"),
+        default="huggingface",
+        help="Model source (default: huggingface; modelscope is useful in mainland China)",
     )
     parser.add_argument(
         "--revision",
@@ -157,6 +292,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             revision=args.revision,
             endpoint=args.endpoint,
             force_download=args.force,
+            source=args.source,
         )
         verify_model_dir(destination)
     except ModelDownloadError as exc:

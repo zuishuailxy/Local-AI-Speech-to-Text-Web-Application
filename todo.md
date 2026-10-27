@@ -243,8 +243,8 @@
   - 文件：`scripts/download_model.py`、`README.md`、`tests/test_download_model.py`、`docs/evidence/t3.3-download-script.txt`。
   - 前置：T1.2。
   - 完成标准：`--model small`、`--output` 可用；下载后校验关键文件；失败给出 `HF_ENDPOINT`/手动放置提示；不把权重写入 Git。
-  - 验证：8 个脚本单测通过；全量 139 passed；CLI help 正常；注入 fake downloader 验证参数与校验；README 模型章节已补。
-  - 结果：已完成（2026-10-27）；使用 snapshot_download，校验 model.bin/config.json/tokenizer.json/vocabulary.*；下载失败给出镜像/手动放置提示。
+  - 验证：10 个脚本单测通过；全量 147 passed；CLI help 正常；注入 fake downloader 验证参数与校验；README 模型章节已补；T3.5 增加 ModelScope 源。
+  - 结果：已完成（2026-10-27）；支持 HuggingFace 与 ModelScope；校验 model.bin/config.json/tokenizer.json/vocabulary.*；下载失败给出镜像/手动放置提示。
   - 备注：实际网络下载、复用与体积记录在 T3.5；`.gitignore` 已排除 `models/`。
 
 - [x] **T3.4 实现 CLI 冒烟验证脚本**
@@ -254,14 +254,16 @@
   - 完成标准：`python scripts/verify_asr.py samples/chinese.wav --language zh` 输出文本/时长/耗时；支持 en；模型缺失时给出可操作错误。
   - 验证：6 个脚本测试通过；全量 145 passed；CLI help、缺文件、非法语言、模型缺失提示、Fake 成功输出均验证。
   - 结果：脚本完成（2026-10-27）；修复 scripts 目录下 `app` 不在 sys.path 的启动问题（显式插入项目根）。
-  - 备注：真实 samples/chinese.wav 与 english.wav 的中英文运行待 T3.5/T3.6/T5.1，届时补归档，不伪造真实输出。
+  - 备注：真实 `samples/chinese.wav` / `english.wav` 已用下载的 small 模型运行，输出见 `docs/evidence/model-download.txt` 与 `sample-audio-check.txt`。
 
-- [ ] **T3.5 下载 small 模型并记录实验数据**
+- [x] **T3.5 下载 small 模型并记录实验数据**
   - 目标：完成首次模型准备，取得真实基线。
-  - 文件：`models/`（不提交）、`docs/evidence/model-download.txt`。
+  - 文件：`models/`（不提交）、`docs/evidence/model-download.txt`、`docs/evidence/sample-audio-check.txt`。
   - 前置：T3.3、网络可用。
   - 完成标准：模型文件完整；记录下载耗时、体积、来源、日期；记录目标 CPU/内存。
-  - 验证：下载脚本校验通过；断网前先完成一次加载。
+  - 验证：ModelScope `Systran/faster-whisper-small` 下载完成；强制复测 real 25.60s；468 MB；M1/16 GB；中英文真实推理成功。
+  - 结果：已完成（2026-10-27）；model.bin 483,546,902 bytes，SHA-256 `3e3059...d671`；文件完整，模型权重未进 Git；首次加载与中英文 CLI 输出已归档。
+  - 备注：HuggingFace/hf-mirror 当前超时，使用 ModelScope 公共源；断网重启验证留给 T6.9。
 
 - [ ] **T3.6 真实模型中英文首轮验证与选型确认**
   - 目标：确认 small 的文本质量/速度，决定是否回退 base 或评估 SenseVoice。

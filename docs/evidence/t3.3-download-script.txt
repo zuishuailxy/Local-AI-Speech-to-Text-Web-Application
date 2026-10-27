@@ -10,13 +10,13 @@
 ```
 
 ```text
-8 passed in 0.14s
+10 passed in 0.10s
 ```
 
 全量：
 
 ```text
-139 passed in 0.93s
+147 passed in 1.25s
 ```
 
 ## CLI
@@ -30,6 +30,7 @@ python scripts/download_model.py --help
 - `--model {tiny,base,small,medium,large-v3}`，默认 small
 - `--output`，默认 `models/faster-whisper-<model>`
 - `--revision`
+- `--source {huggingface,modelscope}`
 - `--endpoint`，默认读取 `HF_ENDPOINT`
 - `--force`
 
@@ -41,7 +42,7 @@ Systran/faster-whisper-small
 
 ## 下载与校验
 
-- 使用 `huggingface_hub.snapshot_download`，只下载：
+- HuggingFace 使用 `huggingface_hub.snapshot_download`；ModelScope 使用公共 HTTP API。只下载：
   - `model.bin`
   - `config.json`
   - `tokenizer.json`

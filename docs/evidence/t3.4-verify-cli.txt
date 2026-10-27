@@ -50,7 +50,7 @@ ERROR: 本地识别模型不存在：<path>。请先运行模型下载脚本。
 全量：
 
 ```text
-145 passed
+147 passed
 ```
 
 覆盖：
@@ -64,5 +64,7 @@ ERROR: 本地识别模型不存在：<path>。请先运行模型下载脚本。
 
 ## 边界
 
-- 当前还没有 `samples/chinese.wav` / `english.wav` 和真实模型权重，因此没有伪造真实识别输出。
-- 真实中英文 CLI 运行将在 T3.5/T3.6 或 T5.1 之后执行并归档。
+- 真实模型与用户录音样本已就绪，实际 CLI 运行结果：
+  - 中文 `samples/chinese.wav`：`轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。`，12.000s，processing 3.375s
+  - 英文 `samples/english.wav`：`Never give up. Never lose hope. Always have faith. It allows you to cope.`，9.000s，processing 1.973s
+- 详细记录见 `docs/evidence/model-download.txt` 与 `sample-audio-check.txt`。

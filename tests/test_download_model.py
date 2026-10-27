@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import scripts.download_model as download_module
 from scripts.download_model import (
     ALLOW_PATTERNS,
     MODEL_REPOS,
@@ -104,3 +105,30 @@ def test_incomplete_download_is_rejected(tmp_path) -> None:
 
     with pytest.raises(ModelDownloadError, match="缺少必要文件"):
         download_model("small", tmp_path / "model", downloader=partial_downloader)
+
+
+def test_modelscope_source_dispatches(monkeypatch, tmp_path) -> None:
+    destination = tmp_path / "model"
+    calls: dict[str, object] = {}
+
+    def fake_modelscope(repo_id: str, dest: Path, **kwargs):
+        calls["repo_id"] = repo_id
+        calls["destination"] = dest
+        calls["kwargs"] = kwargs
+        create_model_files(dest)
+        return dest
+
+    monkeypatch.setattr(download_module, "download_modelscope", fake_modelscope)
+
+    result = download_model("small", destination, source="modelscope")
+
+    assert result == destination
+    assert calls["repo_id"] == "Systran/faster-whisper-small"
+    assert calls["destination"] == destination
+    assert calls["kwargs"]["force_download"] is False
+    verify_model_dir(destination)
+
+
+def test_unknown_source_is_rejected(tmp_path) -> None:
+    with pytest.raises(ModelDownloadError, match="不支持的下载源"):
+        download_model("small", tmp_path / "model", source="ftp")

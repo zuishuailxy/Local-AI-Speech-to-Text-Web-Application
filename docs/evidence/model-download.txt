@@ -1,0 +1,77 @@
+# T3.5 small 模型下载与真实加载记录
+
+- 日期：2026-10-27
+- 目标环境：macOS arm64 / Apple M1 / 16 GB RAM / CPU 推理
+- 模型：Systran/faster-whisper-small（CTranslate2，FP16 权重，运行时 int8）
+- 来源：ModelScope 公共仓库 `Systran/faster-whisper-small`
+- 原因：HuggingFace 与 hf-mirror 在本机网络超时；ModelScope 可访问
+
+## 下载命令
+
+```bash
+.venv/bin/python scripts/download_model.py --model small --source modelscope
+```
+
+T3.5 实际执行的强制复测：
+
+```bash
+/usr/bin/time -p .venv/bin/python scripts/download_model.py --model small --source modelscope --force
+```
+
+结果：
+
+```text
+real 25.60
+user 0.69
+sys 0.98
+```
+
+首次下载在 2026-10-27 21:55 完成；下载的文件约 468 MB（磁盘占用），模型目录已被 `.gitignore` 排除。
+
+## 文件清单与大小
+
+```text
+model.bin          483,546,902 bytes
+config.json             2,370 bytes
+tokenizer.json      2,203,239 bytes
+vocabulary.txt        459,861 bytes
+合计                 486,212,372 bytes（约 463.7 MiB）
+```
+
+`model.bin` SHA-256：
+
+```text
+3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671
+```
+
+## 真实加载与识别冒烟
+
+命令：
+
+```bash
+.venv/bin/python scripts/verify_asr.py samples/chinese.wav --language zh
+.venv/bin/python scripts/verify_asr.py samples/english.wav --language en
+```
+
+结果：
+
+```text
+中文：
+text: 轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+duration_seconds: 12.000
+processing_seconds: 3.375
+
+英文：
+text: Never give up. Never lose hope. Always have faith. It allows you to cope.
+duration_seconds: 9.000
+processing_seconds: 1.973
+```
+
+说明：processing_seconds 为单次 CLI 进程内解码+模型加载+推理耗时；不是严格的模型基准。
+
+## 结论
+
+- 本地模型文件完整，`WhisperTranscriber` 可从 `models/faster-whisper-small` 加载并完成真实中英文推理。
+- 未把模型权重提交 Git。
+- 尚未做断网重启复测；留给 T6.9。
+- 真实模型测试的自动化用例、CER/WER 阈值在 T3.6/T5.2 完成。

@@ -1,0 +1,62 @@
+# T4.1 前端页面结构与视觉状态验证
+
+- 日期：2026-10-27
+- 文件：`static/index.html`、`static/styles.css`
+- 无外部字体、CDN、Node/构建步骤
+
+## 页面结构
+
+- 语言选择：`#language-select`（zh/en）
+- 麦克风区：`#start-button`、`#stop-button`、`#recording-timer`
+- 识别耗时：`#processing-timer`
+- 文件上传：`#file-input`、`#upload-button`、`#file-name`
+- 状态：`#status-badge`、`#status-text`、`#pipeline-state`、5 步 pipeline
+- 结果：`#result-panel`、`#result-language`、`#result-duration`、`#result-processing`、`#result-text`、`#copy-button`、`#audio-preview`
+- 错误：`#error-panel`（role=alert）、`#error-message`、`#retry-button`、`#dismiss-error-button`
+
+## 视觉状态
+
+- `#app[data-state="idle|recording|transcribing|success|error"]`
+- `.status-badge[data-tone]`
+- `.pipeline-step[data-state="active|done|error"]`
+- 录音时 `.record-indicator` 红色脉冲
+- `prefers-reduced-motion` 关闭动画
+- 820px/560px 响应式断点；桌面优先，不要求手机适配
+
+## 初始状态
+
+- Stop 按钮 disabled
+- Copy 按钮 disabled
+- 结果文本 hidden，结果区 `data-result-state="empty"`
+- 错误面板 hidden
+- 无外链资源
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_frontend_structure.py
+```
+
+```text
+5 passed
+```
+
+全量：
+
+```text
+157 passed
+```
+
+覆盖：
+
+- 必需 ID/控件存在
+- 初始 disabled/hidden 状态
+- label/for、role=alert、aria-live
+- 无 http(s) 外链
+- `/` 与 `/static/styles.css` 实际 served 200
+- CSS 含 recording 状态选择器
+
+## 边界
+
+- T4.1 只做结构与视觉；交互逻辑由 T4.2 添加。
+- 尚未进行浏览器截图/手动视觉验收；在 T4.9/T6 检查。

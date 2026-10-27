@@ -3,38 +3,224 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Local AI Speech-to-Text：浏览器录音或上传音频，使用本地 Whisper 模型识别中英文。"
+    />
     <title>Local AI Speech-to-Text</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: #f6f7f9;
-        color: #1d2433;
-      }
-      main {
-        max-width: 42rem;
-        padding: 2rem;
-      }
-      h1 {
-        font-size: clamp(1.6rem, 4vw, 2.4rem);
-        margin-bottom: 0.75rem;
-      }
-      p {
-        line-height: 1.7;
-        color: #4b5565;
-      }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
-    <main>
-      <h1>Local AI Speech-to-Text</h1>
-      <p>Web 页面骨架已就绪。录音、上传与识别界面将在后续任务中接入。</p>
+    <div class="page-glow" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">◉</span>
+        <div>
+          <p class="eyebrow">LOCAL AI · CPU INFERENCE</p>
+          <h1>Local AI Speech-to-Text</h1>
+        </div>
+      </div>
+      <p class="header-note">
+        音频只在本机处理 · 支持中文 / English · 模型准备后可离线运行
+      </p>
+    </header>
+
+    <main id="app" class="app-shell" data-state="idle">
+      <section class="panel language-panel" aria-labelledby="language-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="step-label">01 / LANGUAGE</p>
+            <h2 id="language-heading">识别语言</h2>
+          </div>
+          <span class="pill">中文 / English</span>
+        </div>
+
+        <label id="language-label" class="field-label" for="language-select">当前选择</label>
+        <select id="language-select" name="language" class="select-control">
+          <option value="zh" selected>中文普通话（zh）</option>
+          <option value="en">English（en）</option>
+        </select>
+        <p class="hint">中文模式输出中文文本，English 模式输出英文文本，不做翻译。</p>
+
+        <div class="status-line" aria-live="polite">
+          <span id="status-badge" class="status-badge" data-tone="idle">Idle</span>
+          <span id="status-text">准备就绪，可以开始录音或上传音频。</span>
+        </div>
+      </section>
+
+      <section class="panel record-panel" aria-labelledby="record-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="step-label">02 / MICROPHONE</p>
+            <h2 id="record-heading">麦克风录音</h2>
+          </div>
+          <span id="record-indicator" class="record-indicator" aria-hidden="true"></span>
+        </div>
+
+        <div class="record-controls">
+          <button id="start-button" class="button button-primary" type="button">
+            Start Recording
+          </button>
+          <button id="stop-button" class="button button-danger" type="button" disabled>
+            Stop Recording
+          </button>
+        </div>
+
+        <div class="timer-row">
+          <div>
+            <span class="timer-label">录音时长</span>
+            <strong id="recording-timer" class="timer-value">00:00.0</strong>
+          </div>
+          <div>
+            <span class="timer-label">识别耗时</span>
+            <strong id="processing-timer" class="timer-value">0.0 s</strong>
+          </div>
+        </div>
+
+        <p class="hint">
+          单次录音最长 60 秒；停止录音后才会提交本次完整音频。首次使用需要允许浏览器访问麦克风。
+        </p>
+        <div id="permission-note" class="permission-note" hidden>
+          麦克风权限被拒绝时，请检查浏览器地址栏的站点权限后重试。
+        </div>
+      </section>
+
+      <section class="panel upload-panel" aria-labelledby="upload-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="step-label">03 / UPLOAD</p>
+            <h2 id="upload-heading">上传音频文件</h2>
+          </div>
+          <span class="pill">WAV · WebM · OGG · MP3 · M4A</span>
+        </div>
+
+        <div class="upload-row">
+          <label id="file-picker" class="file-picker" for="file-input">
+            <span class="file-picker-icon" aria-hidden="true">＋</span>
+            <span>
+              <strong>选择音频文件</strong>
+              <small>支持 WAV 与浏览器录音格式，最大 10 MB</small>
+            </span>
+            <input
+              id="file-input"
+              name="file"
+              type="file"
+              accept=".wav,.webm,.ogg,.oga,.mp3,.m4a,.mp4,.flac,audio/*"
+            />
+          </label>
+
+          <button id="upload-button" class="button button-secondary" type="button">
+            Upload &amp; Transcribe
+          </button>
+        </div>
+
+        <p id="file-name" class="file-name" aria-live="polite">尚未选择文件。</p>
+        <p class="hint">上传与录音共用同一条本地识别流程；超过 10 MB 或格式不支持时会被拒绝。</p>
+      </section>
+
+      <section class="panel status-panel" aria-labelledby="status-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="step-label">04 / PIPELINE</p>
+            <h2 id="status-heading">处理状态</h2>
+          </div>
+          <span id="pipeline-state" class="pill pill-muted">等待操作</span>
+        </div>
+
+        <ol class="pipeline" aria-label="识别处理步骤">
+          <li id="step-capture" class="pipeline-step" data-step="capture">采集音频</li>
+          <li id="step-upload" class="pipeline-step" data-step="upload">上传请求</li>
+          <li id="step-decode" class="pipeline-step" data-step="decode">解码与校验</li>
+          <li id="step-infer" class="pipeline-step" data-step="infer">本地模型识别</li>
+          <li id="step-result" class="pipeline-step" data-step="result">返回结果</li>
+        </ol>
+
+        <p class="hint">
+          识别过程中会持续显示已耗时；若后端返回错误，失败原因会显示在下方并允许重试。
+        </p>
+      </section>
+
+      <section
+        id="result-panel"
+        class="panel result-panel"
+        aria-labelledby="result-heading"
+        data-result-state="empty"
+      >
+        <div class="panel-heading">
+          <div>
+            <p class="step-label">05 / RESULT</p>
+            <h2 id="result-heading">识别结果</h2>
+          </div>
+          <button id="copy-button" class="button button-quiet" type="button" disabled>
+            复制文本
+          </button>
+        </div>
+
+        <dl class="result-meta">
+          <div>
+            <dt>语言</dt>
+            <dd id="result-language">—</dd>
+          </div>
+          <div>
+            <dt>音频时长</dt>
+            <dd id="result-duration">—</dd>
+          </div>
+          <div>
+            <dt>处理耗时</dt>
+            <dd id="result-processing">—</dd>
+          </div>
+        </dl>
+
+        <div class="result-text-wrap">
+          <p id="result-placeholder" class="result-placeholder">
+            识别完成后，文本会显示在这里。
+          </p>
+          <p id="result-text" class="result-text" aria-live="polite" hidden></p>
+        </div>
+
+        <audio id="audio-preview" class="audio-preview" controls hidden></audio>
+      </section>
+
+      <section id="error-panel" class="panel alert-panel" role="alert" hidden>
+        <div>
+          <p class="step-label">ERROR</p>
+          <h2 id="error-heading">本次处理失败</h2>
+          <p id="error-message" class="error-message"></p>
+        </div>
+        <div class="alert-actions">
+          <button id="retry-button" class="button button-secondary" type="button">
+            重试
+          </button>
+          <button id="dismiss-error-button" class="button button-quiet" type="button">
+            关闭提示
+          </button>
+        </div>
+      </section>
+
+      <section class="panel local-panel" aria-label="本地运行说明">
+        <div>
+          <p class="step-label">LOCAL BY DESIGN</p>
+          <h2>无需云端 API</h2>
+          <p class="hint">
+            录音、上传、解码和识别均在本机完成；模型权重由一次性下载脚本准备，之后可断网运行。
+          </p>
+        </div>
+        <ul class="feature-list">
+          <li>FastAPI + 原生 Web</li>
+          <li>faster-whisper · CPU int8</li>
+          <li>中英文识别</li>
+        </ul>
+      </section>
     </main>
+
+    <footer class="site-footer">
+      <span>Local AI Speech-to-Text</span>
+      <span>音频不会上传到第三方服务</span>
+    </footer>
+
+    <noscript>
+      <p class="noscript-note">本页面需要启用 JavaScript 才能录音、上传和显示识别结果。</p>
+    </noscript>
   </body>
 </html>

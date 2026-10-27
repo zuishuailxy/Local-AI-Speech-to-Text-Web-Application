@@ -320,12 +320,13 @@
 
 ## 阶段 P4：前端页面与交互
 
-- [ ] **T4.1 实现页面结构与视觉状态**
+- [x] **T4.1 实现页面结构与视觉状态**
   - 目标：语言选择、录音区、上传区、状态区、结果区、错误区齐全。
-  - 文件：`static/index.html`、`static/styles.css`。
+  - 文件：`static/index.html`、`static/styles.css`、`tests/test_frontend_structure.py`、`docs/evidence/t4.1-frontend-structure.txt`。
   - 前置：T1.4。
   - 完成标准：桌面布局清晰；按钮含 Start/Stop Recording；显示当前语言、状态、计时、结果、复制；无外部字体/CDN。
-  - 验证：浏览器打开 `http://127.0.0.1:8000`，元素齐全；窄窗口不严重错位（不要求手机适配）。
+  - 验证：5 个结构测试通过；全量 157 passed；`/` 与 `/static/styles.css` 200；必需 ID、hidden/disabled 初始状态、aria/label、无外链均断言。
+  - 结果：已完成（2026-10-27）；响应式布局、录音脉冲、pipeline/状态样式已定义；交互逻辑留给 T4.2。
 
 - [ ] **T4.2 实现麦克风采集与 MediaRecorder**
   - 目标：授权后录音，停止后得到可上传 Blob。

@@ -1,0 +1,76 @@
+# T3.3 模型下载脚本验证
+
+- 日期：2026-10-27
+- 状态：脚本实现与离线单测通过；实际网络下载在 T3.5
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_download_model.py
+```
+
+```text
+8 passed in 0.14s
+```
+
+全量：
+
+```text
+139 passed in 0.93s
+```
+
+## CLI
+
+```text
+python scripts/download_model.py --help
+```
+
+支持：
+
+- `--model {tiny,base,small,medium,large-v3}`，默认 small
+- `--output`，默认 `models/faster-whisper-<model>`
+- `--revision`
+- `--endpoint`，默认读取 `HF_ENDPOINT`
+- `--force`
+
+默认模型：
+
+```text
+Systran/faster-whisper-small
+```
+
+## 下载与校验
+
+- 使用 `huggingface_hub.snapshot_download`，只下载：
+  - `model.bin`
+  - `config.json`
+  - `tokenizer.json`
+  - `vocabulary.*`
+  - `preprocessor_config.json`（如存在）
+- 下载后校验 `model.bin`、`config.json`、`tokenizer.json`、`vocabulary.txt|json`。
+- 缺少文件抛 `ModelDownloadError`。
+- 下载异常给出镜像/手动放置/网络提示，不静默失败。
+- `models/` 已被 `.gitignore` 排除。
+
+## README
+
+根 README 已增加 Model initialization：
+
+```bash
+python scripts/download_model.py --model small
+HF_ENDPOINT=https://hf-mirror.com python scripts/download_model.py --model small
+```
+
+## 单测覆盖
+
+- 模型规格映射与非法规格
+- 默认输出路径
+- 完整目录校验、缺失文件拒绝
+- 注入 fake downloader：repo、local_dir、patterns、endpoint 参数
+- 下载异常包装为可操作错误
+- 下载后文件不完整拒绝
+
+## 边界
+
+- 本轮不访问 HuggingFace、不下载模型权重；只验证脚本逻辑。
+- 实际下载、重复执行/复用、模型文件清单和体积记录在 T3.5。

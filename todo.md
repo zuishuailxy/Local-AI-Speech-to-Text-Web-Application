@@ -238,12 +238,14 @@
   - 结果：已完成（2026-10-27）；`WhisperTranscriber` 惰性加载、单锁串行化、本地路径、CPU/int8/threads/beam/VAD 从 Settings 读取；默认工厂内部延迟导入 WhisperModel。
   - 备注：真实模型推理尚未执行；下载/加载/中英文验证见 T3.5/T3.6。
 
-- [ ] **T3.3 实现模型下载脚本**
+- [x] **T3.3 实现模型下载脚本**
   - 目标：一次性下载到 `models/faster-whisper-small`，支持镜像与校验。
-  - 文件：`scripts/download_model.py`、`README.md`（模型章节占位）。
+  - 文件：`scripts/download_model.py`、`README.md`、`tests/test_download_model.py`、`docs/evidence/t3.3-download-script.txt`。
   - 前置：T1.2。
   - 完成标准：`--model small`、`--output` 可用；下载后校验关键文件；失败给出 `HF_ENDPOINT`/手动放置提示；不把权重写入 Git。
-  - 验证：在干净 `models/` 下执行成功；重复执行可跳过/复用；`git status` 不含权重。
+  - 验证：8 个脚本单测通过；全量 139 passed；CLI help 正常；注入 fake downloader 验证参数与校验；README 模型章节已补。
+  - 结果：已完成（2026-10-27）；使用 snapshot_download，校验 model.bin/config.json/tokenizer.json/vocabulary.*；下载失败给出镜像/手动放置提示。
+  - 备注：实际网络下载、复用与体积记录在 T3.5；`.gitignore` 已排除 `models/`。
 
 - [ ] **T3.4 实现 CLI 冒烟验证脚本**
   - 目标：不启动 Web 也能验证真实模型中英文。

@@ -311,6 +311,35 @@ def decode_audio(path: Path, settings: Settings) -> DecodedAudio:
     return DecodedAudio(samples=samples, sample_rate=ASR_SAMPLE_RATE)
 
 
+async def process_audio_upload(
+    file: UploadFile,
+    language: str,
+    settings: Settings,
+    *,
+    temp_dir: Path | None = None,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+) -> DecodedAudio:
+    """Validate, stream to temp, decode, and always remove the temp file.
+
+    This is the single cleanup boundary used by the transcription route.  It
+    keeps temporary-file lifetime out of the API layer and ensures decoding
+    failures cannot leave files behind (important on Windows, where open file
+    handles block deletion).
+    """
+
+    stored = await save_upload_to_temp(
+        file,
+        language,
+        settings,
+        temp_dir=temp_dir,
+        chunk_size=chunk_size,
+    )
+    try:
+        return decode_audio(stored.path, settings)
+    finally:
+        stored.cleanup()
+
+
 __all__ = [
     "ALLOWED_AUDIO_EXTENSIONS",
     "ASR_SAMPLE_RATE",
@@ -319,6 +348,7 @@ __all__ = [
     "MAX_MULTIPART_OVERHEAD_BYTES",
     "StoredUpload",
     "decode_audio",
+    "process_audio_upload",
     "save_upload_to_temp",
     "validate_content_length",
     "validate_language",

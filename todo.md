@@ -164,12 +164,14 @@
   - 结果：已完成（2026-10-27）；`decode_audio` 使用 PyAV AudioResampler（flt/mono/16000），先检查容器 duration，再按实际样本数二次限制；静音保留采样，0 帧报 invalid_audio；WebM fixture 解码通过。
   - 备注：T2.6 将补充浏览器录音格式的完整验收记录；临时文件清理与全路径收口见 T2.4。
 
-- [ ] **T2.4 统一音频错误码与清理逻辑**
+- [x] **T2.4 统一音频错误码与清理逻辑**
   - 目标：确保所有异常路径释放句柄、删除临时文件、返回一致错误。
-  - 文件：`app/services/audio.py`、`app/errors.py`、`tests/test_audio.py`。
+  - 文件：`app/services/audio.py`、`app/errors.py`、`tests/test_audio.py`、`docs/evidence/t2.4-cleanup.txt`。
   - 前置：T2.3。
   - 完成标准：`finally` 清理；异常不泄漏堆栈；错误码与 `plan.md` 2.3.3 一致。
-  - 验证：失败用例后检查临时目录；断言 JSON `code`。
+  - 验证：成功/解码失败/超时长/超大小四条路径后临时目录为空；36 passed；全量 83 passed；HTTP 路由返回 400 audio_too_long、400 invalid_audio、413 file_too_large。
+  - 结果：已完成（2026-10-27）；新增 `process_audio_upload` 作为统一 save→decode→finally cleanup 边界；容器与临时文件均用 with 关闭。
+  - 备注：Windows 同一测试集待本次 push 后由 windows-latest 确认。
 
 - [ ] **T2.5 Mock 层音频单元测试**
   - 目标：覆盖正常/空/损坏/超长/静音。

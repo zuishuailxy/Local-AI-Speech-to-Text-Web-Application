@@ -21,6 +21,7 @@ from app.main import create_app
 from app.services.audio import (
     ASR_SAMPLE_RATE,
     decode_audio,
+    process_audio_upload,
     save_upload_to_temp,
     validate_content_length,
     validate_language,
@@ -424,3 +425,136 @@ def test_decode_webm_fixture(tmp_path) -> None:
     assert decoded.samples.dtype == np.float32
     assert decoded.samples.ndim == 1
     assert decoded.duration_seconds == pytest.approx(1.0, abs=0.02)
+
+
+def _make_processing_client(tmp_path):
+    settings = Settings.from_env(
+        environ={"MAX_AUDIO_SECONDS": "1", "MAX_UPLOAD_MB": "1"},
+        project_root=tmp_path,
+    )
+    upload_dir = tmp_path / "uploads"
+    app = create_app(settings=settings)
+
+    @app.post("/__test/process")
+    async def process(
+        file: UploadFile = File(...), language: str = Form(...)
+    ) -> dict[str, float | int]:
+        decoded = await process_audio_upload(
+            file,
+            language,
+            settings,
+            temp_dir=upload_dir,
+        )
+        return {
+            "duration": decoded.duration_seconds,
+            "samples": len(decoded.samples),
+        }
+
+    return TestClient(app), upload_dir
+
+
+def test_process_audio_upload_cleans_after_success(tmp_path, wav_bytes: bytes) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_AUDIO_SECONDS": "10"}, project_root=tmp_path
+    )
+    upload_dir = tmp_path / "uploads"
+    upload = UploadFile(
+        file=io.BytesIO(wav_bytes),
+        filename="sample.wav",
+        size=len(wav_bytes),
+    )
+
+    decoded = asyncio.run(
+        process_audio_upload(upload, "zh", settings, temp_dir=upload_dir)
+    )
+
+    assert decoded.duration_seconds == pytest.approx(1.0, abs=0.01)
+    assert not upload_dir.exists() or not list(upload_dir.iterdir())
+
+
+def test_process_audio_upload_cleans_after_decode_error(tmp_path) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_AUDIO_SECONDS": "10"}, project_root=tmp_path
+    )
+    upload_dir = tmp_path / "uploads"
+    payload = b"this is not a webm container"
+    upload = UploadFile(
+        file=io.BytesIO(payload),
+        filename="broken.webm",
+        size=len(payload),
+    )
+
+    with pytest.raises(InvalidAudioError):
+        asyncio.run(
+            process_audio_upload(upload, "zh", settings, temp_dir=upload_dir)
+        )
+
+    assert not upload_dir.exists() or not list(upload_dir.iterdir())
+
+
+def test_process_audio_upload_cleans_after_too_long(tmp_path, wav_file_factory) -> None:
+    settings = Settings.from_env(
+        environ={"MAX_AUDIO_SECONDS": "1"}, project_root=tmp_path
+    )
+    upload_dir = tmp_path / "uploads"
+    payload = wav_file_factory(2.0).read_bytes()
+    upload = UploadFile(
+        file=io.BytesIO(payload),
+        filename="too-long.wav",
+        size=len(payload),
+    )
+
+    with pytest.raises(AudioTooLongError):
+        asyncio.run(
+            process_audio_upload(upload, "zh", settings, temp_dir=upload_dir)
+        )
+
+    assert not upload_dir.exists() or not list(upload_dir.iterdir())
+
+
+def test_process_route_maps_errors_and_cleans(
+    tmp_path, wav_file_factory, wav_bytes: bytes
+) -> None:
+    client, upload_dir = _make_processing_client(tmp_path)
+
+    success = client.post(
+        "/__test/process",
+        data={"language": "zh"},
+        files={"file": ("sample.wav", wav_bytes, "audio/wav")},
+    )
+    assert success.status_code == 200
+    assert success.json()["duration"] == pytest.approx(1.0, abs=0.02)
+    assert not upload_dir.exists() or not list(upload_dir.iterdir())
+
+    too_long = client.post(
+        "/__test/process",
+        data={"language": "zh"},
+        files={"file": ("long.wav", wav_file_factory(2.0).read_bytes(), "audio/wav")},
+    )
+    assert too_long.status_code == 400
+    assert too_long.json()["code"] == "audio_too_long"
+    assert not list(upload_dir.iterdir())
+
+    broken = client.post(
+        "/__test/process",
+        data={"language": "zh"},
+        files={"file": ("broken.webm", b"not webm", "audio/webm")},
+    )
+    assert broken.status_code == 400
+    assert broken.json()["code"] == "invalid_audio"
+    assert not list(upload_dir.iterdir())
+
+    oversize = client.post(
+        "/__test/process",
+        data={"language": "zh"},
+        files={
+            "file": (
+                "oversize.webm",
+                b"x" * (1024 * 1024 + 1),
+                "audio/webm",
+            )
+        },
+    )
+    assert oversize.status_code == 413
+    assert oversize.json()["code"] == "file_too_large"
+    assert not list(upload_dir.iterdir())

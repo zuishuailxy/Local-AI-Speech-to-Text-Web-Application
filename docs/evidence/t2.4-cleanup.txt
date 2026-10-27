@@ -1,0 +1,39 @@
+# T2.4 音频错误码与清理逻辑验证
+
+- 日期：2026-10-27
+
+## 测试命令
+
+```bash
+.venv/bin/python -m pytest -q tests/test_audio.py
+```
+
+```text
+....................................                                     [100%]
+36 passed in 0.38s
+```
+
+## 全量
+
+```text
+........................................................................ [ 86%]
+...........                                                              [100%]
+83 passed in 0.37s
+```
+
+## 清理边界
+
+- process_audio_upload 负责 save → decode → finally cleanup；异常路径不遗留临时文件。
+- 成功、解码失败、超时长、超大小四类路径均断言临时目录为空。
+
+## HTTP 错误码（测试路由）
+
+- audio_too_long → 400
+- invalid_audio → 400
+- file_too_large → 413
+- 其他 400/415/422 由 T2.1/T1.5 测试覆盖；JSON 统一 {detail, code}
+
+## Windows 说明
+
+- 代码使用 with 打开容器/临时文件，decode 完成后关闭，再由 TemporaryDirectory.cleanup() 删除。
+- 同一测试集会在 GitHub Actions windows-latest 运行；本次 commit push 后确认。

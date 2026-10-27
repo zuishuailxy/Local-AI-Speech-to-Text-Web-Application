@@ -1,0 +1,82 @@
+# T3.8 真实模型异常路径与恢复验证
+
+- 日期：2026-10-27
+- 模型：`models/faster-whisper-small`（本地，CPU int8）
+- Web：uvicorn `app.main:app`，127.0.0.1:8013
+- 测试后模型目录已恢复
+
+## 1. 模型目录缺失 → 503
+
+操作：临时把 `models/faster-whisper-small` 改名为备份目录，再启动服务。
+
+```text
+POST /api/transcribe
+status: 503
+body: {"detail":"本地识别模型不存在：<path>/models/faster-whisper-small。请先运行模型下载脚本。","code":"model_unavailable"}
+
+GET /health
+status: 200
+body: {"status":"ok"}
+```
+
+结论：模型缺失返回可理解的 503，服务进程不崩溃，健康检查仍正常。
+
+## 2. 模型文件损坏 → 503
+
+操作：模型目录替换为只包含伪造 `model.bin`/`config.json` 的目录。
+
+```text
+POST /api/transcribe
+status: 503
+body: {"detail":"本地识别模型加载失败，请检查模型文件和运行环境。","code":"model_unavailable"}
+
+GET /health
+status: 200
+```
+
+结论：加载异常被转换为 503，异常细节不直接暴露给客户端；服务仍存活。
+
+## 3. 恢复模型目录 → 继续识别 200
+
+恢复原模型目录并重启服务：
+
+```text
+POST /api/transcribe
+status: 200
+body: {"text":"轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。","language":"zh","duration_seconds":12.0,"processing_seconds":4.788}
+```
+
+结论：失败后恢复目录即可再次加载并识别；引擎没有缓存失败的模型。
+
+## 4. 推理异常 → 500（自动化）
+
+`tests/test_transcribe_api.py::test_real_engine_inference_failure_maps_500`：
+
+- 使用真实 `WhisperTranscriber` 类；
+- 注入一个 `transcribe()` 直接抛 `RuntimeError` 的假模型（不伪装成真实推理结果）；
+- 路由返回 500 `transcription_failed`；
+- `detail` 可读，异常原文不出现在响应；
+- `/health` 仍为 200。
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+150 passed
+```
+
+## 结论
+
+- 模型缺失/损坏：503 `model_unavailable`，提示下载/检查。
+- 推理异常：500 `transcription_failed`，不泄漏内部异常。
+- 服务在失败后保持可用；恢复模型目录后可继续识别。
+- 临时改名的模型备份已恢复；测试未修改或删除最终模型。
+
+## 边界
+
+- “损坏模型”使用伪造文件模拟，不是实际下载损坏。
+- 真实 Windows 11 桌面/麦克风仍未验证。
+- 断网场景在 T6.9 验证。

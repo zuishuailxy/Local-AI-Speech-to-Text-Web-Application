@@ -283,12 +283,13 @@
   - 结果：已完成（2026-10-27）；生产 `app` 创建 `WhisperTranscriber` 但不在导入时加载；`create_app()` 默认仍不注入引擎；`model_load_seconds` 日志由 caplog 测试覆盖。
   - 备注：uvicorn 默认 INFO 日志级别可能不显示加载日志；不影响响应与计时。
 
-- [ ] **T3.8 真实模型异常路径**
+- [x] **T3.8 真实模型异常路径**
   - 目标：模型缺失/损坏/推理失败均可理解。
-  - 文件：`app/services/transcriber.py`、`tests/test_errors.py`、`docs/evidence/model-failure.txt`。
+  - 文件：`app/services/transcriber.py`、`tests/test_transcribe_api.py`、`docs/evidence/model-failure.txt`。
   - 前置：T3.7。
   - 完成标准：临时重命名模型目录 → 503 且提示下载脚本；推理异常 → 500；服务不崩溃，恢复目录后可继续识别。
-  - 验证：手动/自动化各一次；记录响应。
+  - 验证：真实服务缺失/损坏模型均 503，/health 仍 200；恢复目录后 POST 200；真实引擎适配器推理异常→500；全量 150 passed。
+  - 结果：已完成（2026-10-27）；模型未缓存失败状态，恢复后重新加载成功；临时备份已还原。
 
 - [ ] **T3.9 完善 Mock API 测试矩阵**
   - 目标：在不依赖真实模型的情况下覆盖 API 契约与错误。

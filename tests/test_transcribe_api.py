@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.errors import ModelUnavailableError
 from app.main import create_app
-from app.services.transcriber import FakeTranscriber
+from app.services.transcriber import FakeTranscriber, WhisperTranscriber
 
 
 def make_transcribe_client(
@@ -276,3 +276,26 @@ def test_retry_after_validation_error_is_stateless(
     assert valid.json()["text"] == "valid after retry"
     assert len(fake.calls) == 1
     assert fake.calls[0][1] == "zh"
+
+
+def test_real_engine_inference_failure_maps_500(tmp_path, wav_bytes: bytes) -> None:
+    settings = Settings.from_env(environ={}, project_root=tmp_path)
+    settings.asr_model_path.mkdir(parents=True)
+
+    class FailingModel:
+        def transcribe(self, samples, **kwargs):
+            raise RuntimeError("real-engine adapter failure")
+
+    engine = WhisperTranscriber(
+        settings,
+        model_factory=lambda path, **kwargs: FailingModel(),
+    )
+    client = TestClient(create_app(transcriber=engine, settings=settings))
+
+    response = post_wav(client, wav_bytes)
+
+    assert response.status_code == 500
+    assert response.json()["code"] == "transcription_failed"
+    assert response.json()["detail"]
+    assert "real-engine adapter failure" not in response.text
+    assert client.get("/health").status_code == 200

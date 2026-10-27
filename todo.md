@@ -84,12 +84,13 @@
   - 验证：`.venv/bin/python --version` 输出 3.12.13；`pip download --only-binary=:all: --platform win_amd64 --python-version 3.12 --implementation cp --abi cp312 -r requirements.txt` 成功（41 个 wheel）；干净临时 venv 按 requirements 复装并导入关键模块成功；`pip check` 无冲突。
   - 结果：已完成（2026-10-27）；`requirements.txt` 为 41 个精确锁版本；模型权重未下载。
 
-- [ ] **T1.3 实现配置模块**
+- [x] **T1.3 实现配置模块**
   - 目标：集中管理模型路径、设备、线程、大小/时长限制、预热开关。
-  - 文件：`app/config.py`、`tests/test_config.py`（可选）。
+  - 文件：`app/config.py`、`tests/test_config.py`、`docs/evidence/t1.3-config.txt`。
   - 前置：T1.1。
-  - 完成标准：`plan.md` 2.3.4 的环境变量均有默认值；路径使用 `pathlib.Path`；可从测试覆盖。
-  - 验证：单元测试断言默认值与环境变量覆盖；代码无散落魔法数字。
+  - 完成标准：`plan.md` 2.3.4 的环境变量均有默认值；路径使用 `pathlib.Path`；可从测试覆盖；非法布尔/整数 fail fast；相对模型路径按项目根解析。
+  - 验证：`python -m pytest -q tests/test_config.py`（21 passed）；默认值、环境变量覆盖、相对/绝对路径、布尔/整数校验均覆盖。
+  - 结果：已完成（2026-10-27）；`Settings` 为 frozen dataclass，提供 `max_upload_bytes` 与 `supported_languages`。
 
 - [ ] **T1.4 实现应用工厂、静态页面与健康检查**
   - 目标：`create_app()` 可注入假引擎；`GET /health` 与 `GET /` 可用。
@@ -121,11 +122,13 @@
   - 验证：`git log --oneline -5`；`pytest -q` 通过。
 
 - [ ] **T1.8 建立 GitHub Actions Windows CI 骨架**
-  - 目标：在无 Windows 实机条件下尽早发现 Windows 安装/启动问题。
-  - 文件：`.github/workflows/windows.yml`、`docs/evidence/windows-ci.txt`。
-  - 前置：T0.7 确认 GitHub 可用；T1.2、T1.7。
-  - 完成标准：workflow 使用 `windows-latest` + Python 3.12，执行 `pip install -r requirements.txt`、`python -m pytest -q`、启动 uvicorn、请求 `/health`；支持手动触发；失败日志可下载。
-  - 验证：GitHub Actions 运行成功；截图/日志归档；若 D6 不可用，记录原因并升级 R19。
+  - 目标：在无 Windows 实机条件下尽早发现 Windows 安装/导入问题。
+  - 文件：`.github/workflows/windows.yml`、`docs/evidence/t1.8-windows-ci.txt`。
+  - 前置：T0.7 确认 GitHub 可用；T1.2；用户 push。
+  - 完成标准：workflow 使用 `windows-latest` + Python 3.12，执行 `pip install -r requirements.txt`、`pip check`、关键模块导入、`python -m pytest -q`；支持 push/PR/手动触发；失败日志可在 Actions 页面查看。
+  - 验证：YAML 本地解析通过；本地等价步骤通过（21 tests）；用户 push 后 Windows job 绿色；截图/日志归档。
+  - 状态：workflow 已创建并本地验证（2026-10-27），但**实际 windows-latest run 尚未执行**；本 commit 需用户 push 后才能确认，未通过前不得勾选。
+  - 后续：T1.4 完成后把 uvicorn + `/health` 加入 workflow；T6.10 再加入真实模型上传与 Playwright 假麦克风。
 
 ---
 

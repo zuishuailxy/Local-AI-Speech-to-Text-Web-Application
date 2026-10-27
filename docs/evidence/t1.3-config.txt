@@ -1,0 +1,23 @@
+# T1.3 配置模块验证
+
+- 日期：2026-10-27
+
+## 测试命令
+
+```bash
+.venv/bin/python -m pytest -q tests/test_config.py
+```
+
+## 结果
+
+```text
+.....................                                                    [100%]
+21 passed in 0.06s
+```
+
+## 覆盖点
+
+- 默认值、路径解析（相对/绝对/空白回退）
+- 环境变量覆盖、布尔值 true/false/1/0/yes/no/on/off
+- 正整数校验（线程、beam、上传大小、时长）
+- 不可变 Settings 与 max_upload_bytes 换算

@@ -1,0 +1,31 @@
+# T1.8 Windows CI 骨架验证
+
+- 日期：2026-10-27
+- workflow：.github/workflows/windows.yml
+
+## 本地可执行部分（macOS，不等同于 Windows CI）
+
+```text
+$ python -m pytest -q
+.....................                                                    [100%]
+21 passed in 0.03s
+
+$ python -m pip check
+No broken requirements found.
+
+$ python -c "import fastapi, faster_whisper, ctranslate2, av, onnxruntime, websockets, pytest, httpx"
+imports ok
+```
+
+## YAML 解析
+
+```text
+runner: windows-latest
+steps: ['Checkout', 'Set up Python 3.12', 'Install dependencies', 'Verify dependency health', 'Verify critical imports', 'Run tests']
+```
+
+## 实际 GitHub Actions 状态
+
+尚未执行：本 commit 需要用户手动 push 后触发 windows-latest。匿名 GitHub API 无法读取该仓库的 Actions 状态（返回 404），代理无法替用户 push，也无法读取 Actions 运行日志。
+
+因此：workflow 文件与本地等价步骤已验证，但 **不得把 T1.8 标记为 CI 已通过**；待 push 后查看 Windows job 结果。

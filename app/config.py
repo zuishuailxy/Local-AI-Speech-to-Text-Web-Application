@@ -1,0 +1,115 @@
+"""Application configuration.
+
+All runtime knobs live here so the API, audio layer and ASR engine do not
+scatter magic numbers. Values can be overridden with environment variables;
+invalid values fail fast with a message naming the variable.
+"""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Mapping
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_MODEL_PATH = Path("models") / "faster-whisper-small"
+SUPPORTED_LANGUAGES: tuple[str, ...] = ("zh", "en")
+
+_TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
+_FALSE_VALUES = frozenset({"0", "false", "no", "off"})
+
+
+def _read_env(env: Mapping[str, str], name: str, default: str) -> str:
+    raw = env.get(name)
+    if raw is None or not raw.strip():
+        return default
+    return raw.strip()
+
+
+def _parse_bool(env: Mapping[str, str], name: str, default: bool) -> bool:
+    raw = _read_env(env, name, "true" if default else "false").lower()
+    if raw in _TRUE_VALUES:
+        return True
+    if raw in _FALSE_VALUES:
+        return False
+    raise ValueError(f"{name} must be one of: true/false, 1/0, yes/no, on/off")
+
+
+def _parse_positive_int(
+    env: Mapping[str, str], name: str, default: int, minimum: int = 1
+) -> int:
+    raw = _read_env(env, name, str(default))
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be an integer, got: {raw!r}") from exc
+    if value < minimum:
+        raise ValueError(f"{name} must be >= {minimum}, got: {value}")
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class Settings:
+    """Immutable settings resolved from environment variables."""
+
+    project_root: Path
+    asr_model_path: Path
+    asr_model_size: str
+    asr_device: str
+    asr_compute_type: str
+    asr_cpu_threads: int
+    asr_beam_size: int
+    asr_vad_filter: bool
+    asr_warmup: bool
+    max_upload_mb: int
+    max_audio_seconds: int
+    supported_languages: tuple[str, ...] = SUPPORTED_LANGUAGES
+
+    @property
+    def max_upload_bytes(self) -> int:
+        return self.max_upload_mb * 1024 * 1024
+
+    @classmethod
+    def from_env(
+        cls,
+        environ: Mapping[str, str] | None = None,
+        project_root: Path | None = None,
+    ) -> "Settings":
+        """Build settings from a mapping (defaults to ``os.environ``).
+
+        Relative model paths are resolved against ``project_root`` so the same
+        environment variable works on Windows and POSIX without relying on the
+        process working directory.
+        """
+
+        env = os.environ if environ is None else environ
+        root = (project_root or PROJECT_ROOT).expanduser().resolve()
+
+        raw_model_path = _read_env(env, "ASR_MODEL_PATH", str(DEFAULT_MODEL_PATH))
+        model_path = Path(raw_model_path).expanduser()
+        if not model_path.is_absolute():
+            model_path = root / model_path
+
+        return cls(
+            project_root=root,
+            asr_model_path=model_path.resolve(),
+            asr_model_size=_read_env(env, "ASR_MODEL_SIZE", "small"),
+            asr_device=_read_env(env, "ASR_DEVICE", "cpu"),
+            asr_compute_type=_read_env(env, "ASR_COMPUTE_TYPE", "int8"),
+            asr_cpu_threads=_parse_positive_int(env, "ASR_CPU_THREADS", 4),
+            asr_beam_size=_parse_positive_int(env, "ASR_BEAM_SIZE", 5),
+            asr_vad_filter=_parse_bool(env, "ASR_VAD_FILTER", True),
+            asr_warmup=_parse_bool(env, "ASR_WARMUP", True),
+            max_upload_mb=_parse_positive_int(env, "MAX_UPLOAD_MB", 10),
+            max_audio_seconds=_parse_positive_int(env, "MAX_AUDIO_SECONDS", 120),
+            supported_languages=SUPPORTED_LANGUAGES,
+        )
+
+
+__all__ = [
+    "DEFAULT_MODEL_PATH",
+    "PROJECT_ROOT",
+    "SUPPORTED_LANGUAGES",
+    "Settings",
+]

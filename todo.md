@@ -128,9 +128,9 @@
   - 文件：`.github/workflows/windows.yml`、`docs/evidence/t1.8-windows-ci.txt`。
   - 前置：T0.7 确认 GitHub 可用；T1.2；用户 push。
   - 完成标准：workflow 使用 `windows-latest` + Python 3.12，执行 `pip install -r requirements.txt`、`pip check`、关键模块导入、`python -m pytest -q`；支持 push/PR/手动触发；失败日志可在 Actions 页面查看。
-  - 验证：YAML 本地解析通过；本地等价步骤通过；用户确认 push 后 Windows job 绿色（2026-10-27）。
+  - 验证：YAML 本地解析通过；本地等价步骤通过；GitHub Actions run `40483713787`（commit `fc8e7f9`）在 `windows-latest` / Python 3.12 上 success，全部 step success。
   - 结果：已完成（T1.8 骨架）。T1.4 的 uvicorn/health 与 T6.10 的真实模型/Playwright 步骤后续再加入 workflow。
-  - 备注：未保存 run URL/日志，仅记录用户确认，不伪造截图。
+  - 备注：公开 API 可读取 run/job/step 状态；完整日志下载需 admin，未伪造日志；run URL 见 `docs/evidence/t1.8-windows-ci.txt`。
 
 ---
 

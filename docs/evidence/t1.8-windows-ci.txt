@@ -26,6 +26,24 @@ steps: ['Checkout', 'Set up Python 3.12', 'Install dependencies', 'Verify depend
 
 ## 实际 GitHub Actions 状态
 
-用户于 2026-10-27 确认：push 后 Windows job 为绿色。未提供 run URL 或完整日志，因此本记录只保留用户确认，不伪造截图/日志。
+用户于 2026-10-27 确认 Windows job 为绿色；仓库改为 public 后，通过 GitHub REST API 复核：
 
-workflow 文件与本地等价步骤已验证；Windows job 已由用户确认通过。T1.4 之后若修改 workflow，需要重新确认新的 run。
+```text
+run id: 40483713787
+commit: fc8e7f90abe61eea5205419aed6cfcc5ed9224d8
+workflow: Windows CI
+event: push
+status: completed
+conclusion: success
+started_at: 2026-10-27T09:49:28Z
+completed_at: 2026-10-27T09:50:22Z
+runner: windows-latest
+job: Windows / Python 3.12
+steps: Checkout, Set up Python 3.12, Install dependencies,
+       Verify dependency health, Verify critical imports, Run tests — 全部 success
+url: https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application/actions/runs/40483713787
+```
+
+说明：公开 API 可读取 run/job/step 状态；下载完整日志仍需要仓库 admin 权限（API 返回 403），因此本记录不伪造日志内容。
+
+workflow 文件与本地等价步骤已验证；Windows job 已通过。T1.4 之后若修改 workflow，需要重新确认新的 run。

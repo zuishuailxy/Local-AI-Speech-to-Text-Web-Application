@@ -51,10 +51,10 @@ Never give up. Never lose hope. Always have faith. It allows you to cope.
 - 说明 small 模型在清晰人声上可用，但不是逐字完美；参考文本不能直接用模型输出替代，需要人工确认。
 - 建议保留当前 12 秒/9 秒片段；如希望更短或换起始位置，可重新截取。
 
-## 待确认
+## 确认
 
-- 请用户确认 `samples/reference.txt` 中的中文文本是否与实际朗读一致（标准《再别康桥》文本）。
-- 确认后 T5.1 可标记完成；T5.2 将用这两份 WAV + reference 做真实模型自动化测试与 CER/WER 评估。
+- 用户已于 2026-10-27 确认 `samples/reference.txt` 的中文/英文文本。
+- T5.1 完成；T5.2 将用这两份 WAV + reference 做真实模型自动化测试与 CER/WER 评估。
 
 ## 原始文件
 

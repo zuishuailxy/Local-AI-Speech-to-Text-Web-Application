@@ -114,7 +114,7 @@
   - 前置：T1.4、T1.5。
   - 完成标准：注册 `real_model`、`e2e` 标记；默认排除两者；提供 `FakeTranscriber` 与生成 WAV 的 fixture；`pythonpath` 指向仓库根。
   - 验证：`python -m pytest -q`（47 passed，无模型/麦克风/下载）；临时 real_model probe 默认被排除，`pytest -q -m real_model` 可单独运行（1 passed）；probe 已删除。
-  - 结果：已完成（2026-10-27）；G1 仍需 T2.5 完成后最终确认。
+  - 结果：已完成（2026-10-27）；G1 已在 T2.5 完成后通过。
 
 - [x] **T1.7 P1 阶段收尾**
   - 目标：提交脚手架并留痕。
@@ -122,7 +122,7 @@
   - 前置：T1.1–T1.6。
   - 完成标准：`git status` 干净；提交信息说明脚手架/配置/健康检查；记录本阶段命令与问题。
   - 验证：`git log --oneline -5`；`python -m pytest -q`（47 passed）；阶段二记录与证据已归档。
-  - 结果：已完成（2026-10-27）；G1 仍需 T2.5 完成后最终确认。
+  - 结果：已完成（2026-10-27）；G1 已在 T2.5 完成后通过。
 
 - [x] **T1.8 建立 GitHub Actions Windows CI 骨架**
   - 目标：在无 Windows 实机条件下尽早发现 Windows 安装/导入问题。
@@ -173,12 +173,14 @@
   - 结果：已完成（2026-10-27）；新增 `process_audio_upload` 作为统一 save→decode→finally cleanup 边界；容器与临时文件均用 with 关闭。
   - 备注：Windows CI run `40504918267`（commit `8f31ebc`）为 success，已确认临时文件测试在 windows-latest 通过。
 
-- [ ] **T2.5 Mock 层音频单元测试**
+- [x] **T2.5 Mock 层音频单元测试**
   - 目标：覆盖正常/空/损坏/超长/静音。
-  - 文件：`tests/conftest.py`、`tests/test_audio.py`。
+  - 文件：`tests/conftest.py`、`tests/test_audio.py`、`docs/evidence/t2.5-audio-tests.txt`。
   - 前置：T2.1–T2.4。
   - 完成标准：测试不依赖样本文件/麦克风；生成 WAV 使用标准库；静音用例返回 0 帧或空文本路径明确。
-  - 验证：`python -m pytest -q tests/test_audio.py` 全绿。
+  - 验证：`python -m pytest -q tests/test_audio.py`（41 passed）；全量 88 passed；矩阵覆盖 normal/silent/empty/corrupt/too_long，且每条路径临时目录为空。
+  - 结果：已完成（2026-10-27）；静音 WAV 明确解码为 16000 个零采样（不是空文件），后续 VAD/ASR 返回空文本的路径由 T2.7/T3 验证；G1 通过。
+  - 备注：WAV 全部由标准库生成；WebM fixture 仅用于容器格式测试，不依赖麦克风或 `samples/`。
 
 - [ ] **T2.6 浏览器录音格式（webm）解码测试**
   - 目标：证明后端可处理前端实际录音格式。

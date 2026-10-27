@@ -1,3 +1,10 @@
+"""Audio unit/integration tests.
+
+WAV inputs are generated with the standard library (see tests/conftest.py);
+tests do not require a microphone or the committed `samples/` audio files.
+The only committed audio fixture is a tiny WebM/Opus container for T2.6.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -558,3 +565,61 @@ def test_process_route_maps_errors_and_cleans(
     assert oversize.status_code == 413
     assert oversize.json()["code"] == "file_too_large"
     assert not list(upload_dir.iterdir())
+
+
+@pytest.mark.parametrize(
+    "case",
+    ["normal", "silent", "empty", "corrupt", "too_long"],
+)
+def test_audio_pipeline_matrix(
+    case: str, tmp_path, wav_file_factory, wav_bytes: bytes
+) -> None:
+    """T2.5 acceptance matrix: normal/empty/corrupt/too-long/silence."""
+
+    settings = Settings.from_env(
+        environ={"MAX_AUDIO_SECONDS": "1", "MAX_UPLOAD_MB": "1"},
+        project_root=tmp_path,
+    )
+    upload_dir = tmp_path / "uploads"
+
+    if case == "normal":
+        payload = wav_bytes
+        filename = "normal.wav"
+        expected_error = None
+    elif case == "silent":
+        payload = wav_file_factory(1.0, silent=True).read_bytes()
+        filename = "silent.wav"
+        expected_error = None
+    elif case == "empty":
+        payload = b""
+        filename = "empty.wav"
+        expected_error = EmptyFileError
+    elif case == "corrupt":
+        payload = b"not a real container"
+        filename = "corrupt.webm"
+        expected_error = InvalidAudioError
+    else:
+        payload = wav_file_factory(2.0).read_bytes()
+        filename = "too-long.wav"
+        expected_error = AudioTooLongError
+
+    upload = UploadFile(
+        file=io.BytesIO(payload),
+        filename=filename,
+        size=len(payload),
+    )
+
+    if expected_error is None:
+        decoded = asyncio.run(
+            process_audio_upload(upload, "zh", settings, temp_dir=upload_dir)
+        )
+        assert decoded.duration_seconds == pytest.approx(1.0, abs=0.02)
+        if case == "silent":
+            assert np.max(np.abs(decoded.samples)) == 0
+    else:
+        with pytest.raises(expected_error):
+            asyncio.run(
+                process_audio_upload(upload, "zh", settings, temp_dir=upload_dir)
+            )
+
+    assert not upload_dir.exists() or not list(upload_dir.iterdir())

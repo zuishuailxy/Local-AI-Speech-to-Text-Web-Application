@@ -123,7 +123,8 @@
 - 真实麦克风尚未在自动化环境完成授权；T6 手动验证。
 - 真实 Windows 11 桌面/麦克风未验证；CI 是 Windows Server，需在报告中披露。
 - Windows CI 的 Edge 为 headless 假麦克风，不是桌面 Edge 手动操作。
-- Edge 尚未手动验证。
+- 本机 macOS 未安装 Edge，未做 macOS Edge UI 验证。
+- Edge：Windows CI headless E2E 通过；桌面 Edge/真实麦克风未验证。
 - 断网验证已完成（T6.9，Wi-Fi 关闭 + HF_HUB_OFFLINE=1）。
 - Playwright E2E 默认不执行，但已在 Windows CI 单独运行；假麦克风/FakeTranscriber 不代表真实设备/模型。
 - 语言选择不强制目标脚本；错配时日志有 `asr_language_mismatch`。
@@ -163,4 +164,5 @@
 - T6.8 WebM 上传、复制、停后端重试：8.999 s、WER 0；剪贴板哈希一致；重试复用同一文件成功。
 - T6.9 真实断网：Wi-Fi 关闭，HF_HUB_OFFLINE=1；中文 4.357 s / CER 0.1795，英文 1.359 s / WER 0；无外网请求。
 - T6.10 Windows CI：Python 3.12.10、Edge 155；真实模型 5 项、Chromium/Edge E2E 3 项均通过；模型下载 136 s，缓存命中 6 s。
-- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`、`upload-webm.png`、`offline.txt`、`offline-zh.png`、`offline-en.png`、`windows-ci.txt`。
+- T6.11 Edge E2E：Edge 155 headless，3 passed，新增复制剪贴板断言；Run `40658826426`。
+- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`、`upload-webm.png`、`offline.txt`、`offline-zh.png`、`offline-en.png`、`windows-ci.txt`、`edge.txt`。

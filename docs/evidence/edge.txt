@@ -1,0 +1,48 @@
+# T6.11 Edge 兼容性验证
+
+- 日期：2026-10-28
+- 方式：Windows CI Playwright Microsoft Edge（headless）
+- 版本：Microsoft Edge 155.0.4283.62
+- 运行器：`windows-latest`（Windows Server）
+- 提交：`0a23a8c test: cover clipboard copy in browser e2e`
+- Run：`40658826426`（success）
+
+## 覆盖内容
+
+Playwright Edge channel 执行 `tests/e2e/test_browser.py`，3 项：
+
+1. 页面加载：标题、idle、语言默认 zh、Start 可用、Upload 禁用、0 console error。
+2. WAV 上传 + 复制：
+   - 上传 `samples/english.wav`
+   - 结果文本与语言正确
+   - 点击复制，按钮显示“已复制”
+   - `navigator.clipboard.readText()` 与结果文本完全一致
+3. 假麦克风录音：
+   - Start → recording → Stop → success
+   - `lastRecording.mimeType` 以 `audio/webm` 开头（WebM/Opus 容器）
+   - 大小 >1000 bytes、时长 ≥1 s
+   - 结果字段正确
+
+结果：
+
+```text
+3 passed
+```
+
+## 环境差异
+
+- 这是 Windows Server + **headless Edge**，不是 Windows 11 桌面 Edge，也不是 macOS Edge。
+- 麦克风为 Playwright 假设备，不是真实麦克风；真实 Edge 桌面权限/设备未验证。
+- Windows CI 已验证 Edge 的页面、上传、复制、假麦克风录音；真实桌面 Edge 手动验证仍缺失。
+- 本机 macOS 未安装 Microsoft Edge，因此没有做 macOS Edge UI 验证。
+
+## 与 Chrome 的关系
+
+- Chrome 156 真实麦克风：T6.1/T6.2 已通过。
+- Chrome 156 页面上传/复制/WebM：T6.3/T6.4/T6.8 已通过。
+- Chromium E2E：Windows CI 默认 job 3 passed。
+- Edge E2E：本文件 3 passed，额外覆盖复制。
+
+## 结论
+
+Edge 的 Chromium 兼容路径通过自动化验证；但“Edge 桌面实机 + 真实麦克风”未验证，最终报告必须单独披露，不能写成 Windows 11/Edge 实机通过。

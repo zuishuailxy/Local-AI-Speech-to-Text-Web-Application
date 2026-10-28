@@ -562,12 +562,14 @@
   - 结果：已完成（2026-10-28）；首次失败为 Windows cp1252 打印中文导致 UnicodeEncodeError，已设 PYTHONUTF8/PYTHONIOENCODING 并加 HF/hf-mirror 回退。
   - 备注：CI 是 Windows Server，不是 Windows 11 桌面；假麦克风/headless Edge 不等于真实桌面/麦克风，报告中必须披露。
 
-- [ ] **T6.11 Edge 兼容性验证（本地/CI）**
+- [x] **T6.11 Edge 兼容性验证（本地/CI）**
   - 目标：覆盖题目要求的 Chrome/Edge 最新稳定版。
-  - 文件：`docs/test-report.md`、`docs/evidence/edge.txt`。
+  - 文件：`docs/test-report.md`（后续汇总）、`docs/evidence/edge.txt`。
   - 前置：T6.1–T6.4；T6.10（CI）。
   - 完成标准：Edge 打开页面、上传、识别、复制；记录实际 MediaRecorder MIME；有 Windows CI 时用 Playwright Edge 通道跑页面/上传；无 Windows 实机时在 macOS Edge 做 UI 验证并注明环境差异。
-  - 验证：手动/CI 记录；必要时用 T2.6 解码路径兜底。
+  - 验证：Windows CI Edge 155.0.4283.62 `3 passed`；页面加载、WAV 上传、复制（clipboard 文本一致）、假麦克风 WebM 录音；Run `40658826426` success。
+  - 结果：已完成（2026-10-28，CI headless）；本机 macOS 未安装 Edge，桌面 Edge/真实麦克风未验证。
+  - 备注：headless Edge + 假麦克风不等于 Windows 11/macOS 桌面 Edge 实机；最终报告需披露。
 
 - [ ] **T6.12 P6 阶段收尾与证据归档**
   - 目标：汇总手动/离线/Windows 结果，形成测试报告初稿。

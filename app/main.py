@@ -12,6 +12,7 @@ from app.api.routes import router
 from app.api.ws import router as ws_router
 from app.config import PROJECT_ROOT, Settings
 from app.errors import FileTooLargeError, register_exception_handlers
+from app.logging_config import configure_logging
 from app.services.audio import validate_content_length
 from app.services.transcriber import Transcriber, WhisperTranscriber
 
@@ -32,11 +33,7 @@ def create_app(
     """
 
     resolved_settings = settings or Settings.from_env()
-    logging.basicConfig(
-        level=resolved_settings.log_level,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-    )
-    logging.getLogger("app").setLevel(resolved_settings.log_level)
+    configure_logging(resolved_settings)
     logger.info(
         "app_configured model_path=%s device=%s compute_type=%s "
         "cpu_threads=%d beam_size=%d vad_filter=%s max_upload_mb=%d "

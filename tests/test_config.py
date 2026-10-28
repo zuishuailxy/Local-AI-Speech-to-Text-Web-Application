@@ -23,6 +23,10 @@ def test_defaults_are_stable(tmp_path: Path) -> None:
     assert settings.max_upload_bytes == 10 * 1024 * 1024
     assert settings.max_audio_seconds == 120
     assert settings.log_level == "INFO"
+    assert settings.log_file is None
+    assert settings.log_format == "text"
+    assert settings.log_max_bytes == 5 * 1024 * 1024
+    assert settings.log_backup_count == 3
     assert settings.supported_languages == SUPPORTED_LANGUAGES
 
 
@@ -40,6 +44,10 @@ def test_environment_overrides_and_relative_model_path(tmp_path: Path) -> None:
             "MAX_UPLOAD_MB": "5",
             "MAX_AUDIO_SECONDS": "60",
             "LOG_LEVEL": "debug",
+            "LOG_FILE": "logs/app.log",
+            "LOG_FORMAT": "json",
+            "LOG_MAX_BYTES": "1024",
+            "LOG_BACKUP_COUNT": "2",
         },
         project_root=tmp_path,
     )
@@ -55,6 +63,10 @@ def test_environment_overrides_and_relative_model_path(tmp_path: Path) -> None:
     assert settings.max_upload_bytes == 5 * 1024 * 1024
     assert settings.max_audio_seconds == 60
     assert settings.log_level == "DEBUG"
+    assert settings.log_file == (tmp_path / "logs" / "app.log").resolve()
+    assert settings.log_format == "json"
+    assert settings.log_max_bytes == 1024
+    assert settings.log_backup_count == 2
 
 
 def test_absolute_model_path_is_preserved(tmp_path: Path) -> None:
@@ -109,6 +121,14 @@ def test_invalid_log_level_names_the_variable(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="LOG_LEVEL"):
         Settings.from_env(
             environ={"LOG_LEVEL": "verbose"},
+            project_root=tmp_path,
+        )
+
+
+def test_invalid_log_format_is_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="LOG_FORMAT"):
+        Settings.from_env(
+            environ={"LOG_FORMAT": "xml"},
             project_root=tmp_path,
         )
 

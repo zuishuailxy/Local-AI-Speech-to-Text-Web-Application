@@ -24,7 +24,7 @@ python -m pytest -q
 ```
 
 ```text
-217 passed, 12 deselected in 1.90s
+223 passed, 12 deselected in 1.72s
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -35,7 +35,7 @@ python -m pytest -q
 | --- | ---: | --- |
 | `test_app_factory.py` | 5 | 应用工厂、注入、静态页 |
 | `test_audio.py` | 42 | 校验、流式 10 MB、解码、时长、清理 |
-| `test_config.py` | 22 | 默认值、环境变量、非法值、日志级别 |
+| `test_config.py` | 23 | 默认值、环境变量、非法值、日志级别/文件 |
 | `test_download_model.py` | 10 | 模型下载/校验/回退 |
 | `test_errors.py` | 10 | 错误码、异常处理 |
 | `test_fixtures.py` | 8 | fixture/隔离 |
@@ -45,19 +45,20 @@ python -m pytest -q
 | `test_health.py` | 4 | `/health`、首页 |
 | `test_language.py` | 11 | zh/en/auto/非法语言 |
 | `test_logging.py` | 5 | request_id、日志字段、文本不入日志 |
+| `test_logging_config.py` | 4 | 文件/JSON/轮转/默认无文件 |
 | `test_metrics.py` | 10 | CER/WER/脚本占比 |
 | `test_samples.py` | 5 | WAV 参数、参考文本、无模型权重 |
 | `test_transcribe_api.py` | 21 | 200/4xx/5xx、空文本、重试、auto |
 | `test_transcriber.py` | 7 | 协议/Fake |
-| `test_transcriber_unit.py` | 14 | 惰性加载、锁、推理、日志、繁转简、auto |
+| `test_transcriber_unit.py` | 15 | 惰性加载、锁、推理、日志、繁转简、auto/低置信度 |
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
 | `test_ws.py` | 9 | WebSocket/PCM/partial/final/错误/auto |
-| **合计** | **217** | 默认执行 |
+| **合计** | **223** | 默认执行 |
 
 真实模型 5 项、E2E 4 项默认排除，分别需要模型/浏览器。
 
-当前全量为 217 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前全量为 223 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -159,7 +160,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - 前端“实时识别（实验）”复选框，AudioWorklet 主路径 + 重采样 + PCM16；旧浏览器回退 ScriptProcessor。
 - Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40673661197` Edge 5 项通过）。
 - T8.1 自动语言：HTTP/WS/页面支持 `auto`；中英文真实样本自动检测通过；用户手动中文/英文/实时 auto 截图；原有 zh/en 契约不变。
-- 日志：成功事件带 `outcome=success`，失败事件带 `outcome=error`；不记录音频/文本原文。
+- 日志：成功事件带 `outcome=success`，失败事件带 `outcome=error`；支持 `LOG_FILE`/JSON/轮转；不记录音频/文本原文。
 - 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；迁移 AudioWorklet 后实时 E2E 无 ScriptProcessor deprecation warning。
 - 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40665695751` 成功。
 - 自动语言检测（`language=auto`）已实现：HTTP/WS/页面；中英文真实样本检测通过。

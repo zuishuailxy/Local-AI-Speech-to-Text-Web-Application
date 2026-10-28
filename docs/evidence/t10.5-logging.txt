@@ -1,0 +1,50 @@
+# T10.5 日志工程化
+
+- 日期：2026-10-28
+- 分支：`optimization/post-delivery`
+- 新增：`app/logging_config.py`
+- 配置：`LOG_FILE`、`LOG_FORMAT=text|json`、`LOG_MAX_BYTES`、`LOG_BACKUP_COUNT`
+
+## 行为
+
+- 默认（无 `LOG_FILE`）：保持 stderr 文本日志，不创建文件。
+- `LOG_FILE=logs/server.log`：app logger 写入文件，`RotatingFileHandler` 轮转。
+- `LOG_FORMAT=json`：每行一个 JSON 对象（time/level/logger/message）。
+- 文本格式：`时间 级别 logger 消息`。
+- 默认大小 5 MiB，备份 3 个。
+- 不记录音频字节、识别文本原文、请求体；只记录元数据。
+- 文件日志包含 `request_id`、`outcome=success/error`、语言、时长、耗时、错误码。
+
+## 示例
+
+```bash
+LOG_FILE=logs/server.log LOG_FORMAT=json \
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+```json
+{"time": "2026-10-28 19:00:00,000", "level": "INFO", "logger": "app.api.routes", "message": "transcribe_complete outcome=success request_id=... language=zh ..."}
+```
+
+## 测试
+
+```text
+tests/test_logging_config.py
+- 文本文件写入 + 隐私（secret 不出现）
+- JSON 逐行解析
+- RotatingFileHandler 参数
+- 默认无文件 handler
+
+tests/test_config.py
+- LOG_FILE 相对路径
+- LOG_FORMAT 非法值
+- LOG_MAX_BYTES/LOG_BACKUP_COUNT
+```
+
+全量：`223 passed, 12 deselected`；E2E：5 passed。
+
+## 边界
+
+- `LOG_FILE` 只接管 app logger；uvicorn 自己的 access/error 日志仍在 stderr。要全部落盘可同时重定向 stdout/stderr。
+- 不做远程日志/集中采集；单机文件轮转即可。
+- JSON 的 message 仍是已格式化字符串；后续可改为结构化字段字典。

@@ -797,12 +797,13 @@
   - 验证：baseline CER 0.2308；领域 prompt CER 0.2051、耗时 3.317 s，仍有近音字；默认不启用 prompt，未改参考文本。
   - 结果：已完成（2026-10-28）；prompt 收益有限，保持无 prompt 默认。
 
-- [ ] **T10.5 日志工程化**
+- [x] **T10.5 日志工程化**
   - 目标：可选文件保存、结构化 JSON、基础轮转；保持隐私边界。
-  - 文件：`app/config.py`、`app/logging_config.py`、`app/main.py`、`tests/test_config.py`、`tests/test_logging.py`、`docs/evidence/t10.5-logging.txt`、`README.md`。
+  - 文件：`app/config.py`、`app/logging_config.py`、`app/main.py`、`tests/test_config.py`、`tests/test_logging_config.py`、`docs/evidence/t10.5-logging.txt`、`README.md`。
   - 前置：T9.4。
   - 完成标准：`LOG_FILE` 可写文件；`LOG_FORMAT=text|json`；轮转大小/备份可配；不记录音频/文本原文；不破坏默认 stderr。
-  - 验证：启动写入临时日志；JSON 可解析；请求成功/失败含 outcome/request_id；关闭默认无文件。
+  - 验证：文本/JSON 文件测试；RotatingFileHandler 参数；默认无文件；secret 不出现；全量 223 passed、12 deselected。
+  - 结果：已完成（2026-10-28）；文件日志只接管 app logger，uvicorn 日志仍走 stderr/重定向。
 
 - [ ] **T10.6 优化回归与版本标记**
   - 目标：证明优化未破坏必做/F6，并给优化版 tag。

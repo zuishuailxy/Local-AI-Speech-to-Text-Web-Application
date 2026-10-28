@@ -58,6 +58,13 @@ def _parse_log_level(env: Mapping[str, str], name: str, default: str) -> str:
     return raw
 
 
+def _parse_log_format(env: Mapping[str, str], name: str, default: str) -> str:
+    raw = _read_env(env, name, default).lower()
+    if raw not in {"text", "json"}:
+        raise ValueError(f"{name} must be one of: text, json; got: {raw!r}")
+    return raw
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     """Immutable settings resolved from environment variables."""
@@ -74,6 +81,10 @@ class Settings:
     max_upload_mb: int
     max_audio_seconds: int
     log_level: str = "INFO"
+    log_file: Path | None = None
+    log_format: str = "text"
+    log_max_bytes: int = 5 * 1024 * 1024
+    log_backup_count: int = 3
     supported_languages: tuple[str, ...] = SUPPORTED_LANGUAGES
 
     @property
@@ -101,6 +112,14 @@ class Settings:
         if not model_path.is_absolute():
             model_path = root / model_path
 
+        raw_log_file = _read_env(env, "LOG_FILE", "")
+        log_file = None
+        if raw_log_file:
+            candidate = Path(raw_log_file).expanduser()
+            if not candidate.is_absolute():
+                candidate = root / candidate
+            log_file = candidate.resolve()
+
         return cls(
             project_root=root,
             asr_model_path=model_path.resolve(),
@@ -114,6 +133,10 @@ class Settings:
             max_upload_mb=_parse_positive_int(env, "MAX_UPLOAD_MB", 10),
             max_audio_seconds=_parse_positive_int(env, "MAX_AUDIO_SECONDS", 120),
             log_level=_parse_log_level(env, "LOG_LEVEL", "INFO"),
+            log_file=log_file,
+            log_format=_parse_log_format(env, "LOG_FORMAT", "text"),
+            log_max_bytes=_parse_positive_int(env, "LOG_MAX_BYTES", 5 * 1024 * 1024),
+            log_backup_count=_parse_positive_int(env, "LOG_BACKUP_COUNT", 3),
             supported_languages=SUPPORTED_LANGUAGES,
         )
 

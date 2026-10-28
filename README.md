@@ -130,7 +130,12 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 日志建议：
 
 - 后端日志是主要依据，包含 `request_id`、语言、时长、耗时、错误码，不记录音频/识别文本原文。
-- 需要保存时把 stdout/stderr 重定向到文件：
+- 需要保存时可直接配置 app 文件日志（带轮转）：
+  ```bash
+  LOG_FILE=logs/server.log LOG_FORMAT=json \
+  python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+  ```
+  也可把 stdout/stderr 重定向到文件，包含 uvicorn 自身日志：
   ```bash
   python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > server.log 2>&1
   ```
@@ -259,6 +264,10 @@ curl -X POST http://127.0.0.1:8000/api/transcribe \
 | `MAX_UPLOAD_MB` | `10` | 上传上限 |
 | `MAX_AUDIO_SECONDS` | `120` | 解码后音频上限 |
 | `LOG_LEVEL` | `INFO` | `DEBUG/INFO/WARNING/ERROR/CRITICAL` |
+| `LOG_FILE` | 空 | 可选日志文件；空则仅 stderr |
+| `LOG_FORMAT` | `text` | `text` / `json`（文件日志格式） |
+| `LOG_MAX_BYTES` | `5242880` | 文件轮转大小 |
+| `LOG_BACKUP_COUNT` | `3` | 轮转备份数 |
 
 示例：
 
@@ -278,7 +287,7 @@ python -m pytest -q
 ```
 
 ```text
-217 passed, 12 deselected
+223 passed, 12 deselected
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -333,7 +342,7 @@ P7 必做版已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + 
 203 passed, 8 deselected in 2.53s
 ```
 
-F6 合并后在新 clone / 新 venv 中为 `217 passed, 12 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
+F6 合并后在新 clone / 新 venv 中为 `223 passed, 12 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
 
 ## 9. 离线验证
 
@@ -463,7 +472,7 @@ netstat -ano | findstr :8000       # Windows
 自动化结果：
 
 ```text
-默认：217 passed, 12 deselected
+默认：223 passed, 12 deselected
 真实模型：7 passed
 浏览器 E2E：5 passed
 Windows CI：Chromium + Edge + 真实模型通过（AudioWorklet 后 run `40673661197`，Edge 5 项 E2E）

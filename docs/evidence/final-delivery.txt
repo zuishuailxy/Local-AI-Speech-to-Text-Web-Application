@@ -36,7 +36,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 Windows CI：
 
 ```text
-Run 40677386222
+Run 40680120089
 Windows / Python 3.12: success
 Windows / real model: success
 Edge E2E: 5 passed

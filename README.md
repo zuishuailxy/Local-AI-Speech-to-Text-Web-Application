@@ -343,7 +343,7 @@ P7 必做版已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + 
 203 passed, 8 deselected in 2.53s
 ```
 
-F6 合并后在新 clone / 新 venv 中为 `229 passed, 12 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
+T9.1 在新 clone / 新 venv 中复现时为 `217 passed, 12 deselected`；T10 后当前为 `229 passed, 12 deselected`。两次复现期间均未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
 
 ## 9. 离线验证
 

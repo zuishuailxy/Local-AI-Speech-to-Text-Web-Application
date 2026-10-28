@@ -46,7 +46,7 @@ Edge E2E: 5 passed
 干净复现：
 
 ```text
-新 clone + 新 venv 229 passed
+新 clone + 新 venv 复现（T9.1 当时为 217 passed；T10 后当前 229 passed）
 /health 200
 中文/英文上传成功
 F6 WebSocket 6 partials + final 成功

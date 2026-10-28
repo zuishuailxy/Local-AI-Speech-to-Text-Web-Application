@@ -95,7 +95,7 @@
 | 无 Docker/DB/云 | 通过 |
 | Windows 11 x64 | 第三方 Win11 x64 + Chrome 156 + Sony 麦克风通过；Edge 未测试 |
 | 默认测试无模型/麦克风/外网 | 通过（233/12；P7 干净 203/8） |
-| 真实模型 | 5 passed |
+| 真实模型 | 7 passed |
 | 6 项手动 | 全部完成 |
 | Windows CI | 真实模型 + Chromium + Edge 通过（Edge 5 项，run `40697700916`） |
 

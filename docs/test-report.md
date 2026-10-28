@@ -131,7 +131,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 | 异常上传、静音、超时长、503 | 6 个分支提示/状态码正确 | `error-cases.txt` |
 | 60 秒自动停止 | 计时 01:00.0，自动提交；服务端音频 57.18 s（T10.1 复测改为 59.8 s，差 0.2 s） | `auto-stop-60s.png`、`t10.1-60s-alignment.txt` |
 | 复制、停后端重试、WebM 上传 | 通过；剪贴板哈希一致；重试复用同一文件 | `upload-webm.txt`、`upload-webm.png` |
-| Windows CI | 真实模型 5 项、Chromium/Edge E2E 通过 | `windows-ci.txt` |
+| Windows CI | 真实模型 7 项、Chromium/Edge E2E 通过 | `windows-ci.txt` |
 | Edge | Windows CI headless Edge 155，5 passed（含复制/F6/auto） | `edge.txt` |
 
 ## 5. Windows CI
@@ -203,8 +203,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | --- | --- | --- |
 | ~~中~~ 已关闭 | 60 秒计时与实际音频不一致 | T10.1 复测 5.3/5.2、10.2/10.1、60.0/59.8，最大差 0.2 s；历史 57.18 s 未复现 |
 | 中 | 中文近音字错误 | small 模型把招手/金柳/夕阳识别为近音词；CER 0.18–0.23，未超过阈值 |
-| 低 | 桌面 Edge 未测试 | 第三方 Windows 验证使用 Chrome 156；Edge 仅 CI headless |
-| 低 | 桌面 Edge 未手动验证 | 仅有 Windows CI headless Edge + 假麦克风 |
+| 低 | 桌面 Edge 未手动验证 | 第三方 Windows 验证使用 Chrome 156；Edge 仅 CI headless + 假麦克风 |
 | 低 | 语言选择不强制目标脚本 | 音频与所选语言不一致时可能输出源语言；日志有 `asr_language_mismatch` |
 | 低 | 无设备验证为模拟 | macOS 内置麦克风无法安全禁用；真实 NotFound/NotReadable 待其他设备 |
 | 低 | 样本覆盖有限 | 单人、安静、正常语速；噪声/远场/混合语言未覆盖 |
@@ -240,7 +239,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 
 - 测试隔离/合规：`pytest-default.txt`、`compliance-check.txt`
 - 真实模型：`asr-baseline.md`、`t5.2-real-model.txt`、`t5.3-real-api.txt`、`pytest-real-model.txt`
-- 手动：`t6.1-mic-zh.txt` … `t6.11` 对应文件；第三方 Windows：`t6.13-windows-third-party.txt`
+- 手动：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`；T6.7–T6.11 见 `error-cases.txt`、`upload-webm.txt`、`offline.txt`、`windows-ci.txt`、`edge.txt`；第三方 Windows：`t6.13-windows-third-party.txt`
 - 错误/边界：`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`
 - CI：`windows-ci.txt`、`edge.txt`
 - 准确率：`t10.7-medium-model.txt`、`t10.7-medium-benchmark.json`

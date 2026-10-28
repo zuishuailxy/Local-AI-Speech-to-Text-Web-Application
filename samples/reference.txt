@@ -20,5 +20,5 @@ Never give up. Never lose hope. Always have faith. It allows you to cope.
 Notes
 =====
 - 两段音频均为本人录制，用于本项目测试，不含敏感个人信息。
-- M4A 原文件保留在 samples/ 下，WAV 为测试用 16 kHz mono PCM16 版本。
+- M4A 原文件仅在本地保留、未提交 Git（见 .gitignore）；仓库中提交的是 16 kHz mono PCM16 WAV。
 - 中文文本为《再别康桥》片段；英文为励志短文片段。

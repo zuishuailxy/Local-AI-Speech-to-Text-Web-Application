@@ -97,7 +97,7 @@
 | 默认测试无模型/麦克风/外网 | 通过（229/12；P7 干净 203/8） |
 | 真实模型 | 5 passed |
 | 6 项手动 | 全部完成 |
-| Windows CI | 真实模型 + Chromium + Edge 通过（Edge 5 项，run `40682285556`） |
+| Windows CI | 真实模型 + Chromium + Edge 通过（Edge 5 项，run `40684188857`） |
 
 ## F6 实时识别（加分）
 
@@ -108,7 +108,7 @@
 | partial 中间文本 | 真实麦克风出现（6 partials） |
 | final 完整文本 | 14.08 s / 1.742 s；CER 0.0455 |
 | 必做回归 | 229 passed / 真实模型 7 / HTTP 200 |
-| Windows CI F6 | 已通过（run `40682285556`，Edge E2E 5 项） |
+| Windows CI F6 | 已通过（run `40684188857`，Edge E2E 5 项） |
 | ScriptProcessor warning | 主路径已迁 AudioWorklet，E2E 无 warning；旧浏览器回退未实机 |
 | 自动语言检测 | 已实现（T8.1）：HTTP/WS/页面 auto，中英文真实样本通过 |
 
@@ -121,7 +121,7 @@
 | 真实无设备/占用 | 模拟；内置麦克风无法安全禁用 |
 | 60 s 计时 vs 音频 | 已关闭：60.0 s → 59.8 s；历史 57.18 s 未复现 |
 | 噪声/远场/中英混合 | 未覆盖 |
-| F6 Windows CI | 已通过（run `40682285556`，Edge 5 项，含 auto） |
+| F6 Windows CI | 已通过（run `40684188857`，Edge 5 项，含 auto） |
 | F6 AudioWorklet | 已迁移为主路径；旧浏览器回退未实机 |
 
 ## 结论

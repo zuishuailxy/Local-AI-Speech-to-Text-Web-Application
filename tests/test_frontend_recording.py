@@ -59,7 +59,7 @@ def test_timer_and_sixty_second_limit_contract() -> None:
 def test_error_recovery_hooks_and_guards() -> None:
     assert 'getElementById("retry-button")' in JS
     assert 'getElementById("dismiss-error-button")' in JS
-    assert 'addEventListener("click", retryRecording)' in JS
+    assert 'addEventListener("click", retryLastAction)' in JS
     assert 'addEventListener("click", dismissError)' in JS
     assert "recordingFailed" in JS
     assert "window.isSecureContext" in JS
@@ -77,3 +77,18 @@ def test_file_selection_validation_contract() -> None:
     assert "file.size > MAX_UPLOAD_BYTES" in JS
     assert "不支持的" in JS or "不支持该文件格式" in JS
     assert "上传文件超过 10 MB" in JS
+
+
+def test_transcribe_request_and_result_contract() -> None:
+    assert 'fetch("/api/transcribe"' in JS
+    assert "new FormData()" in JS
+    assert 'formData.append("file"' in JS
+    assert 'formData.append("language"' in JS
+    assert "requestInFlight" in JS
+    assert "startProcessingTimer" in JS
+    assert "stopProcessingTimer" in JS
+    assert "showResult(payload, blob)" in JS
+    assert "processing_seconds" in JS
+    assert "duration_seconds" in JS
+    assert "lastSubmission" in JS
+    assert "submitAudio(blob, filename" in JS

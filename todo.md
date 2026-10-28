@@ -364,12 +364,14 @@
   - 结果：已完成（2026-10-27）；Upload 按钮默认 disabled，选中合法文件后启用；客户端校验仅作提示，服务端仍独立校验。
   - 备注：实际 `/api/transcribe` 请求/结果显示在 T4.6；本轮不发送网络请求。
 
-- [ ] **T4.6 实现请求、状态与结果展示**
+- [x] **T4.6 实现请求、状态与结果展示**
   - 目标：调用 API 并展示全部必填字段。
-  - 文件：`static/app.js`、`static/index.html`。
+  - 文件：`static/app.js`、`tests/test_frontend_recording.py`、`docs/evidence/t4.6-request-result.txt`、`docs/evidence/t4.6-real-result.png`。
   - 前置：T3.7、T4.5。
   - 完成标准：正确构造 `FormData`（file、language）；识别中显示已耗时；成功后展示文本、语言、音频时长、处理耗时；请求期间禁止重复提交。
-  - 验证：Chrome/Edge 手动中英文；Network 响应与页面字段一致。
+  - 验证：真实浏览器上传中文/英文 WAV，均 200 并显示四字段；中文 4.38s/英文 1.70s；录音自动提交链路用假 MediaRecorder + 真实 WAV 验证；9 前端测试/全量 166 passed。
+  - 结果：已完成（2026-10-28）；统一 submitAudio、processing timer、pipeline 状态、音频预览、空文本提示；错误保留最近提交供重试。
+  - 备注：真实麦克风录音仍待 T6.1/T6.2；Edge 待 T6.11；Copy 与错误联调分别在 T4.7/T4.8。
 
 - [ ] **T4.7 实现复制功能**
   - 目标：一键复制识别文本。

@@ -36,11 +36,25 @@
     fileInput: document.getElementById("file-input"),
     uploadButton: document.getElementById("upload-button"),
     fileName: document.getElementById("file-name"),
+    languageSelect: document.getElementById("language-select"),
+    processingTimer: document.getElementById("processing-timer"),
     permissionNote: document.getElementById("permission-note"),
     errorPanel: document.getElementById("error-panel"),
     errorMessage: document.getElementById("error-message"),
     retryButton: document.getElementById("retry-button"),
     dismissErrorButton: document.getElementById("dismiss-error-button"),
+    resultPanel: document.getElementById("result-panel"),
+    resultPlaceholder: document.getElementById("result-placeholder"),
+    resultText: document.getElementById("result-text"),
+    resultLanguage: document.getElementById("result-language"),
+    resultDuration: document.getElementById("result-duration"),
+    resultProcessing: document.getElementById("result-processing"),
+    copyButton: document.getElementById("copy-button"),
+    audioPreview: document.getElementById("audio-preview"),
+    stepUpload: document.getElementById("step-upload"),
+    stepDecode: document.getElementById("step-decode"),
+    stepInfer: document.getElementById("step-infer"),
+    stepResult: document.getElementById("step-result"),
   };
 
   const state = {
@@ -57,6 +71,12 @@
     recordedMs: 0,
     recordingFailed: false,
     selectedFile: null,
+    lastSubmission: null,
+    requestInFlight: false,
+    processingTimerId: null,
+    processingStartMs: 0,
+    lastResult: null,
+    previewUrl: null,
   };
 
   function chooseMimeType() {
@@ -134,6 +154,12 @@
     }
     if (elements.fileInput) {
       elements.fileInput.disabled = busy;
+    }
+    if (elements.uploadButton) {
+      elements.uploadButton.disabled = busy || !state.selectedFile;
+    }
+    if (elements.languageSelect) {
+      elements.languageSelect.disabled = busy;
     }
     if (elements.pipelineState) {
       elements.pipelineState.textContent =
@@ -286,6 +312,242 @@
     }
   }
 
+  function formatSeconds(milliseconds) {
+    return `${(Math.max(0, milliseconds) / 1000).toFixed(1)} s`;
+  }
+
+  function setPipelineStep(element, stateName) {
+    if (element) {
+      element.dataset.state = stateName || "";
+    }
+  }
+
+  function resetPipeline() {
+    [
+      elements.stepCapture,
+      elements.stepUpload,
+      elements.stepDecode,
+      elements.stepInfer,
+      elements.stepResult,
+    ].forEach((element) => setPipelineStep(element, ""));
+  }
+
+  function updateProcessingTimer() {
+    if (!state.processingStartMs) {
+      return;
+    }
+    if (elements.processingTimer) {
+      elements.processingTimer.textContent = formatSeconds(
+        Date.now() - state.processingStartMs
+      );
+    }
+  }
+
+  function startProcessingTimer() {
+    stopProcessingTimer();
+    state.processingStartMs = Date.now();
+    updateProcessingTimer();
+    state.processingTimerId = setInterval(updateProcessingTimer, 100);
+  }
+
+  function stopProcessingTimer() {
+    if (state.processingTimerId !== null) {
+      clearInterval(state.processingTimerId);
+      state.processingTimerId = null;
+    }
+  }
+
+  function revokePreview() {
+    if (state.previewUrl) {
+      URL.revokeObjectURL(state.previewUrl);
+      state.previewUrl = null;
+    }
+    if (elements.audioPreview) {
+      elements.audioPreview.pause();
+      elements.audioPreview.removeAttribute("src");
+      elements.audioPreview.hidden = true;
+    }
+  }
+
+  function resetResult() {
+    revokePreview();
+    if (elements.resultPanel) {
+      elements.resultPanel.dataset.resultState = "empty";
+    }
+    if (elements.resultPlaceholder) {
+      elements.resultPlaceholder.hidden = false;
+      elements.resultPlaceholder.textContent = "识别完成后，文本会显示在这里。";
+    }
+    if (elements.resultText) {
+      elements.resultText.hidden = true;
+      elements.resultText.textContent = "";
+    }
+    if (elements.resultLanguage) {
+      elements.resultLanguage.textContent = "—";
+    }
+    if (elements.resultDuration) {
+      elements.resultDuration.textContent = "—";
+    }
+    if (elements.resultProcessing) {
+      elements.resultProcessing.textContent = "—";
+    }
+    if (elements.copyButton) {
+      elements.copyButton.disabled = true;
+    }
+    state.lastResult = null;
+  }
+
+  function languageLabel(language) {
+    return language === "zh" ? "中文（zh）" : language === "en" ? "English（en）" : language || "—";
+  }
+
+  function showResult(payload, blob) {
+    stopProcessingTimer();
+    if (
+      !payload ||
+      typeof payload.text !== "string" ||
+      typeof payload.language !== "string" ||
+      typeof payload.duration_seconds !== "number" ||
+      typeof payload.processing_seconds !== "number"
+    ) {
+      throw new Error("后端返回了无法识别的响应格式。");
+    }
+
+    state.lastResult = payload;
+    window.__lastResult = payload;
+    if (elements.resultPanel) {
+      elements.resultPanel.dataset.resultState = payload.text ? "success" : "empty";
+    }
+    if (elements.resultLanguage) {
+      elements.resultLanguage.textContent = languageLabel(payload.language);
+    }
+    if (elements.resultDuration) {
+      elements.resultDuration.textContent = `${payload.duration_seconds.toFixed(1)} s`;
+    }
+    if (elements.resultProcessing) {
+      elements.resultProcessing.textContent = `${payload.processing_seconds.toFixed(2)} s`;
+    }
+    if (elements.processingTimer) {
+      elements.processingTimer.textContent = `${payload.processing_seconds.toFixed(1)} s`;
+    }
+
+    if (payload.text) {
+      if (elements.resultPlaceholder) {
+        elements.resultPlaceholder.hidden = true;
+      }
+      if (elements.resultText) {
+        elements.resultText.hidden = false;
+        elements.resultText.textContent = payload.text;
+      }
+    } else {
+      if (elements.resultText) {
+        elements.resultText.hidden = true;
+        elements.resultText.textContent = "";
+      }
+      if (elements.resultPlaceholder) {
+        elements.resultPlaceholder.hidden = false;
+        elements.resultPlaceholder.textContent =
+          "未检测到可识别语音，请换一段更清晰、包含说话的音频。";
+      }
+    }
+
+    if (blob && elements.audioPreview) {
+      revokePreview();
+      state.previewUrl = URL.createObjectURL(blob);
+      elements.audioPreview.src = state.previewUrl;
+      elements.audioPreview.hidden = false;
+    }
+
+    resetPipeline();
+    [
+      elements.stepCapture,
+      elements.stepUpload,
+      elements.stepDecode,
+      elements.stepInfer,
+      elements.stepResult,
+    ].forEach((element) => setPipelineStep(element, "done"));
+    setPhase("success");
+    setStatus(
+      payload.text ? "识别完成。" : "识别完成，未检测到可识别语音。",
+      "success"
+    );
+  }
+
+  async function parseApiError(response) {
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (_) {
+      // Fall back to the HTTP status below.
+    }
+    const detail = payload && payload.detail ? payload.detail : `HTTP ${response.status}`;
+    const code = payload && payload.code ? ` (${payload.code})` : "";
+    return `${detail}${code}`;
+  }
+
+  async function submitAudio(blob, filename, note = "") {
+    if (state.requestInFlight) {
+      return;
+    }
+    if (!blob || blob.size === 0) {
+      showError("没有可识别的音频，请重新录音或选择文件。");
+      setStatus("没有可识别的音频", "error");
+      return;
+    }
+    if (blob.size > MAX_UPLOAD_BYTES) {
+      showError("上传文件超过 10 MB 限制，请选择更短的音频。");
+      setStatus("文件超过大小限制", "error");
+      return;
+    }
+
+    state.requestInFlight = true;
+    state.lastSubmission = { blob, filename, note };
+    clearError();
+    resetResult();
+    resetPipeline();
+    setPipelineStep(elements.stepCapture, "done");
+    setPipelineStep(elements.stepUpload, "active");
+    setPhase("transcribing");
+    setStatus(`${note}正在上传并识别…`, "working");
+    startProcessingTimer();
+
+    const formData = new FormData();
+    formData.append("file", blob, filename);
+    formData.append("language", elements.languageSelect ? elements.languageSelect.value : "zh");
+
+    try {
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error(await parseApiError(response));
+      }
+      const payload = await response.json();
+      setPipelineStep(elements.stepUpload, "done");
+      setPipelineStep(elements.stepDecode, "done");
+      setPipelineStep(elements.stepInfer, "done");
+      setPipelineStep(elements.stepResult, "active");
+      showResult(payload, blob);
+      if (note) {
+        setStatus(`${note}识别完成。`, "success");
+      }
+    } catch (error) {
+      stopProcessingTimer();
+      setPipelineStep(elements.stepUpload, "error");
+      setStatus("识别失败", "error");
+      showError(
+        `识别失败：${error && error.message ? error.message : "无法连接后端，请确认服务仍在运行。"}`
+      );
+    } finally {
+      state.requestInFlight = false;
+      if (state.phase !== "error") {
+        // Re-enable the actions that were disabled for the request.
+        setAppState(state.phase);
+      }
+    }
+  }
+
   function releaseStream() {
     if (state.stream) {
       state.stream.getTracks().forEach((track) => track.stop());
@@ -362,13 +624,10 @@
       stoppedByLimit: state.stoppedByLimit,
     };
     window.__lastRecording = state.lastRecording;
-    setPhase("success");
-    setStatus(
-      state.stoppedByLimit
-        ? `已达到 60 秒上限并自动停止；录音 ${formatElapsed(state.recordedMs)}，等待识别。`
-        : `录音完成（${formatElapsed(state.recordedMs)}，${formatBytes(blob.size)}），等待识别。`,
-      "success"
-    );
+
+    const filename = `recording-${Date.now()}.${state.lastRecording.extension}`;
+    const note = state.stoppedByLimit ? "已达到 60 秒上限；" : "";
+    void submitAudio(blob, filename, note);
   }
 
   async function startRecording() {
@@ -392,6 +651,17 @@
     }
 
     clearError();
+    state.lastSubmission = null;
+    state.selectedFile = null;
+    if (elements.fileInput) {
+      elements.fileInput.value = "";
+    }
+    if (elements.uploadButton) {
+      elements.uploadButton.disabled = true;
+    }
+    if (elements.fileName) {
+      elements.fileName.textContent = "尚未选择文件。";
+    }
     state.stoppedByLimit = false;
     state.recordingFailed = false;
     state.recordedMs = 0;
@@ -519,8 +789,16 @@
     }
   }
 
-  function retryRecording() {
+  function retryLastAction() {
     clearError();
+    if (state.lastSubmission) {
+      void submitAudio(
+        state.lastSubmission.blob,
+        state.lastSubmission.filename,
+        state.lastSubmission.note || ""
+      );
+      return;
+    }
     startRecording();
   }
 
@@ -531,7 +809,14 @@
     elements.stopButton.addEventListener("click", () => stopRecording("manual"));
   }
   if (elements.retryButton) {
-    elements.retryButton.addEventListener("click", retryRecording);
+    elements.retryButton.addEventListener("click", retryLastAction);
+  }
+  if (elements.uploadButton) {
+    elements.uploadButton.addEventListener("click", () => {
+      if (state.selectedFile) {
+        void submitAudio(state.selectedFile, state.selectedFile.name);
+      }
+    });
   }
   if (elements.dismissErrorButton) {
     elements.dismissErrorButton.addEventListener("click", dismissError);
@@ -556,6 +841,8 @@
       elapsedMs: state.startTimeMs ? Date.now() - state.startTimeMs : 0,
       recordedMs: state.recordedMs,
       stoppedByLimit: state.stoppedByLimit,
+      requestInFlight: state.requestInFlight,
+      lastResult: state.lastResult,
       selectedFile: state.selectedFile
         ? {
             name: state.selectedFile.name,

@@ -1,0 +1,102 @@
+# T4.6 请求、状态与结果展示验证
+
+- 日期：2026-10-28
+- 文件：`static/app.js`
+- 浏览器：Review 面板 Chromium
+- 后端：真实 uvicorn + 本地 faster-whisper small
+- 说明：上传流程使用真实样本；录音自动提交使用假 MediaRecorder 输出真实 WAV bytes（不伪造识别结果）
+
+## 实现
+
+- 录音停止 / 选择文件后统一调用 `submitAudio(blob, filename)`。
+- `FormData`：
+  - `file` + 文件名
+  - `language` 来自 `#language-select`
+- `fetch("/api/transcribe", { method: "POST", body: formData })`
+- 请求期间：
+  - `requestInFlight` 防重复提交
+  - Start/Stop/Upload/语言选择/file input 禁用
+  - `#processing-timer` 每 100ms 显示客户端已耗时
+  - 状态 `transcribing`
+- 成功：
+  - 展示 `text / language / duration_seconds / processing_seconds`
+  - `#processing-timer` 更新为后端 processing_seconds
+  - 结果语言显示“中文（zh）/ English（en）”
+  - 音频预览 `URL.createObjectURL(blob)`
+  - pipeline 5 步全部 done
+  - 状态 success
+- 空文本：
+  - 结果区提示“未检测到可识别语音”
+  - 不视为 500
+  - Copy 仍 disabled（T4.7 再实现复制）
+- 错误：
+  - 解析后端 `detail/code`
+  - 错误面板展示，保留最近一次提交供重试
+- 录音结束自动提交；60 秒上限提示会保留在请求状态文案中。
+
+## 真实浏览器上传结果
+
+### 中文 `samples/chinese.wav`
+
+```text
+language: 中文（zh）
+duration: 12.0 s
+processing: 4.38 s
+timer: 4.4 s
+text: 轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+pipeline: all done
+preview: blob URL active
+```
+
+### 英文 `samples/english.wav`
+
+```text
+language: English（en）
+duration: 9.0 s
+processing: 1.70 s
+text: Never give up. Never lose hope. Always have faith. It allows you to cope.
+status: 识别完成。
+```
+
+截图：`docs/evidence/t4.6-real-result.png`
+
+## 录音自动提交
+
+假 MediaRecorder 的 stop 事件输出真实 `chinese.wav` 字节，验证：
+
+```text
+lastRecording.mimeType: audio/webm;codecs=opus
+lastRecording.extension: webm
+lastRecording.size: 384044
+phase: success
+lastResult.text: 轻轻地我走了...
+trackStopped: true
+selectedFile: null
+```
+
+说明录音结束 → 自动 FormData → 后端识别 → 结果展示链路可用。
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_frontend_recording.py
+```
+
+```text
+9 passed
+```
+
+全量：
+
+```text
+166 passed
+```
+
+JS 语法：`node --check static/app.js` 通过。
+
+## 待后续
+
+- T4.7：复制文本
+- T4.8：统一错误展示/重试联调
+- T6.1/T6.2：真实麦克风手动录音
+- T6.11：Edge 兼容性

@@ -53,11 +53,11 @@ python -m pytest -q
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
 | `test_ws.py` | 8 | WebSocket/PCM/partial/final/错误 |
-| **合计** | **212** | 默认执行（F6 分支） |
+| **合计** | **212** | 默认执行 |
 
 真实模型 5 项、E2E 4 项默认排除，分别需要模型/浏览器。
 
-F6 分支本地全量为 212 passed、9 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前 F6 全量为 212 passed、9 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -131,7 +131,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 | 60 秒自动停止 | 计时 01:00.0，自动提交；服务端音频 57.18 s | `auto-stop-60s.png` |
 | 复制、停后端重试、WebM 上传 | 通过；剪贴板哈希一致；重试复用同一文件 | `upload-webm.txt`、`upload-webm.png` |
 | Windows CI | 真实模型 5 项、Chromium/Edge E2E 通过 | `windows-ci.txt` |
-| Edge | Windows CI headless Edge 155，3 passed（含复制）；F6 合并后待跑 4 项 | `edge.txt` |
+| Edge | Windows CI headless Edge 155，4 passed（含复制/F6） | `edge.txt` |
 
 ## 5. Windows CI
 
@@ -152,14 +152,14 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 
 ## 6. F6 实时识别
 
-**分支已完成（`feature/f6-realtime`），待合并/终验。**
+**已完成并合并到 `main`；Windows CI 通过。**
 
 - WebSocket `/ws/transcribe?language=zh|en`，PCM16LE 16 kHz 分片。
 - partial 每约 2 s、最近 8 s 窗口；stop 后 final 全量。
 - 前端“实时识别（实验）”复选框，ScriptProcessor + 重采样 + PCM16。
-- Mock WS：8 passed；E2E：4 passed。
+- Mock WS：8 passed；E2E：4 passed（Chrome 本地、Windows CI Chromium/Edge）。
 - 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；控制台有 ScriptProcessor deprecation **warning**，无 error。
-- 回滚基线 `v1.0-must-have` 保留；F6 失败可丢弃分支。
+- 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40665695751` 成功。
 - 自动语言检测（`language=auto`）仍未实现。
 
 ## 7. 已知问题与风险
@@ -185,10 +185,10 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 真实模型测试 | 通过（本机 + Windows CI） |
 | 测试报告基线 | 本文件 |
 | 所有必做项 | F1–F5 通过 |
-| F6 实时识别 | 分支完成，待合并/终验 |
+| F6 实时识别 | 已完成并合并；Windows CI 通过 |
 | Windows 11 实机/麦克风 | 未验证，已披露 |
 
-**G4：通过（带已披露限制）**。不把 Windows CI 写成 Windows 11 实机通过；F6 仍需 G5 门禁与文档基线。
+**G4：通过（带已披露限制）**。不把 Windows CI 写成 Windows 11 实机通过；F6 已完成并通过 Windows CI，但 Windows 11 桌面/真实麦克风仍未验证。
 
 ### 未执行/未验证项
 

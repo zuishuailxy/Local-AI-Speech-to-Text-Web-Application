@@ -1,6 +1,6 @@
 # 阶段二：功能开发与集成
 
-> 状态：P1–P8 已完成（F6 分支，待合并/终验）。
+> 状态：P1–P8 已完成；F6 已合并，Windows CI 通过。
 > 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；P7 细节见阶段三记录。
 > 会话：`ses_e838f4101ffet1mEwSYEGuuSMK`（OpenCode Desktop，`deepseek-flash` high）
 > 日期：2026-10-27

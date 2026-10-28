@@ -308,7 +308,7 @@ P7 必做版已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + 
 203 passed, 8 deselected in 2.53s
 ```
 
-F6 分支在新 clone / 新 venv 中为 `212 passed, 9 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
+F6 合并后在新 clone / 新 venv 中为 `212 passed, 9 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
 
 ## 9. 离线验证
 
@@ -389,7 +389,7 @@ netstat -ano | findstr :8000       # Windows
 - 样本只覆盖单人、安静环境、正常语速；噪声、远场、中英混合未覆盖。
 - 语言选择不强制输出目标语言；音频与所选语言不一致时可能输出源语言，日志会记录 `asr_language_mismatch`。
 - 单用户、无登录、无并发控制、无历史记录；只绑定本机。
-- 实时识别（F6）在 `feature/f6-realtime` 分支完成；ScriptProcessor 有 deprecation warning，功能正常。
+- 实时识别（F6）已完成并合并到 `main`；ScriptProcessor 有 deprecation warning，功能正常。
 
 ## 12. 项目结构
 
@@ -441,7 +441,7 @@ netstat -ano | findstr :8000       # Windows
 默认：212 passed, 9 deselected
 真实模型：5 passed
 浏览器 E2E：4 passed
-Windows CI：Chromium + Edge + 真实模型通过
+Windows CI：Chromium + Edge + 真实模型通过（F6 合并后 Edge 4 项 E2E）
 ```
 
-Windows CI 不能替代 Windows 11 实机验证；真实桌面/麦克风项在测试报告中单列为未验证。
+Windows CI 不能替代 Windows 11 实机验证；真实桌面/麦克风项在测试报告中单列为未验证。F6 已在本地真实麦克风和 Windows CI 验证。

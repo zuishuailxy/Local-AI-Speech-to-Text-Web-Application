@@ -82,7 +82,7 @@ AI 负责生成代码、测试和文档草稿；最终取舍、验收和是否�
 
 ## 5. 后续优化优先级
 
-1. **F6 实时识别**：分支已完成 WebSocket + PCM 分片，待合并/Windows CI；失败可回滚。
+1. **F6 实时识别**：已完成 WebSocket + PCM 分片并合并，Windows CI 通过；回滚基线保留。
 2. **自动语言检测**：`language=auto`，保持 zh/en 契约兼容。
 3. **真实 Windows 11/桌面 Edge/真实麦克风**：补验环境差异。
 4. **60 s 音频时长差异**：定位 MediaRecorder/后台节流/WebM 封装。

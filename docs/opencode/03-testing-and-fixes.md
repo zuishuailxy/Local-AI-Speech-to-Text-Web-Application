@@ -188,7 +188,7 @@
 - T8.3：ScriptProcessor + 重采样 + partial/final 前端，E2E 4 passed。
 - T8.4：真实麦克风 14.08 s、6 个 partials、final 1.742 s、CER 0.0455；HTTP 回归 200。
 - ScriptProcessor deprecation warning 记录为 warning，非 error。
-- 分支：`feature/f6-realtime`；待合并/终验。
+- 分支：`feature/f6-realtime` 已合并；Windows CI run `40665695751` 通过。
 
 
 ## 12. P9 终验

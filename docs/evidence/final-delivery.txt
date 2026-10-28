@@ -1,0 +1,72 @@
+# T9.4 最终交付与汇报
+
+- 日期：2026-10-28
+- 交付方式：Git 仓库（T7.9 压缩包跳过，用户确认只交 Git）
+- 仓库：`https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application`
+- 分支：`main`
+- 必做回滚 tag：`v1.0-must-have`
+- 最终 tag：`v1.0-submission`（本提交后创建）
+
+## 交付内容
+
+| 类别 | 文件 |
+| --- | --- |
+| 后端 | `app/`（FastAPI、音频、Whisper、F6 WebSocket） |
+| 前端 | `static/`（录音、上传、结果、复制、实时） |
+| 脚本 | `scripts/download_model.py`、`scripts/verify_asr.py` |
+| 样本 | `samples/chinese.wav`、`english.wav`、`reference.txt` |
+| 测试 | `tests/`（默认 212、真实 5、E2E 4） |
+| 文档 | `README.md`、`docs/requirements.md`、`docs/design.md`、`docs/test-report.md`、`docs/ai-development.md`、`docs/issue-log.md` |
+| 证据 | `docs/evidence/` |
+| OpenCode | `docs/opencode/01–03`、README |
+
+## 最终验证
+
+```text
+python -m pytest -q
+212 passed, 9 deselected
+
+python -m pytest -q -m real_model
+5 passed, 216 deselected
+
+PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
+4 passed
+```
+
+Windows CI：
+
+```text
+Run 40665695751
+Windows / Python 3.12: success
+Windows / real model: success
+Edge E2E: 4 passed
+真实模型: 5 passed
+```
+
+干净复现：
+
+```text
+新 clone + 新 venv 212 passed
+/health 200
+中文/英文上传成功
+F6 WebSocket 6 partials + final 成功
+```
+
+## 已知限制
+
+- Windows CI 是 Windows Server，不是 Windows 11 桌面；真实桌面/麦克风未验证。
+- 桌面 Edge 未手动验证；CI 为 headless Edge + 假麦克风。
+- 无设备/设备占用为 DevTools 模拟。
+- 60 s 计时与 57.18 s 音频差异待排查。
+- 中文 small 近音字错误；CER 0.18–0.23。
+- 语言选择不强制目标脚本。
+- ScriptProcessor deprecation warning（非 error，后续可迁 AudioWorklet）。
+- 自动语言检测未实现。
+
+## 后续优先级
+
+1. 真实 Windows 11/桌面 Edge/真实麦克风补验。
+2. 60 s 计时与音频时长对齐。
+3. AudioWorklet 迁移。
+4. 中文准确率（更大模型/热词）与 CPU 权衡。
+5. 自动语言检测、样本覆盖（噪声/远场/混合）。

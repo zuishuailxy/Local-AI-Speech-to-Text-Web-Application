@@ -108,7 +108,7 @@
 | partial 中间文本 | 真实麦克风出现（6 partials） |
 | final 完整文本 | 14.08 s / 1.742 s；CER 0.0455 |
 | 必做回归 | 212 passed / 真实模型 5 / HTTP 200 |
-| Windows CI F6 | **待合并后运行**（Edge E2E 4 项） |
+| Windows CI F6 | 已通过（run `40665695751`，Edge E2E 4 项） |
 | ScriptProcessor warning | 已知 warning，非 error；后续可迁 AudioWorklet |
 | 自动语言检测 | 未实现（后置） |
 
@@ -121,9 +121,9 @@
 | 真实无设备/占用 | 模拟；内置麦克风无法安全禁用 |
 | 60 s 计时 vs 音频 57.18 s | 已知差异，待排查 |
 | 噪声/远场/中英混合 | 未覆盖 |
-| F6 Windows CI | 待合并后验证 |
+| F6 Windows CI | 已通过（run `40665695751`，Edge 4 项） |
 | F6 AudioWorklet | 未迁移，仅 warning |
 
 ## 结论
 
-F1–F5、三接口、6 项手动、离线、真实模型、Windows CI（必做）均通过；F6 本地完成并演示，待合并后跑 Windows CI。未验证项已单列，不以 CI 或模拟替代实机结论。
+F1–F5、三接口、6 项手动、离线、真实模型、Windows CI（必做）均通过；F6 已完成、真实麦克风演示、合并后 Windows CI 通过。未验证项已单列，不以 CI 或模拟替代实机结论。

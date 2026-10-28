@@ -1,0 +1,49 @@
+# F6 合并与 Windows CI
+
+- 日期：2026-10-28
+- 分支：`feature/f6-realtime` → `main`
+- 合并方式：`git merge --ff-only feature/f6-realtime`
+- 合并后提交：`3f82dfd`
+- 必做基线 tag：`v1.0-must-have`（`4db4ed6`）
+
+## 合并内容
+
+- `app/api/ws.py`：WebSocket `/ws/transcribe`
+- `app/services/streaming.py`：PCM/窗口/60 s 上限
+- `static/app.js`：实时复选框、ScriptProcessor、重采样、partial/final
+- `tests/test_ws.py`：8 项
+- E2E 实时测试 1 项（总 4 项）
+- 文档/证据：T8.2–T8.4
+
+## 本地回归
+
+```text
+python -m pytest -q
+212 passed, 9 deselected
+
+python -m pytest -q -m real_model
+5 passed, 216 deselected
+
+PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
+4 passed
+```
+
+真实麦克风：14.08 s，6 partials，final 1.742 s，CER 0.0455。
+
+## Windows CI
+
+- Run：`40665695751`
+- 结果：success
+- Job：Windows / Python 3.12 + Windows / real model
+- Edge E2E：4 项通过
+- 真实模型：5 项通过
+- 默认测试：通过
+
+## 已知 warning
+
+Chrome ScriptProcessor deprecation warning；功能正常，非 error。题目允许 ScriptProcessor，后续可迁 AudioWorklet。
+
+## Tag
+
+- `v1.0-must-have` 保留为必做回滚点
+- 最终提交在 T9.4 打 `v1.0-submission`

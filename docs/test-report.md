@@ -24,7 +24,7 @@ python -m pytest -q
 ```
 
 ```text
-223 passed, 12 deselected in 1.72s
+224 passed, 12 deselected in 1.60s
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -40,7 +40,7 @@ python -m pytest -q
 | `test_errors.py` | 10 | 错误码、异常处理 |
 | `test_fixtures.py` | 8 | fixture/隔离 |
 | `test_frontend_accessibility.py` | 5 | label、aria、键盘 |
-| `test_frontend_recording.py` | 12 | MediaRecorder、计时、上传、请求、复制、real-time |
+| `test_frontend_recording.py` | 14 | MediaRecorder、计时、上传、请求、复制、real-time、标签 |
 | `test_frontend_structure.py` | 5 | 页面结构、静态资源、favicon |
 | `test_health.py` | 4 | `/health`、首页 |
 | `test_language.py` | 11 | zh/en/auto/非法语言 |
@@ -54,11 +54,11 @@ python -m pytest -q
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
 | `test_ws.py` | 9 | WebSocket/PCM/partial/final/错误/auto |
-| **合计** | **223** | 默认执行 |
+| **合计** | **224** | 默认执行 |
 
 真实模型 5 项、E2E 4 项默认排除，分别需要模型/浏览器。
 
-当前全量为 223 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前全量为 224 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -71,7 +71,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-7 passed, 222 deselected
+7 passed, 229 deselected
 ```
 
 | 测试 | 时长 | 处理/推理 | 质量 |

@@ -287,7 +287,7 @@ python -m pytest -q
 ```
 
 ```text
-223 passed, 12 deselected
+224 passed, 12 deselected
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -301,7 +301,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-7 passed, 222 deselected
+7 passed, 229 deselected
 ```
 
 `-s` 会显示真实文本、参考文本、时长、推理耗时、RTF、CER/WER。使用：
@@ -342,7 +342,7 @@ P7 必做版已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + 
 203 passed, 8 deselected in 2.53s
 ```
 
-F6 合并后在新 clone / 新 venv 中为 `223 passed, 12 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
+F6 合并后在新 clone / 新 venv 中为 `224 passed, 12 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
 
 ## 9. 离线验证
 
@@ -472,7 +472,7 @@ netstat -ano | findstr :8000       # Windows
 自动化结果：
 
 ```text
-默认：223 passed, 12 deselected
+默认：224 passed, 12 deselected
 真实模型：7 passed
 浏览器 E2E：5 passed
 Windows CI：Chromium + Edge + 真实模型通过（AudioWorklet 后 run `40677386222`，Edge 5 项 E2E）

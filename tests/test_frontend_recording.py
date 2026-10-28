@@ -138,3 +138,11 @@ def test_auto_language_option_contract() -> None:
     assert '"auto"' in JS
     assert "自动检测" in JS
     assert 'language === "auto"' in JS
+
+
+def test_timer_and_result_labels_are_distinct_and_precise() -> None:
+    assert "录音计时（墙钟）" in HTML
+    assert "处理计时（实时）" in HTML
+    assert "音频时长（服务端）" in HTML
+    assert "处理耗时（服务端）" in HTML
+    assert "toFixed(2)" in JS

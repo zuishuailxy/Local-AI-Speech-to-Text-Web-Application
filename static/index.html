@@ -76,17 +76,18 @@
 
         <div class="timer-row">
           <div>
-            <span class="timer-label">录音时长</span>
+            <span class="timer-label">录音计时（墙钟）</span>
             <strong id="recording-timer" class="timer-value">00:00.0</strong>
           </div>
           <div>
-            <span class="timer-label">识别耗时</span>
+            <span class="timer-label">处理计时（实时）</span>
             <strong id="processing-timer" class="timer-value">0.0 s</strong>
           </div>
         </div>
 
         <p class="hint">
           单次录音最长 60 秒；停止录音后才会提交本次完整音频。首次使用需要允许浏览器访问麦克风。
+          录音计时是浏览器墙钟，音频时长和处理耗时以服务端返回为准，可能有 0.1–0.2 s 差异。
         </p>
         <div id="permission-note" class="permission-note" hidden>
           麦克风权限被拒绝时，请检查浏览器地址栏的站点权限后重试。
@@ -170,11 +171,11 @@
             <dd id="result-language">—</dd>
           </div>
           <div>
-            <dt>音频时长</dt>
+            <dt>音频时长（服务端）</dt>
             <dd id="result-duration">—</dd>
           </div>
           <div>
-            <dt>处理耗时</dt>
+            <dt>处理耗时（服务端）</dt>
             <dd id="result-processing">—</dd>
           </div>
         </dl>

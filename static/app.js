@@ -338,7 +338,7 @@
   }
 
   function formatSeconds(milliseconds) {
-    return `${(Math.max(0, milliseconds) / 1000).toFixed(1)} s`;
+    return `${(Math.max(0, milliseconds) / 1000).toFixed(2)} s`;
   }
 
   function setPipelineStep(element, stateName) {
@@ -461,7 +461,7 @@
       elements.resultProcessing.textContent = `${payload.processing_seconds.toFixed(2)} s`;
     }
     if (elements.processingTimer) {
-      elements.processingTimer.textContent = `${payload.processing_seconds.toFixed(1)} s`;
+      elements.processingTimer.textContent = `${payload.processing_seconds.toFixed(2)} s`;
     }
 
     if (payload.text) {

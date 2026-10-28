@@ -53,8 +53,18 @@ class TranscriptionResult:
 
 @runtime_checkable
 class Transcriber(Protocol):
-    def transcribe(self, samples: np.ndarray, language: str) -> TranscriptionResult:
-        """Transcribe mono 16 kHz float32 samples for the requested language."""
+    def transcribe(
+        self,
+        samples: np.ndarray,
+        language: str,
+        *,
+        use_prompt: bool = True,
+    ) -> TranscriptionResult:
+        """Transcribe mono 16 kHz float32 samples for the requested language.
+
+        ``use_prompt=False`` is used by realtime partials: their 3 s windows are
+        the most likely place for an initial prompt to rewrite the output.
+        """
 
 
 class FakeTranscriber:
@@ -77,7 +87,13 @@ class FakeTranscriber:
         self.detected_language = detected_language
         self.calls: list[tuple[np.ndarray, str]] = []
 
-    def transcribe(self, samples: np.ndarray, language: str) -> TranscriptionResult:
+    def transcribe(
+        self,
+        samples: np.ndarray,
+        language: str,
+        *,
+        use_prompt: bool = True,
+    ) -> TranscriptionResult:
         self.calls.append((samples, language))
         if self.delay_seconds:
             time.sleep(self.delay_seconds)
@@ -191,9 +207,17 @@ class WhisperTranscriber:
             return None
         return prompt
 
-    def transcribe(self, samples: np.ndarray, language: str) -> TranscriptionResult:
+    def transcribe(
+        self,
+        samples: np.ndarray,
+        language: str,
+        *,
+        use_prompt: bool = True,
+    ) -> TranscriptionResult:
         sample_count = int(samples.size)
-        initial_prompt = self._initial_prompt(language, sample_count)
+        initial_prompt = (
+            self._initial_prompt(language, sample_count) if use_prompt else None
+        )
         logger.info(
             "asr_start requested_language=%s samples=%d initial_prompt=%s",
             language,

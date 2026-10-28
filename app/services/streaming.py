@@ -87,8 +87,14 @@ def transcribe_pcm(
     transcriber: Transcriber,
     pcm: bytes,
     language: str,
+    *,
+    use_prompt: bool = True,
 ) -> TranscriptionResult:
-    return transcriber.transcribe(pcm16le_to_float32(pcm), language)
+    return transcriber.transcribe(
+        pcm16le_to_float32(pcm),
+        language,
+        use_prompt=use_prompt,
+    )
 
 
 __all__ = [

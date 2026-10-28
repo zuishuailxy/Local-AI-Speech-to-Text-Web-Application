@@ -335,3 +335,13 @@ def test_prompt_text_is_not_logged(tmp_path, caplog) -> None:
 
     assert "initial_prompt=on" in caplog.text
     assert "本地语音识别" not in caplog.text
+
+
+def test_use_prompt_false_disables_prompt(tmp_path) -> None:
+    settings = make_settings(tmp_path, ASR_INITIAL_PROMPT=PROMPT)
+    model = FakeWhisperModel()
+    engine = WhisperTranscriber(settings, model_factory=lambda *a, **k: model)
+
+    engine.transcribe(np.zeros(5 * 16_000, dtype=np.float32), "zh", use_prompt=False)
+
+    assert "initial_prompt" not in model.calls[0][1]

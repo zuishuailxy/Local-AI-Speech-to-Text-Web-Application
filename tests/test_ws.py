@@ -152,3 +152,20 @@ def test_ws_auto_language_returns_detected_language(tmp_path) -> None:
     assert final["type"] == "final"
     assert final["language"] == "zh"
     assert fake.calls[0][1] == "auto"
+
+
+def test_partial_transcription_disables_prompt() -> None:
+    from app.services.streaming import transcribe_pcm
+    from app.services.transcriber import TranscriptionResult
+
+    calls: list[bool] = []
+
+    class Spy:
+        def transcribe(self, samples, language, *, use_prompt=True):
+            calls.append(use_prompt)
+            return TranscriptionResult(text="x", language="zh")
+
+    pcm = b"\x00\x00" * 1600
+    transcribe_pcm(Spy(), pcm, "zh", use_prompt=False)
+    transcribe_pcm(Spy(), pcm, "zh")
+    assert calls == [False, True]

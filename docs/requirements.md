@@ -189,7 +189,7 @@
 | 安全 | 默认本机 | 绑定 `127.0.0.1`，无认证/多用户 |
 | 性能 | CPU 可接受 | 12 s 音频约 3–5 s；9 s 约 1.4–2.6 s |
 | 可观测性 | 可定位请求 | request_id、状态码、耗时、语言、text_chars |
-| 测试 | pytest 默认无模型/麦克风/外网 | 217 passed, 12 deselected |
+| 测试 | pytest 默认无模型/麦克风/外网 | 229 passed, 12 deselected |
 | 交付 | 文档/证据/OpenCode | README、design、test-report、ai-development、三阶段记录 |
 
 ## 6. 假设与边界
@@ -222,7 +222,7 @@
 - Windows CI 是 Windows Server，不是 Windows 11 桌面；真实桌面/麦克风未验证。
 - 桌面 Edge 未手动验证；CI 为 headless + 假麦克风。
 - 无设备/占用用 DevTools 注入模拟；不是真实拔设备。
-- 60 秒自动停止页面计时 60.0 s，服务端曾收到 57.18 s；差约 2.8 s，未超过上限，待排查。
+- 60 秒自动停止：页面计时 60.0 s 对应服务端 59.8 s，差 0.2 s；历史 57.18 s 未复现（T10.1）。
 - 中文 small 模型有近音字错误，CER 0.18–0.23；英文 WER 0。
 - 语言选择不强制输出目标脚本；错配时可能输出源语言。
 

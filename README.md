@@ -288,7 +288,7 @@ python -m pytest -q
 ```
 
 ```text
-227 passed, 12 deselected
+229 passed, 12 deselected
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -302,7 +302,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-7 passed, 229 deselected
+7 passed, 234 deselected
 ```
 
 `-s` 会显示真实文本、参考文本、时长、推理耗时、RTF、CER/WER。使用：
@@ -343,7 +343,7 @@ P7 必做版已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + 
 203 passed, 8 deselected in 2.53s
 ```
 
-F6 合并后在新 clone / 新 venv 中为 `227 passed, 12 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
+F6 合并后在新 clone / 新 venv 中为 `229 passed, 12 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
 
 ## 9. 离线验证
 
@@ -412,14 +412,14 @@ netstat -ano | findstr :8000       # Windows
 ### 中文出现繁体/同音字
 
 - 繁体：后端已用 `zhconv` 统一转简体
-- 同音字：small 模型能力限制，例如“语音识别”可能被识别成近音词；换更大模型或改初始提示可改善，但会增加 CPU 开销
+- 同音字：small 模型能力限制，例如“语音识别”可能被识别成近音词；换更大模型可改善。领域提示是 opt-in（`ASR_INITIAL_PROMPT`，默认关闭），短音频可能被改写，见 `docs/evidence/t10.4-prompt-default-analysis.md`
 
 ## 11. 已知限制
 
 - 真实 Windows 11 桌面/麦克风未验证；Windows CI 是 Windows Server。
 - 桌面 Edge 未手动验证；CI 为 headless Edge + 假麦克风。
 - 无设备/设备占用场景使用 DevTools 注入验证，不是真实拔设备。
-- 60 秒自动停止页面计时为 60.0 s，但服务端音频曾为 57.18 s，差约 2.8 s；未超过上限，待排查 MediaRecorder/封装/后台节流。
+- 录音计时是浏览器墙钟，音频时长以服务端解码为准；实测 60.0 s 对应 59.8 s（差 0.2 s），历史 57.18 s 未复现。
 - 中文 small 模型存在近音字错误，CER 约 0.18–0.23。
 - 样本只覆盖单人、安静环境、正常语速；噪声、远场、中英混合未覆盖。
 - 语言选择不强制输出目标语言；音频与所选语言不一致时可能输出源语言，日志会记录 `asr_language_mismatch`。
@@ -473,10 +473,10 @@ netstat -ano | findstr :8000       # Windows
 自动化结果：
 
 ```text
-默认：227 passed, 12 deselected
+默认：229 passed, 12 deselected
 真实模型：7 passed
 浏览器 E2E：5 passed
-Windows CI：Chromium + Edge + 真实模型通过（AudioWorklet 后 run `40680120089`，Edge 5 项 E2E）
+Windows CI：Chromium + Edge + 真实模型通过（最新 run `40682285556`，Edge 5 项 E2E）
 ```
 
 Windows CI 不能替代 Windows 11 实机验证；真实桌面/麦克风项在测试报告中单列为未验证。F6 已在本地真实麦克风和 Windows CI 验证。

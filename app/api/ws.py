@@ -102,6 +102,7 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
                         transcriber,
                         buffer.partial_pcm(),
                         normalized_language,
+                        use_prompt=False,
                     )
                     buffer.mark_partial()
                     partial_count += 1

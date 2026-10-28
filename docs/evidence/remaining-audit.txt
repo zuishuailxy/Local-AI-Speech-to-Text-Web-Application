@@ -1,16 +1,16 @@
-# 交付剩余项与优化建议审计
+# 交付剩余项与优化建议审计（T10 后更新）
 
 - 日期：2026-10-28
-- 范围：`todo.md`、`plan.md`、README、docs、Git/tag
-- 当前：默认 217 passed / 12 deselected；真实 7；E2E 5；Windows CI `40673661197` success
-- 最终 tag：`v1.0-submission`；必做回滚 tag：`v1.0-must-have`
+- 范围：`todo.md`、`plan.md`、README、docs、Git/tag、CI
+- 当前：默认 229 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40682285556` success
+- Tag：`v1.0-submission`（F1–F6 基线）、`v1.0.1-optimizations`（T10 优化版）、`v1.0-must-have`（回滚）
 
 ## 已完成
 
-- T0–T9 必做任务、F6、T8.1 自动语言检测、AudioWorklet、日志 outcome
-- 6 项指定手动验证、离线、Windows CI、Chromium/Edge E2E
-- README/requirements/design/test-report/ai-development/issue-log/OpenCode 三阶段
-- Git 干净、模型/venv/缓存未跟踪
+- T0–T9 必做任务、F6、自动语言检测、AudioWorklet 主路径、日志 `outcome` 标记
+- 6 项指定手动验证、离线识别、Windows CI（Server）、Chromium/Edge E2E
+- T10.1–T10.6：计时对齐、auto 低置信度回退、实时 partial 调优、中文 prompt 评估、日志工程化、回归与 tag
+- 文档一致性：README/requirements/design/test-report/issue-log/final-delivery/checklist 的 60 s 与 CI 记录已更新
 
 ## 仍开放/未验证
 
@@ -19,30 +19,27 @@
 | T6.13 Windows 11 实机/云 VM | **阻塞** | 无 Windows 11 实机；CI 是 Windows Server，不计为实机通过 |
 | 桌面 Edge 手动 | 未验证 | 仅 Windows CI headless Edge 155 |
 | 真实无设备/占用 | 模拟 | 内置麦克风无法安全禁用；T6.6 为 DevTools 注入 |
-| 60 s 计时 vs 音频时长 | 已知差异 | 页面 60.0 s，服务端曾 57.18 s，差约 2.8 s |
-| 短音频/噪声/混合语言 auto | 未评估 | 中文/英文样本检测通过；混合语句可能误判 |
-| AudioWorklet 回退 | 仅静态/兼容路径 | 主路径 E2E 无 warning；旧浏览器 ScriptProcessor 回退未实机 |
+| 短音频/噪声/混合语言 auto | 部分覆盖 | 低置信度回退已实现；混合语句仍只输出一种语言，未做逐词语言标记 |
+| AudioWorklet 回退 | 未实机 | 主路径 E2E 无 warning；旧浏览器 ScriptProcessor 回退未在旧浏览器验证 |
+| 实时首个非空文本 ≤2.5 s | 未完全达标 | 真实麦克风首个非空文本 3.0 s；后续 partial ≤1.38 s，final 1.970 s |
 | 压缩包 | 按用户要求跳过 | 只交 Git；T9.1 clone 已验证 |
 
-## 已关闭的非必做
+## 已知限制（不是未完成任务）
 
-- T3.11 SenseVoice 评估：未触发（small 达标，F6 用 Whisper 完成）
-- T7.9 zip：按用户要求跳过
-- T8.5 回滚：未触发（F6 成功）
+- 中文 small 模型近音字错误，CER 0.18–0.23；默认不启用领域 prompt。
+- 单人、安静、正常语速样本；噪声/远场/专业术语未系统评估。
+- 单用户、无认证、无历史记录；只适合本机使用。
+- 语言选择不强制输出目标脚本，错配时日志有 `asr_language_mismatch`。
 
-## 优化建议（按优先级）
+## 后续可选优化（非交付阻塞）
 
-1. **Windows 11/桌面 Edge/真实麦克风补验**：唯一未完成的实机项。
-2. **60 s 计时与音频时长对齐**：定位 MediaRecorder/后台节流/WebM 封装。
-3. **自动检测鲁棒性**：短音频、噪声、中英混合样本；必要时增加置信度阈值/回退提示。
-4. **AudioWorklet 全面替代**：删除 ScriptProcessor 回退或仅在检测到不支持时加载，降低兼容代码。
-5. **实时延迟/partial 策略**：当前 2 s 触发、8 s 窗口；可做重叠拼接、增量文本，减少首包 3 s 延迟。
-6. **中文准确率**：small → medium/热词/提示的 CPU 权衡；保持 CER 阈值。
-7. **日志工程化**：结构化 JSON/轮转/保留策略；当前为文本日志 + request_id。
-8. **CI 成本**：real-model job 每次 push 都跑（缓存命中约 2 min）；可按路径过滤或手动触发。
-9. **样本覆盖**：噪声、远场、混合语言、数字/专有名词。
-10. **测试补充**：AudioWorklet fallback、auto 混合语句、60 s 真实音频对齐。
+1. **Windows 11/桌面 Edge/真实麦克风补验**：唯一环境阻塞项。
+2. **中文准确率**：medium 模型/领域微调；prompt 已 opt-in，默认关闭。
+3. **实时体验**：重叠窗口/增量拼接，争取首个非空文本 ≤2.5 s。
+4. **样本覆盖**：噪声、远场、中英混合、数字/专有名词。
+5. **测试补充**：AudioWorklet 回退、auto 混合语句、真实 60 s 音频。
+6. **CI 成本**：real-model job 每次 push 都跑；可按路径过滤或手动触发。
 
 ## 结论
 
-todo 中仅剩 T6.13（环境阻塞），其余任务已完成或按用户要求跳过。plan 已更新为历史计划 + 执行状态；当前交付无未完成代码任务。
+`todo.md` 中仅剩 T6.13（环境阻塞，已记录为 blocked，不计为通过）。代码任务与文档任务均已完成；剩余项均为实机环境限制或非阻塞增强。

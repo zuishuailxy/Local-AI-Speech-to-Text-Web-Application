@@ -24,7 +24,7 @@ python -m pytest -q
 ```
 
 ```text
-227 passed, 12 deselected in 1.76s
+229 passed, 12 deselected in 1.96s
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -50,15 +50,15 @@ python -m pytest -q
 | `test_samples.py` | 5 | WAV 参数、参考文本、无模型权重 |
 | `test_transcribe_api.py` | 21 | 200/4xx/5xx、空文本、重试、auto |
 | `test_transcriber.py` | 7 | 协议/Fake |
-| `test_transcriber_unit.py` | 17 | 惰性加载、锁、推理、日志、繁转简、auto/低置信度、prompt 门控 |
+| `test_transcriber_unit.py` | 18 | 惰性加载、锁、推理、日志、繁转简、auto/低置信度、prompt 门控 |
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
-| `test_ws.py` | 9 | WebSocket/PCM/partial/final/错误/auto |
+| `test_ws.py` | 10 | WebSocket/PCM/partial/final/错误/auto |
 | **合计** | **227** | 默认执行 |
 
-真实模型 5 项、E2E 4 项默认排除，分别需要模型/浏览器。
+真实模型 7 项、E2E 5 项默认排除，分别需要模型/浏览器。
 
-当前全量为 227 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前全量为 229 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -71,7 +71,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-7 passed, 229 deselected
+7 passed, 234 deselected
 ```
 
 | 测试 | 时长 | 处理/推理 | 质量 |
@@ -129,7 +129,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 | --- | --- | --- |
 | 无设备/设备占用（DevTools 模拟） | NotFound/NotReadable 提示正确；明确标注模拟 | `t6.6-no-mic.txt`、`device-*.png` |
 | 异常上传、静音、超时长、503 | 6 个分支提示/状态码正确 | `error-cases.txt` |
-| 60 秒自动停止 | 计时 01:00.0，自动提交；服务端音频 57.18 s | `auto-stop-60s.png` |
+| 60 秒自动停止 | 计时 01:00.0，自动提交；服务端音频 57.18 s（T10.1 复测改为 59.8 s，差 0.2 s） | `auto-stop-60s.png`、`t10.1-60s-alignment.txt` |
 | 复制、停后端重试、WebM 上传 | 通过；剪贴板哈希一致；重试复用同一文件 | `upload-webm.txt`、`upload-webm.png` |
 | Windows CI | 真实模型 5 项、Chromium/Edge E2E 通过 | `windows-ci.txt` |
 | Edge | Windows CI headless Edge 155，5 passed（含复制/F6/auto） | `edge.txt` |
@@ -141,6 +141,8 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 | `40651179705` | 首次真实模型下载 + 测试 + Edge | success |
 | `40651812439` | 缓存命中；Python/Edge 版本与模型耗时 | success |
 | `40658826426` | Edge 复制断言补充后复跑 | success |
+| `40680120089` | T10 优化 + 计时标签 + 截图 | success |
+| `40682285556` | T10.4 prompt opt-in | success |
 
 Windows 真实模型耗时：
 
@@ -156,26 +158,27 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 **已完成并合并到 `main`；Windows CI 通过。**
 
 - WebSocket `/ws/transcribe?language=zh|en`，PCM16LE 16 kHz 分片。
-- partial 每约 2 s、最近 8 s 窗口；stop 后 final 全量。
+- partial 每约 1.5 s、最近 3 s 窗口；stop 后 final 全量。
 - 前端“实时识别（实验）”复选框，AudioWorklet 主路径 + 重采样 + PCM16；旧浏览器回退 ScriptProcessor。
-- Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40680120089` Edge 5 项通过）。
+- Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40682285556` Edge 5 项通过）。
 - T8.1 自动语言：HTTP/WS/页面支持 `auto`；中英文真实样本自动检测通过；用户手动中文/英文/实时 auto 截图；原有 zh/en 契约不变。
 - 日志：成功事件带 `outcome=success`，失败事件带 `outcome=error`；支持 `LOG_FILE`/JSON/轮转；不记录音频/文本原文。
 - 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；迁移 AudioWorklet 后实时 E2E 无 ScriptProcessor deprecation warning。
-- 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40665695751` 成功。
+- 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40682285556` 成功。
 - 自动语言检测（`language=auto`）已实现：HTTP/WS/页面；中英文真实样本检测通过。
 
 ## 7. 已知问题与风险
 
 | 级别 | 问题 | 说明 |
 | --- | --- | --- |
-| 中 | 60 秒计时与实际音频不一致 | 页面 60.0 s，服务端 57.18 s，差约 2.8 s；未超过上限，原因可能为 MediaRecorder/硬件启动/后台节流 |
+| ~~中~~ 已关闭 | 60 秒计时与实际音频不一致 | T10.1 复测 5.3/5.2、10.2/10.1、60.0/59.8，最大差 0.2 s；历史 57.18 s 未复现 |
 | 中 | 中文近音字错误 | small 模型把招手/金柳/夕阳识别为近音词；CER 0.18–0.23，未超过阈值 |
 | 中 | Windows 11 实机/真实麦克风未验证 | 仅有 Windows Server CI；不得写成 Windows 11 实机通过 |
 | 低 | 桌面 Edge 未手动验证 | 仅有 Windows CI headless Edge + 假麦克风 |
 | 低 | 语言选择不强制目标脚本 | 音频与所选语言不一致时可能输出源语言；日志有 `asr_language_mismatch` |
 | 低 | 无设备验证为模拟 | macOS 内置麦克风无法安全禁用；真实 NotFound/NotReadable 待其他设备 |
 | 低 | 样本覆盖有限 | 单人、安静、正常语速；噪声/远场/混合语言未覆盖 |
+| 低 | 实时首个非空文本 3.0 s | 未完全达到 ≤2.5 s 目标；后续 partial ≤1.38 s，final 1.970 s |
 | 低 | AudioWorklet 兼容 fallback | 主路径 AudioWorklet；旧浏览器回退 ScriptProcessor，可能有 deprecation warning |
 
 ## 8. G4 检查
@@ -188,7 +191,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 真实模型测试 | 通过（本机 + Windows CI） |
 | 测试报告基线 | 本文件 |
 | 所有必做项 | F1–F5 通过 |
-| F6 实时识别 | 已完成并合并；Windows CI（自动检测前）通过 |
+| F6 实时识别 | 已完成并合并；Windows CI 通过 |
 | Windows 11 实机/麦克风 | 未验证，已披露 |
 
 **G4：通过（带已披露限制）**。不把 Windows CI 写成 Windows 11 实机通过；F6 已完成并通过 Windows CI，但 Windows 11 桌面/真实麦克风仍未验证。
@@ -201,7 +204,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 桌面 Edge 手动操作 | 未验证 | 本机无 Edge；仅 CI headless Edge |
 | 真实无设备/设备占用 | 未验证 | 内置麦克风无法安全禁用；T6.6 为 DevTools 模拟 |
 | 噪声/远场/中英混合 | 未覆盖 | 样本为单人安静环境 |
-| 60 s 计时与音频时长一致 | 已知差异 | 60.0 s vs 57.18 s，待排查 |
+| 60 s 计时与音频时长一致 | 已关闭 | 60.0 s vs 59.8 s（差 0.2 s）；历史 57.18 s 未复现 |
 
 ## 9. 证据索引
 
@@ -210,6 +213,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - 手动：`t6.1-mic-zh.txt` … `t6.11` 对应文件
 - 错误/边界：`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`
 - CI：`windows-ci.txt`、`edge.txt`
+- 优化：`t10.1-60s-alignment.txt`、`t10.2-auto-robustness.txt`、`t10.3-realtime-latency.txt`、`t10.4-prompt-default-analysis.md`、`t10.5-logging.txt`、`t10.6-regression.txt`
 - 问题记录：`docs/issue-log.md`
 - 需求逐项核对：`docs/evidence/requirements-checklist.md`
 - 样本/参考：`samples/reference.txt`、`sample-audio-check.txt`

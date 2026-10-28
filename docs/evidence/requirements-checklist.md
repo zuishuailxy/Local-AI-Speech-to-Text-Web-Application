@@ -1,7 +1,7 @@
 # 必做需求逐项核对（T9.2）
 
 - 日期：2026-10-28
-- 分支：`feature/f6-realtime`
+- 分支：`main`（T9.2 初版在 `feature/f6-realtime`，T10 后更新）
 - 依据：`面试考核题-v1.md`、`docs/requirements.md`、`plan.md`
 - 原则：每条写明“实现位置 + 验证证据”；未验证项单列，不把计划写成通过
 
@@ -12,7 +12,7 @@
 | 点击后才请求权限 | `static/app.js` `startRecording`/`startRealtime` | `test_frontend_accessibility` 检查只在启动函数内调用；T6.1/T6.2 | 通过 |
 | Start/Stop 控制 | `start-button`、`stop-button`、`startRecording`/`stopRecording` | T6.1/T6.2；E2E | 通过 |
 | 状态与录音时长 | 状态机、`recording-timer`、200 ms 计时 | `t4.3-timer-state.txt`、T6.1（00:08.3） | 通过 |
-| 60 秒自动停止 | `updateRecordingTimer`、`visibilitychange` | `test_frontend_recording`、T6.7（01:00.0 自动提交） | 通过（音频 57.18 s 差异已记录） |
+| 60 秒自动停止 | `updateRecordingTimer`、`visibilitychange` | `test_frontend_recording`、T6.7（01:00.0 自动提交）、T10.1 | 通过（60.0 s → 59.8 s，差 0.2 s） |
 | 停止后提交完整音频 | MediaRecorder stop → Blob → FormData | T6.1/T6.2；`t4.6-request-result.txt` | 通过 |
 | 权限/设备/空 Blob 错误 | `describeMediaError`、错误面板 | T6.5（真实权限）、T6.6（DevTools 模拟设备） | 通过（无设备为模拟） |
 | 成功后再次录音 | 控件 phase 恢复 | T6.1/T6.2；T6.3/T6.4 连续操作 | 通过 |
@@ -69,7 +69,7 @@
 | 设备占用 | NotReadable 分支 | T6.6 DevTools 模拟 | 验证（模拟） |
 | 空文件/损坏 | 400 empty_file/invalid_audio | T6.7 | 通过 |
 | 格式不支持 | 客户端 + 415 | T6.7 | 通过 |
-| 60 秒 | 自动 stop | T6.7 01:00.0 | 通过（音频 57.18 s 差异） |
+| 60 秒 | 自动 stop | T6.7 01:00.0；T10.1 | 通过（音频 59.8 s） |
 | 模型失败 | 503 model_unavailable | T6.7 临时移走模型 | 通过 |
 | 后端识别失败 | 500 + 重试 | T4.8/T6.8 停后端重试 | 通过 |
 | 无语音 | 空文本 + 提示 | T6.7 silent.wav | 通过 |
@@ -94,23 +94,23 @@
 | CPU only | 通过 |
 | 无 Docker/DB/云 | 通过 |
 | Windows 11 x64 | **未验证**；Windows Server CI 替代 |
-| 默认测试无模型/麦克风/外网 | 通过（212/9 分支；P7 干净 203/8） |
+| 默认测试无模型/麦克风/外网 | 通过（229/12；P7 干净 203/8） |
 | 真实模型 | 5 passed |
 | 6 项手动 | 全部完成 |
-| Windows CI | 真实模型 + Chromium + Edge 通过（F6 合并前为 3 项 Edge，合并后待跑 4 项） |
+| Windows CI | 真实模型 + Chromium + Edge 通过（Edge 5 项，run `40682285556`） |
 
 ## F6 实时识别（加分）
 
 | 项 | 状态 |
 | --- | --- |
 | WebSocket + PCM 后端 | 完成；8 个 WS 单测 |
-| 前端 ScriptProcessor + 重采样 | 完成；E2E 4 passed |
+| 前端 AudioWorklet + 重采样（ScriptProcessor 仅回退） | 完成；E2E 5 passed |
 | partial 中间文本 | 真实麦克风出现（6 partials） |
 | final 完整文本 | 14.08 s / 1.742 s；CER 0.0455 |
-| 必做回归 | 212 passed / 真实模型 5 / HTTP 200 |
-| Windows CI F6 | 已通过（run `40665695751`，Edge E2E 4 项） |
-| ScriptProcessor warning | 已知 warning，非 error；后续可迁 AudioWorklet |
-| 自动语言检测 | 未实现（后置） |
+| 必做回归 | 229 passed / 真实模型 7 / HTTP 200 |
+| Windows CI F6 | 已通过（run `40682285556`，Edge E2E 5 项） |
+| ScriptProcessor warning | 主路径已迁 AudioWorklet，E2E 无 warning；旧浏览器回退未实机 |
+| 自动语言检测 | 已实现（T8.1）：HTTP/WS/页面 auto，中英文真实样本通过 |
 
 ## 未验证/限制（不得写成通过）
 
@@ -119,10 +119,10 @@
 | 真实 Windows 11 桌面/麦克风 | 未验证；CI 是 Windows Server |
 | 桌面 Edge 手动 | 未验证；仅 headless CI |
 | 真实无设备/占用 | 模拟；内置麦克风无法安全禁用 |
-| 60 s 计时 vs 音频 57.18 s | 已知差异，待排查 |
+| 60 s 计时 vs 音频 | 已关闭：60.0 s → 59.8 s；历史 57.18 s 未复现 |
 | 噪声/远场/中英混合 | 未覆盖 |
-| F6 Windows CI | 已通过（run `40677386222`，Edge 5 项，含 auto） |
-| F6 AudioWorklet | 未迁移，仅 warning |
+| F6 Windows CI | 已通过（run `40682285556`，Edge 5 项，含 auto） |
+| F6 AudioWorklet | 已迁移为主路径；旧浏览器回退未实机 |
 
 ## 结论
 

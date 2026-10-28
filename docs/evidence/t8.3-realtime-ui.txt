@@ -25,7 +25,7 @@
 
 - 检查 `WebSocket`、`AudioContext`、`createScriptProcessor`。
 - `AudioContext({sampleRate:16000})` 不支持时退回默认采样率，再用 `resampleTo16k` 处理。
-- 不使用 AudioWorklet；ScriptProcessor 是题目允许的方案。
+- 当时使用 ScriptProcessor；随后迁移为 AudioWorklet 主路径，旧浏览器保留 ScriptProcessor 回退。
 - 不改变未勾选时的原有录音/上传路径。
 
 ## 测试
@@ -69,3 +69,5 @@ E2E 流程：
 - 真实模型实时说中文/英文、partial 更新和 final 完整文本在 T8.4 手动验证。
 - partial 只显示最近约 8 s 窗口；final 才是完整文本。
 - 实时模式不生成音频预览 Blob；最终结果仍显示文本/语言/时长/耗时。
+
+> 后续补充：已迁移到 AudioWorklet 主路径（`static/pcm-worklet.js`），旧浏览器才回退 ScriptProcessor；E2E 断言不再出现 deprecation warning。

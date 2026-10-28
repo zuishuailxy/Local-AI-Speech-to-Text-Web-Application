@@ -114,6 +114,7 @@ def test_static_assets_are_served() -> None:
     css_response = client.get("/static/styles.css")
     js_response = client.get("/static/app.js")
     icon_response = client.get("/static/favicon.svg")
+    worklet_response = client.get("/static/pcm-worklet.js")
 
     assert page_response.status_code == 200
     assert "Local AI Speech-to-Text" in page_response.text
@@ -124,3 +125,5 @@ def test_static_assets_are_served() -> None:
     assert "javascript" in js_response.headers["content-type"]
     assert icon_response.status_code == 200
     assert "image/svg+xml" in icon_response.headers["content-type"]
+    assert worklet_response.status_code == 200
+    assert "javascript" in worklet_response.headers["content-type"]

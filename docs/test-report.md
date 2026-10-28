@@ -156,10 +156,10 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 
 - WebSocket `/ws/transcribe?language=zh|en`，PCM16LE 16 kHz 分片。
 - partial 每约 2 s、最近 8 s 窗口；stop 后 final 全量。
-- 前端“实时识别（实验）”复选框，ScriptProcessor + 重采样 + PCM16。
+- 前端“实时识别（实验）”复选框，AudioWorklet 主路径 + 重采样 + PCM16；旧浏览器回退 ScriptProcessor。
 - Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40667909367` Edge 5 项通过）。
 - T8.1 自动语言：HTTP/WS/页面支持 `auto`；中英文真实样本自动检测通过；用户手动中文/英文/实时 auto 截图；原有 zh/en 契约不变。
-- 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；控制台有 ScriptProcessor deprecation **warning**，无 error。
+- 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；迁移 AudioWorklet 后实时 E2E 无 ScriptProcessor deprecation warning。
 - 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40665695751` 成功。
 - 自动语言检测（`language=auto`）已实现：HTTP/WS/页面；中英文真实样本检测通过。
 
@@ -174,7 +174,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 低 | 语言选择不强制目标脚本 | 音频与所选语言不一致时可能输出源语言；日志有 `asr_language_mismatch` |
 | 低 | 无设备验证为模拟 | macOS 内置麦克风无法安全禁用；真实 NotFound/NotReadable 待其他设备 |
 | 低 | 样本覆盖有限 | 单人、安静、正常语速；噪声/远场/混合语言未覆盖 |
-| 低 | ScriptProcessor deprecation warning | F6 前端使用 ScriptProcessor；功能正常，warning 非 error，后续可迁 AudioWorklet |
+| 低 | AudioWorklet 兼容 fallback | 主路径 AudioWorklet；旧浏览器回退 ScriptProcessor，可能有 deprecation warning |
 
 ## 8. G4 检查
 

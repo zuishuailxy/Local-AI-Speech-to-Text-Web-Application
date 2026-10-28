@@ -217,6 +217,8 @@ def test_fake_microphone_recording(page: Any, base_url: str) -> None:
 
 
 def test_realtime_websocket_streaming(page: Any, base_url: str) -> None:
+    messages: list[str] = []
+    page.on("console", lambda message: messages.append(message.text))
     page.goto(base_url)
     page.check("#realtime-toggle")
     page.select_option("#language-select", "en")
@@ -235,6 +237,7 @@ def test_realtime_websocket_streaming(page: Any, base_url: str) -> None:
     _wait_phase(page, "success")
     assert page.locator("#result-text").inner_text() == E2E_TEXT
     assert "English" in page.locator("#result-language").inner_text()
+    assert not any("ScriptProcessorNode is deprecated" in message for message in messages)
 
 
 def test_auto_language_upload(page: Any, base_url: str) -> None:

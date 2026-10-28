@@ -127,6 +127,20 @@ $env:LOG_LEVEL = "DEBUG"
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
+日志建议：
+
+- 后端日志是主要依据，包含 `request_id`、语言、时长、耗时、错误码，不记录音频/识别文本原文。
+- 需要保存时把 stdout/stderr 重定向到文件：
+  ```bash
+  python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > server.log 2>&1
+  ```
+- 前端默认不打印日志；需要排查时打开：
+  ```text
+  http://127.0.0.1:8000/?debug=1
+  ```
+  只会输出实时连接/partial/final/HTTP 状态等元数据，不输出音频或文本原文。
+- 浏览器控制台日志不会自动持久化；长期留存应使用后端文件日志或系统服务日志。
+
 ## 5. 使用
 
 1. 选择中文普通话（zh）或 English（en）
@@ -160,7 +174,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 - 单次仍限制 60 秒
 - 不勾选时保持原 MediaRecorder + HTTP 上传流程
 
-Chrome 会对 ScriptProcessor 显示 deprecation warning，这是兼容方案的提示，不是错误。
+实时音频优先使用 AudioWorklet；只有不支持 AudioWorklet 的旧浏览器才回退 ScriptProcessor，可能显示 deprecation warning。
 
 ### 自动语言检测（T8.1）
 
@@ -400,7 +414,7 @@ netstat -ano | findstr :8000       # Windows
 - 样本只覆盖单人、安静环境、正常语速；噪声、远场、中英混合未覆盖。
 - 语言选择不强制输出目标语言；音频与所选语言不一致时可能输出源语言，日志会记录 `asr_language_mismatch`。
 - 单用户、无登录、无并发控制、无历史记录；只绑定本机。
-- 实时识别（F6）已完成并合并到 `main`；ScriptProcessor 有 deprecation warning，功能正常。
+- 实时识别（F6）已完成并合并到 `main`；优先使用 AudioWorklet，旧浏览器回退 ScriptProcessor。
 
 ## 12. 项目结构
 

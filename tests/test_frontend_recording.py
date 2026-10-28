@@ -126,6 +126,9 @@ def test_realtime_contract() -> None:
     assert 'type: "stop"' in JS
     assert "resampleTo16k" in JS
     assert "floatToPcm16" in JS
+    assert "audioWorklet" in JS
+    assert "AudioWorkletNode" in JS
+    assert "pcm-worklet.js" in JS
     assert 'payload.type === "partial"' in JS
     assert 'payload.type === "final"' in JS
 

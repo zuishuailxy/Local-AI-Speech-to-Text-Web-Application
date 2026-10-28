@@ -282,7 +282,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 5. 无设备/占用为 DevTools 模拟，不是真实拔设备。
 6. 样本单人、安静、正常语速；噪声/远场/混合语言未覆盖。
 7. 单用户、无认证、无历史；不能直接公网部署。
-8. F6 实时识别已完成并合并，Windows CI 通过；ScriptProcessor 有 deprecation warning。
+8. F6 实时识别已完成并合并，Windows CI 通过；实时音频优先 AudioWorklet，旧浏览器回退 ScriptProcessor。
 
 ## 12. 关键文件
 
@@ -347,18 +347,15 @@ ws://127.0.0.1:8000/ws/transcribe?language=zh|en|auto
 ### 14.2 模块
 
 - `app/services/streaming.py`：PCM16→float32、滚动缓冲、窗口/间隔、上限。
+- `static/pcm-worklet.js`：AudioWorklet 采集帧；主路径不再使用 ScriptProcessor。
 - `app/api/ws.py`：WebSocket 协议、partial/final/error、线程池调用。
 - `app/main.py`：注册 WebSocket 路由。
 - `tests/test_ws.py`：协议、partial/final、空音频、非法语言/消息、无模型、超长/PCM 校验。
 
 ### 14.3 已知浏览器 warning
 
-Chrome 会对 `ScriptProcessorNode` 输出：
+实时音频主路径使用 **AudioWorklet**（`static/pcm-worklet.js`），Chrome/Edge 不再出现 `ScriptProcessorNode` deprecation warning。
 
-```text
-[Deprecation] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead.
-```
-
-- 这是 warning，不是 error；T8.4 手动验证中页面功能正常。
-- 题目允许 AudioWorklet 或 ScriptProcessor；当前选择 ScriptProcessor 以兼容更多浏览器。
-- 后续优化可迁移到 AudioWorklet 并删除该 warning；不影响 F6 验收。
+- `AudioWorkletNode` 不可用或 `addModule` 失败时，才回退 ScriptProcessor。
+- 回退路径是兼容方案，旧浏览器可能显示 deprecation warning；功能不受影响。
+- T8.4 的 warning 是迁移前记录；T8.3 后已补 AudioWorklet，E2E 断言实时测试不出现该 warning。

@@ -46,9 +46,9 @@ final 文本：
 - final 文本
 - DevTools Network 中 WebSocket 帧：二进制分片、partial、stop、final
 
-## ScriptProcessor warning
+## ScriptProcessor warning（已在后续修复）
 
-用户控制台出现：
+T8.4 当时用户控制台出现：
 
 ```text
 [Deprecation] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead.
@@ -56,10 +56,10 @@ final 文本：
 
 处理结论：
 
-- 这是 **warning，不是 error**；页面功能正常。
-- 题目明确允许 AudioWorklet 或 ScriptProcessor；T8.3 使用 ScriptProcessor 作为兼容方案。
-- 不阻塞 T8.4；后续优化可迁移到 AudioWorklet，以消除 deprecation warning。
-- 记录在 `docs/design.md`/本证据，不把它写成“控制台无报错”的例外。
+- 当时是 warning，不是 error；页面功能正常。
+- 后续已实现 `static/pcm-worklet.js` + `AudioWorkletNode` 主路径；Chrome/Edge 实时测试不再出现该 warning。
+- 只在 AudioWorklet 不可用/加载失败时回退 ScriptProcessor。
+- 本记录保留当时事实，不把 warning 写成 error。
 
 ## 自动化回归
 
@@ -87,4 +87,6 @@ T6.1–T6.5、T6.9 已在此前完成；本次 F6 改动只新增 WebSocket/前�
 
 - F6 实时路径真实麦克风可用：partial 出现、final 完整返回。
 - 必做路径未回归。
-- 剩余优化：ScriptProcessor → AudioWorklet；partial 窗口/延迟调优。
+- ScriptProcessor → AudioWorklet 已完成；剩余优化：partial 窗口/延迟调优。
+
+> 后续补充：T8.3 后已迁移 AudioWorklet；T8.1 自动检测后全量为 217 passed、12 deselected，真实模型 7 passed，E2E 5 passed。

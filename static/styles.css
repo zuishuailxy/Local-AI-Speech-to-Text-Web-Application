@@ -405,6 +405,7 @@ h2 {
 }
 
 .hint {
+  padding-top: 8px;
   margin-bottom: 0;
   color: var(--muted);
   font-size: 13px;

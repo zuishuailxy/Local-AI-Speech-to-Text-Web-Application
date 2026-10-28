@@ -26,6 +26,14 @@
     ".flac",
   ]);
   const ACTIVE_PHASES = new Set(["requesting", "recording", "transcribing"]);
+  const DEBUG = new URLSearchParams(window.location.search).has("debug");
+
+  function debugLog(event, details = {}) {
+    if (!DEBUG) {
+      return;
+    }
+    console.info(`[stt] ${event}`, details);
+  }
 
   const elements = {
     app: document.getElementById("app"),
@@ -87,6 +95,7 @@
     realtimeContext: null,
     realtimeSource: null,
     realtimeProcessor: null,
+    realtimeWorklet: null,
     realtimeMute: null,
     realtimeFinalizing: false,
     realtimeFinalTimer: null,
@@ -562,6 +571,10 @@
       if (!response.ok) {
         throw new Error(await parseApiError(response));
       }
+      debugLog("http_result", {
+        status: response.status,
+        request_id: response.headers.get("X-Request-ID"),
+      });
       const payload = await response.json();
       setPipelineStep(elements.stepUpload, "done");
       setPipelineStep(elements.stepDecode, "done");
@@ -772,6 +785,15 @@
   }
 
   function stopRealtimeCapture() {
+    if (state.realtimeWorklet) {
+      state.realtimeWorklet.port.onmessage = null;
+      try {
+        state.realtimeWorklet.disconnect();
+      } catch (_) {
+        // best effort
+      }
+      state.realtimeWorklet = null;
+    }
     if (state.realtimeProcessor) {
       state.realtimeProcessor.onaudioprocess = null;
       try {
@@ -844,18 +866,21 @@
     if (state.phase === "error") {
       return;
     }
+    debugLog("realtime_error", { message });
     cleanupRealtime();
     stopTimer();
     setStatus("实时识别失败", "error");
     showError(message);
   }
 
-  function handleRealtimeAudio(event) {
+  function sendRealtimeSamples(input) {
     if (
       state.phase !== "recording" ||
       state.realtimeFinalizing ||
       !state.realtimeContext ||
-      !state.realtimeSocket
+      !state.realtimeSocket ||
+      !input ||
+      !input.length
     ) {
       return;
     }
@@ -863,7 +888,6 @@
     if (socket.readyState !== WebSocket.OPEN) {
       return;
     }
-    const input = event.inputBuffer.getChannelData(0);
     const resampled = resampleTo16k(input, state.realtimeContext.sampleRate);
     if (!resampled.length) {
       return;
@@ -873,6 +897,14 @@
     } catch (_) {
       failRealtime("实时音频发送失败，请重试。");
     }
+  }
+
+  function handleRealtimeAudio(event) {
+    sendRealtimeSamples(event.inputBuffer.getChannelData(0));
+  }
+
+  function handleRealtimeWorklet(event) {
+    sendRealtimeSamples(event.data);
   }
 
   function showRealtimePartial(payload) {
@@ -940,10 +972,20 @@
       return;
     }
     if (payload.type === "partial") {
+      debugLog("realtime_partial", {
+        index: payload.partial_index,
+        duration_seconds: payload.duration_seconds,
+        processing_seconds: payload.processing_seconds,
+      });
       showRealtimePartial(payload);
       return;
     }
     if (payload.type === "final") {
+      debugLog("realtime_final", {
+        duration_seconds: payload.duration_seconds,
+        processing_seconds: payload.processing_seconds,
+        text_chars: typeof payload.text === "string" ? payload.text.length : 0,
+      });
       finishRealtime(payload);
       return;
     }
@@ -1086,26 +1128,50 @@
       }
       await context.resume();
       const source = context.createMediaStreamSource(stream);
-      if (typeof context.createScriptProcessor !== "function") {
-        throw new Error("当前浏览器不支持实时音频处理。");
-      }
-      const processor = context.createScriptProcessor(
-        REALTIME_PROCESSOR_SIZE,
-        1,
-        1
-      );
       const mute = context.createGain();
       mute.gain.value = 0;
-      source.connect(processor);
-      processor.connect(mute);
+
+      let worklet = null;
+      let processor = null;
+      if (
+        context.audioWorklet &&
+        typeof AudioWorkletNode !== "undefined"
+      ) {
+        try {
+          await context.audioWorklet.addModule("/static/pcm-worklet.js");
+          worklet = new AudioWorkletNode(context, "pcm-capture", {
+            processorOptions: { frameSize: REALTIME_PROCESSOR_SIZE },
+          });
+          worklet.port.onmessage = handleRealtimeWorklet;
+          source.connect(worklet);
+          worklet.connect(mute);
+        } catch (_) {
+          worklet = null;
+        }
+      }
+
+      if (!worklet) {
+        if (typeof context.createScriptProcessor !== "function") {
+          throw new Error("当前浏览器不支持实时音频处理。");
+        }
+        processor = context.createScriptProcessor(
+          REALTIME_PROCESSOR_SIZE,
+          1,
+          1
+        );
+        source.connect(processor);
+        processor.connect(mute);
+        processor.onaudioprocess = handleRealtimeAudio;
+      }
       mute.connect(context.destination);
 
       state.realtimeContext = context;
       state.realtimeSource = source;
       state.realtimeProcessor = processor;
+      state.realtimeWorklet = worklet;
       state.realtimeMute = mute;
-      processor.onaudioprocess = handleRealtimeAudio;
 
+      debugLog("realtime_open", { language });
       socket.onmessage = handleRealtimeMessage;
       socket.onerror = () => {
         failRealtime("实时识别连接失败，请重试。");

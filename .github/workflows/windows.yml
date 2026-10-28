@@ -143,6 +143,20 @@ jobs:
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
           }
 
+      - name: Record Windows runtime details
+        shell: pwsh
+        run: |
+          $pyVersion = (python --version 2>&1) -join " "
+          Write-Host "::notice::Python $pyVersion"
+          $edge = python -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(channel='msedge', headless=True); print(b.version); b.close(); p.stop()"
+          Write-Host "::notice::Edge $edge"
+          $zh = & python scripts/verify_asr.py samples/chinese.wav --language zh 2>&1
+          $zh | Write-Host
+          $zh | Where-Object { $_ -match '^(duration_seconds|processing_seconds):|model_load_seconds=|inference_seconds=' } | ForEach-Object { Write-Host "::notice::zh $_" }
+          $en = & python scripts/verify_asr.py samples/english.wav --language en 2>&1
+          $en | Write-Host
+          $en | Where-Object { $_ -match '^(duration_seconds|processing_seconds):|model_load_seconds=|inference_seconds=' } | ForEach-Object { Write-Host "::notice::en $_" }
+
       - name: Run real-model tests
         shell: pwsh
         run: python -m pytest -q -m real_model -s

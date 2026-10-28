@@ -7,7 +7,7 @@
 
 ## 交互
 
-- 麦克风面板新增“实时识别（实验）”复选框 `#realtime-toggle`。
+- 麦克风面板新增“实时识别”复选框 `#realtime-toggle`。
 - 勾选后点击 Start Recording 走实时路径；不勾选保持原 MediaRecorder + HTTP 上传主流程。
 - 实时路径：
   1. `getUserMedia`

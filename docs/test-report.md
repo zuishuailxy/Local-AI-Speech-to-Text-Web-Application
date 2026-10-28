@@ -164,7 +164,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - WebSocket `/ws/transcribe?language=zh|en`，PCM16LE 16 kHz 分片。
 - 首个 partial 约 1.2 s 触发，之后每约 1.5 s；最近 3 s 窗口，partial 用 beam 1；stop 后 final 全量、beam 5。
 - 样本 WebSocket：首个非空文本 2.22–2.27 s；真实麦克风 12.8 s：2.343 s；6.4 s：2.984 s（首窗口为空后重试）。
-- 前端“实时识别（实验）”复选框，AudioWorklet 主路径 + 重采样 + PCM16；旧浏览器回退 ScriptProcessor。
+- 前端“实时识别”复选框，AudioWorklet 主路径 + 重采样 + PCM16；旧浏览器回退 ScriptProcessor。
 - Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40697700916` Edge 5 项通过）。
 - T8.1 自动语言：HTTP/WS/页面支持 `auto`；中英文真实样本自动检测通过；用户手动中文/英文/实时 auto 截图；原有 zh/en 契约不变。
 - 日志：成功事件带 `outcome=success`，失败事件带 `outcome=error`；支持 `LOG_FILE`/JSON/轮转；不记录音频/文本原文。

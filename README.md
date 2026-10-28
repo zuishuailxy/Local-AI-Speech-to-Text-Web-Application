@@ -192,9 +192,9 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 中文结果会经过本地 `zhconv` 繁转简；英文结果不转换。繁转简不修复同音字错误。
 
-### 实时识别（F6，实验）
+### 实时识别（F6）
 
-麦克风面板勾选 **实时识别（实验）** 后，Start 会通过 WebSocket 持续发送 16 kHz PCM 分片：
+麦克风面板勾选 **实时识别** 后，Start 会通过 WebSocket 持续发送 16 kHz PCM 分片：
 
 - 首个 partial 约 1.2 秒触发，之后约每 1.5 秒更新；空 partial 后 0.5 秒重试；只转写最近 3 秒窗口，partial 用 beam 1 降低延迟
 - Stop 后返回完整 final 文本

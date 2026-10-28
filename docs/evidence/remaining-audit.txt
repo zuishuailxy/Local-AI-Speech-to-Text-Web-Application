@@ -1,0 +1,48 @@
+# 交付剩余项与优化建议审计
+
+- 日期：2026-10-28
+- 范围：`todo.md`、`plan.md`、README、docs、Git/tag
+- 当前：默认 217 passed / 12 deselected；真实 7；E2E 5；Windows CI `40673661197` success
+- 最终 tag：`v1.0-submission`；必做回滚 tag：`v1.0-must-have`
+
+## 已完成
+
+- T0–T9 必做任务、F6、T8.1 自动语言检测、AudioWorklet、日志 outcome
+- 6 项指定手动验证、离线、Windows CI、Chromium/Edge E2E
+- README/requirements/design/test-report/ai-development/issue-log/OpenCode 三阶段
+- Git 干净、模型/venv/缓存未跟踪
+
+## 仍开放/未验证
+
+| 项 | 状态 | 说明 |
+| --- | --- | --- |
+| T6.13 Windows 11 实机/云 VM | **阻塞** | 无 Windows 11 实机；CI 是 Windows Server，不计为实机通过 |
+| 桌面 Edge 手动 | 未验证 | 仅 Windows CI headless Edge 155 |
+| 真实无设备/占用 | 模拟 | 内置麦克风无法安全禁用；T6.6 为 DevTools 注入 |
+| 60 s 计时 vs 音频时长 | 已知差异 | 页面 60.0 s，服务端曾 57.18 s，差约 2.8 s |
+| 短音频/噪声/混合语言 auto | 未评估 | 中文/英文样本检测通过；混合语句可能误判 |
+| AudioWorklet 回退 | 仅静态/兼容路径 | 主路径 E2E 无 warning；旧浏览器 ScriptProcessor 回退未实机 |
+| 压缩包 | 按用户要求跳过 | 只交 Git；T9.1 clone 已验证 |
+
+## 已关闭的非必做
+
+- T3.11 SenseVoice 评估：未触发（small 达标，F6 用 Whisper 完成）
+- T7.9 zip：按用户要求跳过
+- T8.5 回滚：未触发（F6 成功）
+
+## 优化建议（按优先级）
+
+1. **Windows 11/桌面 Edge/真实麦克风补验**：唯一未完成的实机项。
+2. **60 s 计时与音频时长对齐**：定位 MediaRecorder/后台节流/WebM 封装。
+3. **自动检测鲁棒性**：短音频、噪声、中英混合样本；必要时增加置信度阈值/回退提示。
+4. **AudioWorklet 全面替代**：删除 ScriptProcessor 回退或仅在检测到不支持时加载，降低兼容代码。
+5. **实时延迟/partial 策略**：当前 2 s 触发、8 s 窗口；可做重叠拼接、增量文本，减少首包 3 s 延迟。
+6. **中文准确率**：small → medium/热词/提示的 CPU 权衡；保持 CER 阈值。
+7. **日志工程化**：结构化 JSON/轮转/保留策略；当前为文本日志 + request_id。
+8. **CI 成本**：real-model job 每次 push 都跑（缓存命中约 2 min）；可按路径过滤或手动触发。
+9. **样本覆盖**：噪声、远场、混合语言、数字/专有名词。
+10. **测试补充**：AudioWorklet fallback、auto 混合语句、60 s 真实音频对齐。
+
+## 结论
+
+todo 中仅剩 T6.13（环境阻塞），其余任务已完成或按用户要求跳过。plan 已更新为历史计划 + 执行状态；当前交付无未完成代码任务。

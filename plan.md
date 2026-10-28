@@ -3,7 +3,7 @@
 - 文档版本：v0.3（D6/GitHub 与 D7/模型路线已确认）
 - 编制日期：2026-10-27
 - 输入依据：`面试考核题-v1.md`（v1）
-- 当前状态：需求分析与计划编制完成；D1–D7 已确认；尚未编写业务代码、未安装依赖、未下载模型
+- 当前状态：已按计划完成必做 + F6 + 自动语言检测（2026-10-28）；实际实现与验证见 `README.md`、`docs/test-report.md`、`docs/evidence/`。本文件保留原始计划，不作为当前状态依据。
 - 配套任务清单：`todo.md`
 
 ---
@@ -13,7 +13,7 @@
 1. 技术路线：**FastAPI（Python 3.12）+ 原生 HTML/CSS/JavaScript + faster-whisper（Whisper small，CTranslate2 CPU int8）+ PyAV 解码 + pytest**。
 2. 交付策略：先用假模型打通接口、错误处理和前端流程，再接入真实模型并单独验证中英文；所有必做项、真实模型测试、离线验证、Windows 兼容性验证和文档完成后，才开始实时识别（F6）。
 3. 时间策略：按 2 个自然日、约 18–22 小时有效工时安排，预留约 15–20% 缓冲。F6 已确认要做，但仍必须先通过 G4 门禁；若 G4 延迟，优先保必做与文档，F6 降级并书面说明。
-4. 已确认决策：D1 无 Windows 11 实机；D2 模型 small；D3 本人录制样本；D4 Git 仓库；D5 要做实时识别；D6 Git 托管在 GitHub（本地已初始化，remote/Actions 待配置）；D7 采用路线 A（Whisper 主 + SenseVoice 条件评估）。Windows 采用 **GitHub Actions `windows-latest` + 浏览器假麦克风**做部分替代验证，真实 Windows 11 桌面/麦克风仍是未验证项。详见 0.1 与 5.3。
+4. 已确认决策：D1 无 Windows 11 实机；D2 模型 small；D3 本人录制样本；D4 Git 仓库；D5 要做实时识别；D6 Git 托管在 GitHub（remote/Actions 已配置并运行）；D7 采用路线 A（Whisper 主 + SenseVoice 条件评估）。Windows 采用 **GitHub Actions `windows-latest` + 浏览器假麦克风**做部分替代验证，真实 Windows 11 桌面/麦克风仍是未验证项。详见 0.1 与 5.3。
 
 ### 0.1 决策记录（2026-10-27）
 
@@ -28,6 +28,8 @@
 | D7 | **模型路线 A**：Whisper small 为主，SenseVoice 为条件备选 | 先交付 Whisper 基线；T3.11 仅在中文/速度/F6 延迟不达标时做 60–90 分钟评估，按数据决定是否切换 |
 
 > D6 当前状态：本地 `main` 已有 initial commit；`origin` 已配置为 GitHub；用户已手动 push，T0.7 已确认本地与 `origin/main` 一致；Actions 的实际运行验证并入 T1.8。
+>
+> **执行结果（2026-10-28）**：必做 F1–F5、F6 实时识别、自动语言检测、AudioWorklet、Windows CI、文档与 OpenCode 证据均已完成；真实 Windows 11 桌面/麦克风仍为未验证项。最终状态以 `docs/test-report.md` 与 `docs/evidence/final-delivery.txt` 为准。
 
 ---
 
@@ -657,7 +659,7 @@ SenseVoiceSmall 是本次选型的**主要备选**，不是被排除的方案。
 | D3 | 样本来源 | **本人录音** | 录制中英文各 5–15 秒；不使用 TTS 作为主方案；注明本人授权、无敏感信息 |
 | D4 | 交付方式 | **Git 仓库** | 分阶段提交、tag、脱敏 OpenCode 证据；模型权重不入库 |
 | D5 | 实时识别 F6 | **要做** | 排在必做之后，G5 门禁 + 3 小时时间盒；失败回滚并说明 |
-| D6 | Git 托管平台 / Actions | **GitHub**（本地已初始化，remote 待配置） | 补 remote URL/push 后可用 `windows-latest`；当前未配置 origin，Actions 尚不可执行 |
+| D6 | Git 托管平台 / Actions | **GitHub（已完成）** | remote/Actions 已配置；Windows CI 已运行；最终 tag `v1.0-submission` |
 | D7 | ASR 模型路线 | **A**：Whisper small 主 + SenseVoice 条件备选 | 先交付确定性基线；T3.11 仅在触发条件下做时间盒评估，按实测切换 |
 
 #### B. 可自行采用默认方案（不阻塞，已写入计划）

@@ -307,7 +307,7 @@
   - 验证：152 passed；`git ls-files models` 为空；模型目录 4 个文件约 468 MB；P3 7 个 Windows run 均 success；阶段二记录已更新 P3。
   - 结果：已完成（2026-10-27）；真实模型与样本数据完整，T3.11 未触发。
 
-- [ ] **T3.11 条件触发：sherpa-onnx + SenseVoiceSmall 时间盒评估（非必做）**
+- [x] **T3.11 条件触发：sherpa-onnx + SenseVoiceSmall 时间盒评估（非必做）**
   - 状态：**未触发**（G2 已通过、small 中英文可辨认、RTF 可接受；不占用时间）。
   - 目标：在 Whisper 中文/速度或 F6 延迟不达标时，用 60–90 分钟判断是否切换备选模型。
   - 文件：`scripts/spike_sensevoice.py`、`docs/evidence/model-bakeoff.md`、`docs/issue-log.md`。
@@ -657,12 +657,13 @@
   - 验证：工作区干净；150 个跟踪文件；无 models/venv/cache；最大 512 KB；干净克隆 203 passed、8 deselected；tag `v1.0-must-have` 已推送；敏感词仅 CSS mask 误报。
   - 结果：已完成（2026-10-28）；F6 未进入 P8，最终 tag 留待 T9/若 P8 完成。
 
-- [ ] **T7.9 打包交付（如需压缩包）**
+- [x] **T7.9 打包交付（按用户要求跳过）**
   - 目标：提供无需 Git 也可运行的交付物。
-  - 文件：`local-speech-to-text.zip`（仓库外或按约定）。
+  - 文件：`local-speech-to-text.zip`（本任务跳过）。
   - 前置：T7.8。
   - 完成标准：排除 `models/`、`.venv/`、缓存；包含源码/样本/文档；解压后按 README 可启动；记录校验和。
-  - 验证：解压到新目录，执行安装/启动/健康检查。
+  - 验证：用户明确“只交 Git 仓库”，未生成压缩包；Git clone 复现已由 T9.1 验证。
+  - 结果：跳过（2026-10-28）。
 
 ---
 
@@ -754,23 +755,23 @@
   - 文件：最终 Git tag/压缩包、`docs/ai-development.md`、`docs/evidence/final-delivery.txt`。
   - 前置：T9.1–T9.3。
   - 完成标准：交付物清单齐全；已知问题与未验证项透明；给出后续优化优先级（准确率、实时性、性能、UI）。
-  - 验证：T9.1 干净复现、T9.2 需求对照、T9.3 一致性；默认 212/9、真实 5、E2E 4、Windows CI 40665695751；tag `v1.0-submission`。
+  - 验证：T9.1 干净复现、T9.2 需求对照、T9.3 一致性；默认 217/12、真实 7、E2E 5、Windows CI `40673661197`；tag `v1.0-submission`。
   - 结果：已完成（2026-10-28）；T7.9 压缩包按用户要求跳过，只交 Git。
 
 ---
 
 ## 交付前总检查（Definition of Done）
 
-- [ ] `python -m pytest -q` 在无模型、无麦克风、无外网环境通过。
-- [ ] `python -m pytest -q -m real_model` 使用真实本地模型通过（中英文），输出已归档。
-- [ ] 6 项手动验证全部实际执行并记录，不把“计划执行”写成“已通过”。
-- [ ] 断网后中英文识别成功。
-- [ ] Windows CI（`windows-latest`）按题目命令安装/启动并完成 API/真实模型/假麦克风验证；真实 Windows 11 桌面/麦克风未验证时明确标注。
-- [ ] `samples/chinese.wav`、`english.wav`、`reference.txt` 为本人录制、合法、可播放、5–15 秒。
-- [ ] README、requirements、design、test-report、ai-development 五份文档齐全且一致。
-- [ ] OpenCode 三阶段证据脱敏、可读、与 Git 时间线对应。
-- [ ] 仓库无模型权重、虚拟环境、缓存、密钥；Git 工作区干净。
-- [ ] F1–F5、三个接口、异常 8 类、10 MB 限制全部通过；F6 完成并演示，或明确记录未完成原因。
+- [x] `python -m pytest -q` 在无模型、无麦克风、无外网环境通过。
+- [x] `python -m pytest -q -m real_model` 使用真实本地模型通过（中英文），输出已归档。
+- [x] 6 项手动验证全部实际执行并记录，不把“计划执行”写成“已通过”。
+- [x] 断网后中英文识别成功。
+- [x] Windows CI（`windows-latest`）按题目命令安装/启动并完成 API/真实模型/假麦克风验证；真实 Windows 11 桌面/麦克风未验证时明确标注。
+- [x] `samples/chinese.wav`、`english.wav`、`reference.txt` 为本人录制、合法、可播放、5–15 秒。
+- [x] README、requirements、design、test-report、ai-development 五份文档齐全且一致。
+- [x] OpenCode 三阶段证据脱敏、可读、与 Git 时间线对应。
+- [x] 仓库无模型权重、虚拟环境、缓存、密钥；Git 工作区干净。
+- [x] F1–F5、三个接口、异常 8 类、10 MB 限制全部通过；F6 完成并演示，或明确记录未完成原因。
 
 ---
 

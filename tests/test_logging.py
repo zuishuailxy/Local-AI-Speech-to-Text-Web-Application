@@ -60,7 +60,7 @@ def test_transcribe_logs_metadata_but_not_text(
     assert "extension=.wav" in log
     assert "audio_upload_stored" in log
     assert "audio_decoded" in log
-    assert "transcribe_complete" in log
+    assert "transcribe_complete outcome=success" in log
     assert "text_chars=" in log
     assert "request_id=" in log
     assert secret not in log
@@ -77,7 +77,7 @@ def test_api_error_is_logged_with_code(tmp_path, wav_bytes: bytes, caplog) -> No
         )
 
     assert response.status_code == 400
-    assert "api_error" in caplog.text
+    assert "api_error outcome=error" in caplog.text
     assert "status=400" in caplog.text
     assert "code=invalid_language" in caplog.text
 

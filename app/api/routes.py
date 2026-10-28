@@ -106,8 +106,9 @@ async def transcribe(
         result.language if normalized_language == "auto" else normalized_language
     )
     logger.info(
-        "transcribe_complete request_id=%s language=%s response_language=%s "
-        "duration_seconds=%.3f processing_seconds=%.3f text_chars=%d",
+        "transcribe_complete outcome=success request_id=%s language=%s "
+        "response_language=%s duration_seconds=%.3f processing_seconds=%.3f "
+        "text_chars=%d",
         request_id,
         normalized_language,
         response_language,

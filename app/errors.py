@@ -135,8 +135,8 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def handle_api_error(request: Request, exc: ApiError) -> JSONResponse:
         logger.warning(
-            "api_error request_id=%s method=%s path=%s status=%d code=%s "
-            "message=%s",
+            "api_error outcome=error request_id=%s method=%s path=%s "
+            "status=%d code=%s message=%s",
             _request_id(request),
             request.method,
             request.url.path,
@@ -152,7 +152,8 @@ def register_exception_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         detail = _validation_detail(exc)
         logger.info(
-            "validation_error request_id=%s method=%s path=%s detail=%s",
+            "validation_error outcome=error request_id=%s method=%s path=%s "
+            "detail=%s",
             _request_id(request),
             request.method,
             request.url.path,
@@ -169,7 +170,8 @@ def register_exception_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         detail = _http_detail(exc)
         logger.info(
-            "http_error request_id=%s method=%s path=%s status=%d detail=%s",
+            "http_error outcome=error request_id=%s method=%s path=%s "
+            "status=%d detail=%s",
             _request_id(request),
             request.method,
             request.url.path,
@@ -188,7 +190,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
         # Do not log request bodies/audio; only the route and exception type.
         logger.exception(
-            "Unhandled error on %s %s request_id=%s",
+            "unhandled_error outcome=error method=%s path=%s request_id=%s",
             request.method,
             request.url.path,
             _request_id(request),

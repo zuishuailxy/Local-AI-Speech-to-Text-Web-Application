@@ -54,7 +54,9 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
         )
     except ApiError as exc:
         logger.info(
-            "ws_rejected connection_id=%s reason=%s", connection_id, exc.code
+            "ws_rejected outcome=error connection_id=%s reason=%s",
+            connection_id,
+            exc.code,
         )
         await _send_error(websocket, exc)
         return
@@ -140,7 +142,9 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
         logger.info("ws_client_disconnected connection_id=%s", connection_id)
         return
     except Exception:
-        logger.exception("ws_stream_failed connection_id=%s", connection_id)
+        logger.exception(
+            "ws_stream_failed outcome=error connection_id=%s", connection_id
+        )
         try:
             await _send_error(websocket, ModelUnavailableError("实时识别失败，请重试。"))
         except Exception:
@@ -167,8 +171,9 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
             final_language = normalized_language
         processing_seconds = round(time.perf_counter() - started, 3)
         logger.info(
-            "ws_final connection_id=%s language=%s duration_seconds=%.3f "
-            "processing_seconds=%.3f text_chars=%d partials=%d",
+            "ws_final outcome=success connection_id=%s language=%s "
+            "duration_seconds=%.3f processing_seconds=%.3f text_chars=%d "
+            "partials=%d",
             connection_id,
             normalized_language,
             buffer.duration_seconds,
@@ -189,7 +194,9 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
     except WebSocketDisconnect:
         return
     except Exception:
-        logger.exception("ws_final_failed connection_id=%s", connection_id)
+        logger.exception(
+            "ws_final_failed outcome=error connection_id=%s", connection_id
+        )
         try:
             await _send_error(websocket, ModelUnavailableError("最终识别失败，请重试。"))
         except Exception:

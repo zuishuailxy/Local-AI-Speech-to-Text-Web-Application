@@ -203,4 +203,5 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - 手动：`t6.1-mic-zh.txt` … `t6.11` 对应文件
 - 错误/边界：`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`
 - CI：`windows-ci.txt`、`edge.txt`
+- 问题记录：`docs/issue-log.md`
 - 样本/参考：`samples/reference.txt`、`sample-audio-check.txt`

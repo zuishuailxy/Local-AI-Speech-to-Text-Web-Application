@@ -178,3 +178,4 @@
 - T7.4 test-report：最终环境、Mock 分布、真实模型、6 项手动、离线、CI、Edge、F6 未实现、证据路径。
 - T7.5 ai-development：OpenCode 任务、人工决策、问题修复、验证方法、优化优先级、三阶段索引。
 - T7.6：三阶段记录复核与脱敏，索引见 `docs/opencode/README.md`。
+- T7.7：问题修复记录 `docs/issue-log.md`，含 17 个已修复问题与 8 个未关闭项。

@@ -418,6 +418,7 @@ netstat -ano | findstr :8000       # Windows
 - 需求说明：[`docs/requirements.md`](docs/requirements.md)
 - 设计说明：[`docs/design.md`](docs/design.md)
 - AI 开发说明：[`docs/ai-development.md`](docs/ai-development.md)
+- 问题修复记录：[`docs/issue-log.md`](docs/issue-log.md)
 - 证据目录：[`docs/evidence/`](docs/evidence/)
 - OpenCode 三阶段记录：[`docs/opencode/`](docs/opencode/)
 - Windows CI：[`docs/evidence/windows-ci.txt`](docs/evidence/windows-ci.txt)

@@ -24,7 +24,7 @@ python -m pytest -q
 ```
 
 ```text
-232 passed, 12 deselected in 1.96s
+233 passed, 12 deselected in 1.96s
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -53,12 +53,12 @@ python -m pytest -q
 | `test_transcriber_unit.py` | 19 | 惰性加载、锁、推理、日志、繁转简、auto/低置信度、prompt 门控 |
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
-| `test_ws.py` | 11 | WebSocket/PCM/partial/final/错误/auto |
-| **合计** | **232** | 默认执行 |
+| `test_ws.py` | 12 | WebSocket/PCM/partial/final/错误/auto |
+| **合计** | **233** | 默认执行 |
 
 真实模型 7 项、E2E 5 项默认排除，分别需要模型/浏览器。
 
-当前全量为 232 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前全量为 233 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -71,7 +71,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-7 passed, 237 deselected
+7 passed, 238 deselected
 ```
 
 | 测试 | 时长 | 处理/推理 | 质量 |

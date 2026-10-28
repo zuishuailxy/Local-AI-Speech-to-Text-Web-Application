@@ -21,6 +21,7 @@ F6_MAX_SECONDS = 60.0
 F6_WINDOW_SECONDS = 3.0
 F6_PARTIAL_INTERVAL_SECONDS = 1.5
 F6_FIRST_PARTIAL_SECONDS = 1.2
+F6_RETRY_PARTIAL_SECONDS = 0.5
 
 
 def pcm16le_to_float32(pcm: bytes) -> np.ndarray:
@@ -40,6 +41,7 @@ class StreamingConfig:
     window_seconds: float = F6_WINDOW_SECONDS
     partial_interval_seconds: float = F6_PARTIAL_INTERVAL_SECONDS
     first_partial_seconds: float = F6_FIRST_PARTIAL_SECONDS
+    retry_partial_seconds: float = F6_RETRY_PARTIAL_SECONDS
 
 
 class StreamingBuffer:
@@ -50,6 +52,7 @@ class StreamingBuffer:
         self._pcm = bytearray()
         self._last_partial_samples = 0
         self._partial_count = 0
+        self._last_partial_empty = False
 
     @property
     def duration_seconds(self) -> float:
@@ -70,17 +73,19 @@ class StreamingBuffer:
             raise AudioTooLongError(int(self.config.max_seconds))
 
     def should_emit_partial(self) -> bool:
-        seconds = (
-            self.config.first_partial_seconds
-            if self._partial_count == 0
-            else self.config.partial_interval_seconds
-        )
+        if self._partial_count == 0:
+            seconds = self.config.first_partial_seconds
+        elif self._last_partial_empty:
+            seconds = self.config.retry_partial_seconds
+        else:
+            seconds = self.config.partial_interval_seconds
         interval_samples = int(seconds * self.config.sample_rate)
         return self.samples - self._last_partial_samples >= interval_samples
 
-    def mark_partial(self) -> None:
+    def mark_partial(self, had_text: bool = True) -> None:
         self._last_partial_samples = self.samples
         self._partial_count += 1
+        self._last_partial_empty = not had_text
 
     def partial_pcm(self) -> bytes:
         window_bytes = int(self.config.window_seconds * self.config.sample_rate) * BYTES_PER_SAMPLE
@@ -111,6 +116,7 @@ __all__ = [
     "F6_FIRST_PARTIAL_SECONDS",
     "F6_MAX_SECONDS",
     "F6_PARTIAL_INTERVAL_SECONDS",
+    "F6_RETRY_PARTIAL_SECONDS",
     "F6_WINDOW_SECONDS",
     "SAMPLE_RATE",
     "StreamingBuffer",

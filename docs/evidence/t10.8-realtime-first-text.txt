@@ -10,7 +10,7 @@
 | 项 | 旧 | 新 |
 | --- | --- | --- |
 | 首个 partial 触发 | 1.5 s | 1.2 s |
-| 后续 partial 间隔 | 1.5 s | 1.5 s |
+| 后续 partial 间隔 | 1.5 s | 1.5 s；空 partial 后 0.5 s 重试 |
 | partial 窗口 | 3 s | 3 s |
 | partial beam | 5 | 1 |
 | final | beam 5、完整音频 | 不变 |
@@ -69,6 +69,27 @@ E2E：5 passed
 ## 版本
 
 - `v1.0.3-realtime`：首个 partial 1.2 s 触发、partial beam 1、首字日志字段。
+
+## 真实麦克风首次复测（2026-10-28 21:07）
+
+用户录音 5.6 s，页面感知中间文本约 3–4 s。服务端日志：
+
+```text
+ws_final duration_seconds=5.632 partials=3
+first_partial_seconds=1.030 first_text_seconds=3.593
+```
+
+诊断：
+
+- 首个 partial 在 1.03 s 已触发，但当时音频为空/静音（VAD 丢弃），没有文本。
+- 之后按 1.5 s 间隔重试，直到累计约 2.5 s 音频才出现首个非空文本。
+- 用户从点击到开口之间通常有 0.5–1 s 停顿，这部分也计入感知延迟。
+
+调整：空 partial 后改为 0.5 s 重试，并记录每个 partial 的 `duration_seconds/text_chars`，避免再等满 1.5 s。
+
+## 真实麦克风二次复测
+
+- 待用户按“点击后立即说话”复测；服务端日志会给出新的 `first_text_seconds` 和逐 partial 记录。
 
 ## 待补
 

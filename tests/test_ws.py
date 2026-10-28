@@ -184,3 +184,21 @@ def test_first_partial_uses_shorter_initial_threshold() -> None:
     assert buffer.should_emit_partial() is False
     buffer.append(pcm(0.5))
     assert buffer.should_emit_partial() is True
+
+
+def test_empty_partial_retries_sooner() -> None:
+    buffer = StreamingBuffer(StreamingConfig())
+    buffer.append(pcm(1.2))
+    assert buffer.should_emit_partial() is True
+    buffer.mark_partial(had_text=False)
+
+    buffer.append(pcm(0.4))
+    assert buffer.should_emit_partial() is False
+    buffer.append(pcm(0.1))
+    assert buffer.should_emit_partial() is True
+
+    buffer.mark_partial(had_text=True)
+    buffer.append(pcm(1.0))
+    assert buffer.should_emit_partial() is False
+    buffer.append(pcm(0.5))
+    assert buffer.should_emit_partial() is True

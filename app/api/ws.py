@@ -115,8 +115,18 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
                         first_partial_seconds = now - first_audio_at
                     if result.text and first_text_seconds is None and first_audio_at is not None:
                         first_text_seconds = now - first_audio_at
-                    buffer.mark_partial()
+                    buffer.mark_partial(bool(result.text))
                     partial_count += 1
+                    logger.info(
+                        "ws_partial connection_id=%s index=%d "
+                        "duration_seconds=%.3f processing_seconds=%.3f "
+                        "text_chars=%d",
+                        connection_id,
+                        partial_count,
+                        buffer.duration_seconds,
+                        now - started,
+                        len(result.text),
+                    )
                     await websocket.send_json(
                         {
                             "type": "partial",

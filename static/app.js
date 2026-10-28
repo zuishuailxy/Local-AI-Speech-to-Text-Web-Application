@@ -1188,7 +1188,7 @@
 
       setPhase("recording");
       startTimer();
-      setStatus("实时识别中…点击 Stop Recording 结束。", "recording");
+      setStatus("正在聆听…开始说话后约 2 秒显示中间文本。", "recording");
     } catch (error) {
       cleanupRealtime();
       stopTimer();

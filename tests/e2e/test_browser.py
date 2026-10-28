@@ -107,7 +107,9 @@ def browser() -> Iterator[Any]:
 
 @pytest.fixture
 def page(browser: Any, base_url: str) -> Iterator[Any]:
-    context = browser.new_context(permissions=["microphone"])
+    context = browser.new_context(
+        permissions=["microphone", "clipboard-read", "clipboard-write"]
+    )
     page = context.new_page()
     page.set_default_timeout(15_000)
     try:
@@ -177,6 +179,12 @@ def test_upload_wav_through_browser(page: Any, base_url: str) -> None:
     assert page.locator("#copy-button").is_enabled()
     assert page.locator("#audio-preview").is_visible()
     assert page.locator("#audio-preview").get_attribute("src")
+
+    page.click("#copy-button")
+    page.wait_for_function(
+        "document.getElementById('copy-button').textContent === '已复制'"
+    )
+    assert page.evaluate("navigator.clipboard.readText()") == E2E_TEXT
 
     _screenshot(page, "t5.4-e2e-upload.png")
 

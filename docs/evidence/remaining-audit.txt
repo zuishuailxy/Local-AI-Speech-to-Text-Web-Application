@@ -3,7 +3,7 @@
 - 日期：2026-10-28
 - 范围：`todo.md`、`plan.md`、README、docs、Git/tag、CI
 - 当前：默认 233 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40697700916` success
-- Tag：`v1.0-submission`、`v1.0.1-optimizations`、`v1.0.2-accuracy`、`v1.0.3-realtime`、`v1.0-must-have`（回滚）
+- Tag：`v1.0-submission`、`v1.0.1-optimizations`、`v1.0.2-accuracy`、`v1.0.3-realtime`、`v1.0.4-cleanup`、`v1.0.5-windows`、`v1.0-must-have`（回滚）
 
 ## 已完成
 
@@ -16,8 +16,8 @@
 
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
-| T6.13 Windows 实机 | **部分通过** | 第三方 Windows clone 上传 + 实时通过；Win11/浏览器/麦克风细节待确认 |
-| 桌面 Edge 手动 | 未验证 | 仅 Windows CI headless Edge 155 |
+| T6.13 Windows 实机 | **完成** | 第三方 Win11 x64 + Chrome 156 + Sony 头戴麦克风，中英文 9 s、WAV、实时通过；无截图/日志 |
+| 桌面 Edge 手动 | 未验证 | 第三方实机用 Chrome 156；Edge 仅 CI headless 155 |
 | 真实无设备/占用 | 模拟 | 内置麦克风无法安全禁用；T6.6 为 DevTools 注入 |
 | 短音频/噪声/混合语言 auto | 部分覆盖 | 低置信度回退已实现；混合语句仍只输出一种语言，未做逐词语言标记 |
 | AudioWorklet 回退 | 未实机 | 主路径 E2E 无 warning；旧浏览器 ScriptProcessor 回退未在旧浏览器验证 |
@@ -33,7 +33,7 @@
 
 ## 后续可选优化（非交付阻塞）
 
-1. **补 Windows 测试细节**：版本、浏览器、是否真实麦克风；第三方 clone 已通过上传 + 实时。
+1. **桌面 Edge**：第三方 Windows 实机验证使用 Chrome 156；如需 Edge 结论再补测。
 2. **中文准确率**：medium 已评估并作为批量可选（CER 0.0769）；进一步可做领域微调。
 3. **实时体验**：样本 2.22–2.27 s、真实麦克风 2.343 s；可继续做重叠窗口/增量拼接，改善中间文本稳定性。
 4. **样本覆盖**：噪声、远场、中英混合、数字/专有名词。

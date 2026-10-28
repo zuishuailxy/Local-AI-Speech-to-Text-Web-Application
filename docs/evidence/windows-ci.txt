@@ -112,3 +112,9 @@ model_load_seconds: 1.289
 - CI 的麦克风是 Playwright 假设备，不是真实麦克风。
 - Edge E2E 是 headless，不等于桌面 Edge 手动操作。
 - 不能把 CI 成功写成“Windows 11 实机通过”。
+
+## 后续更新（2026-10-28）
+
+- T6.13 已由第三方在 Windows 11 x64 + Chrome 156.0.8078.47 + Sony 头戴麦克风上复测：中英文 9 s 录音、WAV 上传、实时识别通过。
+- 无截图/控制台日志；桌面 Edge 仍未手动测试。
+- 本节不改变上文 CI 结论：CI 仍是 Windows Server + headless + 假麦克风。

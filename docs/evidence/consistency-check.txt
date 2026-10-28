@@ -63,4 +63,4 @@ README、design、test-report、requirements 中的命令一致。
 
 ## 结论
 
-未发现启动命令、接口字段、限制值、模型名或当前测试命令的矛盾。F6 已合并到 `main`；Windows 11 实机/桌面 Edge/无设备模拟均未冒充通过。
+未发现启动命令、接口字段、限制值、模型名或当前测试命令的矛盾。F6 已合并到 `main`；第三方 Windows 11 + Chrome + 真实麦克风已验证；桌面 Edge/无设备模拟仍未冒充通过。

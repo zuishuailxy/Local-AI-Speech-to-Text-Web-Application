@@ -5,7 +5,7 @@
 - 仓库：`https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application`
 - 分支：`main`
 - 必做回滚 tag：`v1.0-must-have`
-- 最终 tag：`v1.0-submission`（必做/F6 基线）、`v1.0.1-optimizations`（T10 优化版）、`v1.0.2-accuracy`（medium 可选）、`v1.0.3-realtime`（首字延迟优化）
+- 最终 tag：`v1.0-submission`（必做/F6 基线）、`v1.0.1-optimizations`、`v1.0.2-accuracy`、`v1.0.3-realtime`、`v1.0.4-cleanup`、`v1.0.5-windows`
 
 ## 交付内容
 
@@ -17,7 +17,7 @@
 | 样本 | `samples/chinese.wav`、`english.wav`、`reference.txt` |
 | 测试 | `tests/`（默认 233、真实 7、E2E 5） |
 | 文档 | `README.md`、`docs/requirements.md`、`docs/design.md`、`docs/test-report.md`、`docs/ai-development.md`、`docs/issue-log.md` |
-| 证据 | `docs/evidence/` |
+| 证据 | `docs/evidence/`（含 `t6.13-windows-third-party.txt`） |
 | OpenCode | `docs/opencode/01–03`、README |
 
 ## 最终验证
@@ -54,7 +54,7 @@ F6 WebSocket partials + final 成功
 
 ## 已知限制
 
-- Windows CI 是 Windows Server；第三方 Windows clone 上传 + 实时通过，版本/浏览器/麦克风细节待确认。
+- Windows CI 是 Windows Server；第三方 Windows 11 x64 + Chrome 156 + Sony 头戴麦克风已验证上传 + 实时（中英文、9 s、WAV；无截图/日志）；桌面 Edge 未测试。
 - 桌面 Edge 未手动验证；CI 为 headless Edge + 假麦克风。
 - 无设备/设备占用为 DevTools 模拟。
 - 60 s 计时已验证为 59.8 s（差 0.2 s），未复现旧 57.18 s；不再作为当前缺陷。

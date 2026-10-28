@@ -258,7 +258,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 - 单进程即可。
 - 模型目录不提交 Git；CI 缓存/下载。
 - Windows 使用同一命令，CI 已验证 Python 3.12 / Chromium / Edge / 真实模型。
-- Windows CI 是 Server；另有第三方 Windows 桌面 clone 测试（上传 + 实时通过），但 Win11/Edge/真实麦克风细节待确认。
+- Windows CI 是 Server；第三方 Windows 11 x64 + Chrome 156 + 真实麦克风通过上传/实时；桌面 Edge 未测试。
 
 ## 10. 测试设计
 
@@ -279,7 +279,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 1. 录音计时为墙钟，音频时长以服务端解码为准；实测 60.0 s → 59.8 s（差 0.2 s），历史 57.18 s 未复现。
 2. 中文 small 近音字错误；CER 0.18–0.23，英文 WER 0。
 3. 语言选择不强制输出目标脚本；错配可能输出源语言。
-4. Windows 11 桌面、桌面 Edge、真实麦克风细节待确认；已有第三方 Windows clone 上传/实时测试。CI 是 Server + headless。
+4. 桌面 Edge 未测试；Windows 11 + Chrome + 真实麦克风已由第三方验证。CI 是 Server + headless。
 5. 无设备/占用为 DevTools 模拟，不是真实拔设备。
 6. 样本单人、安静、正常语速；噪声/远场/混合语言未覆盖。
 7. 单用户、无认证、无历史；不能直接公网部署。

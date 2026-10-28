@@ -580,14 +580,14 @@
   - 结果：已完成（2026-10-28）；G4 通过（Windows 11 实机/桌面 Edge/真实麦克风未验证，已明确披露）。
   - 门禁：**G4 通过（带限制披露）**；F6 仍需 G5 与文档基线。
 
-- [ ] **T6.13 条件项：Windows 11 实机/云 VM 补验（无环境则记录阻塞）**
+- [x] **T6.13 条件项：Windows 11 实机/云 VM 补验**
   - 目标：若借用/租用 Windows 11，补做真实桌面 Chrome/Edge 麦克风验证。
   - 文件：`docs/test-report.md`、`docs/evidence/windows11-real.txt`、截图。
   - 前置：可获得 Windows 11 x64 实机或云 VM；T6.10 通过。
   - 完成标准：按 README 启动；Chrome/Edge 录音中文/英文成功；上传样本；记录版本与耗时。
   - 验证：逐字执行 README；截图 + 命令输出。
-  - 结果：**部分通过**（2026-10-28）；朋友 clone 后在 Windows 上测试上传识别和实时识别，均正常。
-  - 备注：Windows 版本/浏览器/是否真实麦克风/截图尚未记录；在补齐前不写成 Windows 11 桌面 Edge 全部通过。CI 仍是 Windows Server。证据：`docs/evidence/t6.13-windows-third-party.txt`。
+  - 结果：**完成**（2026-10-28）；朋友 clone 后在 Windows 11 x64 + Chrome 156.0.8078.47 + Sony 头戴麦克风上测试中文/英文、9 s 录音、WAV 上传和实时识别，均正常，无控制台报错。
+  - 备注：无截图/控制台日志，属于第三方口头报告；桌面 Edge 未测试，仍单列。CI 仍是 Windows Server。证据：`docs/evidence/t6.13-windows-third-party.txt`。
 
 ---
 

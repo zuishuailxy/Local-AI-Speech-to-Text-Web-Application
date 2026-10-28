@@ -24,7 +24,7 @@
 - macOS arm64 / Apple M1 / 16 GB / Python 3.12.13 / Chrome 156
 - Windows CI：`windows-latest`（Windows Server）/ Python 3.12.10 / Edge 155
 
-> Windows CI 是 Windows Server，不是 Windows 11 桌面。另有一次第三方 Windows 桌面 clone 测试（上传 + 实时通过），但 Windows 版本/浏览器/麦克风细节待确认；详见 [测试报告](docs/test-report.md)。
+> Windows CI 是 Windows Server。另有第三方 Windows 11 x64 + Chrome 156 + Sony 头戴麦克风的 clone 测试：中文/英文、9 s 录音、WAV 上传和实时识别通过（无截图/日志）；桌面 Edge 未测试。详见 [测试报告](docs/test-report.md)。
 
 ## 2. 安装
 
@@ -439,7 +439,7 @@ netstat -ano | findstr :8000       # Windows
 
 ## 11. 已知限制
 
-- 第三方 Windows 桌面 clone 测试已通过上传 + 实时；Windows 版本/浏览器/真实麦克风细节待确认。Windows CI 是 Windows Server。
+- 第三方 Windows 11 x64 + Chrome 156 + Sony 头戴麦克风已验证上传 + 实时（中英文、9 s）；无截图/日志；桌面 Edge 未测试。
 - 桌面 Edge 未手动验证；CI 为 headless Edge + 假麦克风。
 - 无设备/设备占用场景使用 DevTools 注入验证，不是真实拔设备。
 - 录音计时是浏览器墙钟，音频时长以服务端解码为准；实测 60.0 s 对应 59.8 s（差 0.2 s），历史 57.18 s 未复现。
@@ -509,7 +509,7 @@ netstat -ano | findstr :8000       # Windows
 Windows CI：Chromium + Edge + 真实模型通过（最新 run `40697700916`，Edge 5 项 E2E）
 ```
 
-Windows CI 不能替代 Windows 11 实机验证；第三方 Windows clone 测试已通过上传 + 实时，但版本/浏览器/麦克风细节待确认。F6 已在本地真实麦克风和 Windows CI 验证。
+Windows CI 不能替代 Windows 11 实机验证；第三方 Windows 11 + Chrome + 真实麦克风测试已通过上传 + 实时（无截图/日志），桌面 Edge 未测试。
 
 ## 14. 版本记录
 
@@ -521,5 +521,6 @@ Windows CI 不能替代 Windows 11 实机验证；第三方 Windows clone 测试
 | `v1.0.2-accuracy` | medium 可选批量模式 + 模型基准脚本 |
 | `v1.0.3-realtime` | 首字延迟 2.2–2.3 s、空 partial 快速重试 |
 | `v1.0.4-cleanup` | 文档/代码整理，无行为变更 |
+| `v1.0.5-windows` | 第三方 Windows 11 实机测试记录 |
 
 回滚优先使用 `v1.0-must-have`；日常开发以 `main` 为准。

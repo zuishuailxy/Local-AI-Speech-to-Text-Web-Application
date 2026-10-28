@@ -197,3 +197,10 @@
 - T9.1：新 clone `/tmp/stt-t91` + 新 venv；42 包安装；当时 212 passed、9 deselected；`/health`/页面/中英文上传/F6 WebSocket 均通过。T8.1 后为 217/12。
 - T9.2：F1–F5/接口/环境/F6 逐项核对，未验证项单列；证据 `docs/evidence/requirements-checklist.md`。
 - 证据：`docs/evidence/final-repro.txt`、`requirements-checklist.md`。
+
+
+## 13. 后续更新（2026-10-28）
+
+- T10.1–T10.8：计时对齐、auto 回退、实时调优、prompt 评估、日志、medium、首字延迟；默认 233/12。
+- T6.13：第三方 Windows 11 x64 + Chrome 156.0.8078.47 + Sony 头戴麦克风，中英文 9 s 录音、WAV 上传、实时识别通过；无截图/日志。
+- 桌面 Edge 仍未手动测试；上文“Windows 11 未验证”是当时状态，不是最终状态。

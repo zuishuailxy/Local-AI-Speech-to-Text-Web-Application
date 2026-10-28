@@ -183,7 +183,7 @@
 | ASR | 开源、本地、CPU | faster-whisper small + CTranslate2 |
 | 离线 | 模型准备后断网可用 | T6.9 真实 Wi-Fi 关闭 |
 | 依赖 | pip + requirements.txt | 42 个固定版本 |
-| 平台 | Windows 11 x64 统一复现 | Windows CI + 第三方 Windows clone 测试；Win11/Edge/真实麦克风细节待确认 |
+| 平台 | Windows 11 x64 统一复现 | 第三方 Windows 11 x64 + Chrome 156 + 真实麦克风通过；Edge 未测试 |
 | 浏览器 | Chrome/Edge 最新稳定版 | Chrome 156 手动；Edge 155 CI |
 | 隐私 | 音频/文本不写日志 | 只记录长度/时长/语言；测试断言文本不入日志 |
 | 安全 | 默认本机 | 绑定 `127.0.0.1`，无认证/多用户 |
@@ -219,7 +219,7 @@
 
 ### 6.3 已知差异
 
-- Windows CI 是 Windows Server；另有第三方 Windows 桌面 clone 测试（上传 + 实时通过），版本/浏览器/麦克风细节待确认。
+- Windows CI 是 Windows Server；另有第三方 Windows 11 x64 + Chrome 156 + Sony 头戴麦克风测试，上传 + 实时中英文通过（无截图/日志）；桌面 Edge 未测试。
 - 桌面 Edge 未手动验证；CI 为 headless + 假麦克风。
 - 无设备/占用用 DevTools 注入模拟；不是真实拔设备。
 - 60 秒自动停止：页面计时 60.0 s 对应服务端 59.8 s，差 0.2 s；历史 57.18 s 未复现（T10.1）。
@@ -257,7 +257,7 @@
 
 | 编号 | 决策 | 影响 |
 | --- | --- | --- |
-| D1 | 无 Windows 11 实机 | Windows CI 替代；第三方 Windows clone 测试通过上传/实时，细节待确认 |
+| D1 | 无自有 Windows 11 实机 | Windows CI + 第三方 Windows 11 x64 实机；Edge 未测试 |
 | D2 | faster-whisper small / CPU int8 | 速度与准确率折中；中文 CER 0.2308；medium 可选（0.0769） |
 | D3 | 本人录制样本 | 合法、无敏感信息；M4A 不提交 |
 | D4 | Git 仓库交付 | 分阶段提交 + GitHub Actions |
@@ -269,7 +269,7 @@
 
 1. F6 实时识别：已完成并合并；首字约 2.2–2.3 s；回滚基线 `v1.0-must-have` 保留。
 2. 自动语言检测：已实现低置信度回退；混合语句仍只输出一种语言。
-3. Windows 11 实机/桌面 Edge/真实麦克风：已有第三方 Windows clone 测试（上传 + 实时通过），版本/浏览器/麦克风细节待补。
+3. 桌面 Edge：第三方验证使用 Chrome 156；Edge 仍未手动测试。
 4. 60 秒计时：已复测 60.0 s → 59.8 s，历史 57.18 s 未复现。
 5. 中文准确率：medium 已作为批量可选（CER 0.0769）；prompt 默认关闭；进一步可做领域微调。
 6. 无设备/占用：在可拔麦克风设备上做真实验证。

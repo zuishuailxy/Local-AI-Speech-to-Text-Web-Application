@@ -93,7 +93,7 @@
 | 原生 HTML/CSS/JS | 通过；无 Node/CDN |
 | CPU only | 通过 |
 | 无 Docker/DB/云 | 通过 |
-| Windows 11 x64 | 第三方 Windows clone 上传/实时通过；Win11/浏览器/麦克风细节待确认 |
+| Windows 11 x64 | 第三方 Win11 x64 + Chrome 156 + Sony 麦克风通过；Edge 未测试 |
 | 默认测试无模型/麦克风/外网 | 通过（233/12；P7 干净 203/8） |
 | 真实模型 | 5 passed |
 | 6 项手动 | 全部完成 |
@@ -116,7 +116,7 @@
 
 | 项 | 状态 |
 | --- | --- |
-| 真实 Windows | 第三方 clone 上传/实时通过；Win11/浏览器/麦克风细节待确认 |
+| 真实 Windows | 第三方 Win11 x64 + Chrome 156 + Sony 麦克风通过；Edge 未测试 |
 | 桌面 Edge 手动 | 未验证；仅 headless CI |
 | 真实无设备/占用 | 模拟；内置麦克风无法安全禁用 |
 | 60 s 计时 vs 音频 | 已关闭：60.0 s → 59.8 s；历史 57.18 s 未复现 |
@@ -126,4 +126,4 @@
 
 ## 结论
 
-F1–F5、三接口、6 项手动、离线、真实模型、Windows CI（必做）均通过；F6 已完成、真实麦克风演示、合并后 Windows CI 通过；第三方 Windows clone 上传/实时通过。Win11/Edge/真实麦克风细节待确认，不以 CI 或模拟替代实机结论。
+F1–F5、三接口、6 项手动、离线、真实模型、Windows CI（必做）均通过；F6 已完成、真实麦克风演示、合并后 Windows CI 通过；第三方 Windows 11 + Chrome + 真实麦克风上传/实时通过（无截图/日志）；桌面 Edge 未测试，不以 CI 或模拟替代实机结论。

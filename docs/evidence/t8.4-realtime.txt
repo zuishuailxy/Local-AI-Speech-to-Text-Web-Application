@@ -1,0 +1,80 @@
+# T8.4 实时识别测试与回归
+
+- 日期：2026-10-28
+- 分支：`feature/f6-realtime`
+- 服务：`127.0.0.1:8001`，真实 faster-whisper small
+- 浏览器：Chrome 156，真实麦克风
+
+## 真实麦克风验证
+
+- 勾选“实时识别（实验）”
+- 中文，朗读约 14 秒
+- 停止后 final
+- partial 在录音过程中持续出现
+
+服务端日志：
+
+```text
+connection_id=13633dacec2e
+language=zh
+duration_seconds=14.080
+processing_seconds=1.742
+partials=6
+text_chars=22
+ws_final status=200
+```
+
+final 文本：
+
+```text
+今天天气很好我们开始测试本地实时预音识别系统
+```
+
+- 用户报告录音时长 14.1 s，处理耗时 1.74 s
+- 与参考“今天天气很好，我们开始测试本地实时语音识别系统。”相比，CER 约 0.0455
+- “语音”误识别为“预音”，属于 small 模型近音字错误
+- partial 处理耗时约 1.2–3.7 s；首次 partial 较慢（模型/窗口刚启动）
+- 控制台无 error
+
+## ScriptProcessor warning
+
+用户控制台出现：
+
+```text
+[Deprecation] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead.
+```
+
+处理结论：
+
+- 这是 **warning，不是 error**；页面功能正常。
+- 题目明确允许 AudioWorklet 或 ScriptProcessor；T8.3 使用 ScriptProcessor 作为兼容方案。
+- 不阻塞 T8.4；后续优化可迁移到 AudioWorklet，以消除 deprecation warning。
+- 记录在 `docs/design.md`/本证据，不把它写成“控制台无报错”的例外。
+
+## 自动化回归
+
+| 项 | 结果 |
+| --- | --- |
+| `tests/test_ws.py` | 8 passed |
+| 全量 `pytest -q` | 212 passed, 9 deselected |
+| 真实模型 `-m real_model` | 5 passed |
+| Chrome E2E `-m e2e` | 4 passed |
+| HTTP `/api/transcribe` 英文 WAV | 200，9.0 s，1.737 s，文本正确 |
+
+HTTP 回归输出：
+
+```json
+{"text":"Never give up. Never lose hope. Always have faith. It allows you to cope.","language":"en","duration_seconds":9.0,"processing_seconds":1.737}
+```
+
+说明 WebSocket 加入后，原 HTTP 录音/上传路径未回归。
+
+## 必做 6 项抽测
+
+T6.1–T6.5、T6.9 已在此前完成；本次 F6 改动只新增 WebSocket/前端实时路径，未改 `/api/transcribe` 和原录音/上传路径。全量 212 passed + HTTP 回归通过。
+
+## 结论
+
+- F6 实时路径真实麦克风可用：partial 出现、final 完整返回。
+- 必做路径未回归。
+- 剩余优化：ScriptProcessor → AudioWorklet；partial 窗口/延迟调优。

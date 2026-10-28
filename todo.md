@@ -704,19 +704,22 @@
   - 结果：已完成（2026-10-28）；未勾选保持原 HTTP 主流程；真实模型手动演示在 T8.4。
   - 备注：E2E 使用 FakeTranscriber + 假麦克风，不冒充真实模型结果。
 
-- [ ] **T8.4 实时识别测试与回归**
+- [x] **T8.4 实时识别测试与回归**
   - 目标：证明 F6 不破坏必做。
-  - 文件：`tests/test_ws.py`、`docs/test-report.md`、`docs/design.md`。
+  - 文件：`tests/test_ws.py`、`docs/test-report.md`、`docs/design.md`、`docs/evidence/t8.4-realtime.txt`。
   - 前置：T8.3。
   - 完成标准：WS Mock 测试通过；`pytest -q` 全绿；真实模型实时手动验证记录；必做 6 项抽测不回归。
-  - 验证：全量回归 + 手动演示。
+  - 验证：WS 8 passed；全量 212 passed、9 deselected；真实模型 5 passed；E2E 4 passed；真实麦克风 14.08 s / 6 partials / final 1.742 s / CER 0.0455；HTTP 回归 200。
+  - 结果：已完成（2026-10-28）；ScriptProcessor deprecation 为 warning，非 error，后续可迁 AudioWorklet。
+  - 备注：partial 约 1.2–3.7 s，近实时；final 完整。
 
-- [ ] **T8.5 实时识别失败回滚**
+- [x] **T8.5 实时识别失败回滚（未触发）**
   - 目标：时间不足/不稳定时安全放弃。
   - 文件：Git revert/feature flag、`docs/issue-log.md`、`docs/test-report.md`。
   - 前置：T8.2–T8.4 任一失败或超时。
   - 完成标准：必做功能恢复到 G4 状态；文档说明 F6 未完成原因；不留下半成品入口。
-  - 验证：`pytest -q` + 手动主流程复测。
+  - 验证：T8.2–T8.4 全部通过，未触发回滚；保留 `v1.0-must-have` tag 作为安全基线。
+  - 结果：未触发（F6 通过）。
 
 ---
 

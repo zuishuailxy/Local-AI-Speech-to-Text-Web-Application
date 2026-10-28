@@ -179,3 +179,13 @@
 - T7.5 ai-development：OpenCode 任务、人工决策、问题修复、验证方法、优化优先级、三阶段索引。
 - T7.6：三阶段记录复核与脱敏，索引见 `docs/opencode/README.md`。
 - T7.7：问题修复记录 `docs/issue-log.md`，含 17 个已修复问题与 8 个未关闭项。
+
+
+## 11. P8 F6 实时识别（分支）
+
+- T8.0：G5 通过，3 小时时间盒，回滚 tag `v1.0-must-have`。
+- T8.2：WebSocket/PCM 后端，8 个 WS 单测。
+- T8.3：ScriptProcessor + 重采样 + partial/final 前端，E2E 4 passed。
+- T8.4：真实麦克风 14.08 s、6 个 partials、final 1.742 s、CER 0.0455；HTTP 回归 200。
+- ScriptProcessor deprecation warning 记录为 warning，非 error。
+- 分支：`feature/f6-realtime`；待合并/终验。

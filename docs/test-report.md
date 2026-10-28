@@ -24,10 +24,10 @@ python -m pytest -q
 ```
 
 ```text
-203 passed, 8 deselected in 1.59s
+212 passed, 9 deselected in 1.68s
 ```
 
-8 个默认排除项：5 个 `real_model` + 3 个 `e2e`。
+9 个默认排除项：5 个 `real_model` + 4 个 `e2e`。
 
 ### Mock/接口用例分布
 
@@ -52,11 +52,12 @@ python -m pytest -q
 | `test_transcriber_unit.py` | 13 | 惰性加载、锁、推理、日志、繁转简 |
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
-| **合计** | **203** | 默认执行 |
+| `test_ws.py` | 8 | WebSocket/PCM/partial/final/错误 |
+| **合计** | **212** | 默认执行（F6 分支） |
 
-真实模型 5 项、E2E 3 项默认排除，分别需要模型/浏览器。
+真实模型 5 项、E2E 4 项默认排除，分别需要模型/浏览器。
 
-干净环境复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）：
+F6 分支本地全量为 212 passed、9 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -69,7 +70,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-5 passed, 199 deselected
+5 passed, 216 deselected
 ```
 
 | 测试 | 时长 | 处理/推理 | 质量 |
@@ -87,7 +88,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 ```
 
 ```text
-3 passed
+4 passed
 ```
 
 覆盖页面加载、WAV 上传 + 复制、假麦克风 WebM 录音。Windows CI 另用 Chromium 与 Edge 155 跑通同一套 3 项。
@@ -151,12 +152,15 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 
 ## 6. F6 实时识别
 
-**未实现。**
+**分支已完成（`feature/f6-realtime`），待合并/终验。**
 
-- 题目列为加分项；D5 已确认“要做”，但必须通过 G5 门禁后启动。
-- 当前 P7 交付基线只包含必做 F1–F5；F6 未编写代码、未测试、未演示。
-- 若后续进入 P8，需重新更新本报告；未完成时不得写成“通过”。
-- 自动语言检测（`language=auto`）同样未实现，当前仅接受 `zh`/`en`。
+- WebSocket `/ws/transcribe?language=zh|en`，PCM16LE 16 kHz 分片。
+- partial 每约 2 s、最近 8 s 窗口；stop 后 final 全量。
+- 前端“实时识别（实验）”复选框，ScriptProcessor + 重采样 + PCM16。
+- Mock WS：8 passed；E2E：4 passed。
+- 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；控制台有 ScriptProcessor deprecation **warning**，无 error。
+- 回滚基线 `v1.0-must-have` 保留；F6 失败可丢弃分支。
+- 自动语言检测（`language=auto`）仍未实现。
 
 ## 7. 已知问题与风险
 
@@ -169,6 +173,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 低 | 语言选择不强制目标脚本 | 音频与所选语言不一致时可能输出源语言；日志有 `asr_language_mismatch` |
 | 低 | 无设备验证为模拟 | macOS 内置麦克风无法安全禁用；真实 NotFound/NotReadable 待其他设备 |
 | 低 | 样本覆盖有限 | 单人、安静、正常语速；噪声/远场/混合语言未覆盖 |
+| 低 | ScriptProcessor deprecation warning | F6 前端使用 ScriptProcessor；功能正常，warning 非 error，后续可迁 AudioWorklet |
 
 ## 8. G4 检查
 
@@ -180,7 +185,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 真实模型测试 | 通过（本机 + Windows CI） |
 | 测试报告基线 | 本文件 |
 | 所有必做项 | F1–F5 通过 |
-| F6 实时识别 | 未实现（加分项，G5 未启动） |
+| F6 实时识别 | 分支完成，待合并/终验 |
 | Windows 11 实机/麦克风 | 未验证，已披露 |
 
 **G4：通过（带已披露限制）**。不把 Windows CI 写成 Windows 11 实机通过；F6 仍需 G5 门禁与文档基线。
@@ -192,7 +197,6 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 真实 Windows 11 桌面/麦克风 | 未验证 | 无实机；CI 是 Windows Server |
 | 桌面 Edge 手动操作 | 未验证 | 本机无 Edge；仅 CI headless Edge |
 | 真实无设备/设备占用 | 未验证 | 内置麦克风无法安全禁用；T6.6 为 DevTools 模拟 |
-| F6 实时识别 | 未实现 | G5 未启动，优先必做 |
 | 噪声/远场/中英混合 | 未覆盖 | 样本为单人安静环境 |
 | 60 s 计时与音频时长一致 | 已知差异 | 60.0 s vs 57.18 s，待排查 |
 

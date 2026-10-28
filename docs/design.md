@@ -349,3 +349,15 @@ ws://127.0.0.1:8000/ws/transcribe?language=zh
 - `app/api/ws.py`：WebSocket 协议、partial/final/error、线程池调用。
 - `app/main.py`：注册 WebSocket 路由。
 - `tests/test_ws.py`：协议、partial/final、空音频、非法语言/消息、无模型、超长/PCM 校验。
+
+### 14.3 已知浏览器 warning
+
+Chrome 会对 `ScriptProcessorNode` 输出：
+
+```text
+[Deprecation] The ScriptProcessorNode is deprecated. Use AudioWorkletNode instead.
+```
+
+- 这是 warning，不是 error；T8.4 手动验证中页面功能正常。
+- 题目允许 AudioWorklet 或 ScriptProcessor；当前选择 ScriptProcessor 以兼容更多浏览器。
+- 后续优化可迁移到 AudioWorklet 并删除该 warning；不影响 F6 验收。

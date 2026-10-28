@@ -13,6 +13,8 @@
 | 音频 | 是 | 否 | 生成 WAV、WebM fixture、解码、时长、清理、错误码 |
 | Transcriber | 是 | 否 | 协议、Fake、惰性加载、并发、加载/推理失败 |
 | 前端静态/契约 | 是 | 否 | 结构、MediaRecorder、计时、上传、请求、复制、可访问性 |
+| 质量指标/样本完整性 | 是 | 否 | CER/WER 归一化、编辑距离、脚本占比、WAV 参数与参考文本一致性 |
+| 真实模型 pytest | 手动 | 是 | 中英文样本转写、脚本占比、CER/WER、耗时 |
 | 真实模型 CLI | 手动 | 是 | 两份 WAV 的中英文转写、耗时、CER/WER |
 | 真实浏览器上传 | 手动 | 是 | 真实 uvicorn + 本地模型，上传样本并检查四字段 |
 | Windows CI | GitHub | 否 | Python 3.12 安装、导入、pytest |
@@ -25,7 +27,7 @@
 ```
 
 ```text
-173 passed
+188 passed, 2 deselected
 ```
 
 默认测试不加载真实模型、不下载权重、不访问麦克风。
@@ -35,6 +37,13 @@
 - 中文 12s：CER 0.231，RTF 0.286
 - 英文 9s：WER 0.000，RTF 0.179
 - 模型加载约 0.987 s
+
+真实模型集成测试：
+
+- 中文 CER 0.2308，RTF 0.262
+- 英文 WER 0.0000，RTF 0.181
+- 模型加载 0.993 s
+- 模型缺失时 2 skipped，提示 ModelScope 下载命令
 
 ## 3. 真实问题与修复记录
 
@@ -59,7 +68,7 @@
 - 配置/错误/测试隔离：`docs/evidence/t1.*`、`t3.9-mock-api-matrix.txt`
 - 音频解码/大小/清理：`t2.1-audio-validation.txt`、`t2.2-upload-limit.txt`、`t2.3-decode.txt`、`t2.4-cleanup.txt`、`t2.5-audio-tests.txt`
 - ASR 引擎：`t3.1-transcriber-protocol.txt`、`t3.2-whisper-engine.txt`
-- 真实模型：`model-download.txt`、`asr-baseline.md`、`t3.7-real-api.txt`、`model-failure.txt`
+- 真实模型：`model-download.txt`、`asr-baseline.md`、`t3.7-real-api.txt`、`t5.2-real-model.txt`、`model-failure.txt`
 - 前端：`t4.1-frontend-structure.txt`、`t4.2-media-recorder.txt`、`t4.3-timer-state.txt`、`t4.4-error-handling.txt`、`t4.5-file-selection.txt`、`t4.6-request-result.txt`、`t4.7-copy.txt`、`t4.8-error-retry-reset.txt`
 - Windows CI：各 evidence 文件中记录 run ID；GitHub Actions 页面可复核
 
@@ -76,6 +85,7 @@
 ## 6. 已知问题
 
 - 中文 small 模型有同音/近音错误，不掩盖；CER 0.231。
+- 测试样本仅覆盖单人、安静环境、正常语速；噪声、远场、混合语言未覆盖。
 - 真实麦克风尚未在自动化环境完成授权；T6 手动验证。
 - 真实 Windows 11 桌面/麦克风未验证；CI 是 Windows Server，需在报告中披露。
 - Edge 尚未手动验证。

@@ -1,0 +1,113 @@
+# T5.2 真实模型集成测试（中/英）
+
+- 日期：2026-10-28
+- 模型：`models/faster-whisper-small`（CTranslate2，CPU int8，beam 5，VAD on）
+- 环境：macOS arm64 / Apple M1 / 16 GB
+- 样本：`samples/chinese.wav`（12.0 s）、`samples/english.wav`（9.0 s）
+- 新增：`tests/test_real_model.py`、`app/services/metrics.py`、`tests/test_metrics.py`、`tests/test_samples.py`、`tests/sample_data.py`
+
+## 样本是否足够
+
+### 已有样本指标
+
+| 样本 | 时长 | 格式 | 峰值 | RMS | 静音占比（<-40 dBFS） | 削波 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `chinese.wav` | 12.000 s | 16 kHz / mono / PCM16 | -5.4 dBFS | -22.6 dBFS | 25.3% | 0 |
+| `english.wav` | 9.000 s | 16 kHz / mono / PCM16 | -3.2 dBFS | -21.1 dBFS | 37.6% | 0 |
+
+- 两段均为本人录制，参考文本已由用户确认。
+- 音量充足、无削波，停顿/尾部静音比例正常。
+- 中文包含两个完整句（39 个有效汉字），英文包含四个短句（15 个词）。
+
+### 结论
+
+**对 T5.2 的必测范围足够**：覆盖中文和英文、均为 5–15 秒、清晰可辨、有确认过的参考文本，可计算 CER/WER 并做质量门槛。
+
+**覆盖有限，但不阻塞当前任务**：
+
+- 单一说话人、安静环境、正常语速；
+- 英文样本较简单，WER 为 0，阈值余量大；
+- 中文样本存在近音错误，CER 0.231，距 0.30 阈值余量约 0.07；
+- 未覆盖噪声、远场、混合中英、数字/专有名词、静音输入。
+
+不伪造第三段录音。若后续需要更宽的鲁棒性覆盖，建议由本人补录 1 段带背景噪声的中文和 1 段中英混合音频；这属于增强项，不改变 T5.2 结论。
+
+## 实现
+
+- `app/services/metrics.py`
+  - CER：小写、去除空白/标点/符号后计算字符编辑距离；
+  - WER：小写、标点转空格后计算词编辑距离；
+  - 脚本占比：`cjk_ratio` / `latin_ratio`，用于判断输出语言是否合理。
+- `tests/test_metrics.py`：10 个默认单测，覆盖同文、标点、替换、增删、空参考、脚本占比。
+- `tests/test_samples.py`：5 个默认单测，校验样本存在、16 kHz/mono/PCM16、5–15 秒、参考文本一致、样本目录无模型权重。
+- `tests/test_real_model.py`：
+  - 模块级 `real_model` 标记，默认 `pytest -q` 不执行；
+  - 模型文件缺失时 `skip`，提示 ModelScope 下载命令；
+  - 模块级 fixture 只加载一次模型，打印加载耗时；
+  - 中文断言非空、汉字占比 ≥0.8、CER ≤0.30；
+  - 英文断言非空、拉丁字母占比 ≥0.8、WER ≤0.30；
+  - 打印真实文本、参考文本、时长、加载/推理耗时、RTF、CER/WER。
+
+阈值说明：按计划初定值（中/英均 ≤0.30），用 T3.6/T5.2 首轮实测校准。中文实测 0.2308，英文 0.0000。
+
+## 真实模型运行
+
+```bash
+.venv/bin/python -m pytest -q -m real_model tests/test_real_model.py -s
+```
+
+```text
+model_load_seconds=0.993
+
+[zh] model_text: 轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+[zh] reference:  轻轻的我走了，正如我轻轻的来；我轻轻的招手，作别西天的云彩。那河畔的金柳，是夕阳中的新娘。
+[zh] duration_seconds=12.000
+[zh] model_load_seconds=0.993
+[zh] inference_seconds=3.139
+[zh] rtf=0.2616
+[zh] CER=0.2308 (threshold 0.30)
+
+[en] model_text: Never give up. Never lose hope. Always have faith. It allows you to cope.
+[en] reference:  Never give up. Never lose hope. Always have faith. It allows you to cope.
+[en] duration_seconds=9.000
+[en] model_load_seconds=0.993
+[en] inference_seconds=1.631
+[en] rtf=0.1813
+[en] WER=0.0000 (threshold 0.30)
+
+2 passed in 5.81s
+```
+
+中文仍出现与 T3.6 一致的近音替换：占如/抓手/做别/金牛/西洋；不掩盖、不修改参考文本。
+
+## 模型缺失时的跳过
+
+```bash
+ASR_MODEL_PATH=/tmp/definitely-missing-model \
+  .venv/bin/python -m pytest -q -rs -m real_model tests/test_real_model.py
+```
+
+```text
+ss                                                                       [100%]
+=========================== short test summary info ============================
+SKIPPED [2] tests/test_real_model.py:56: 本地模型缺失（model.bin, config.json, tokenizer.json, vocabulary.txt）：/private/tmp/definitely-missing-model。先运行 python scripts/download_model.py --model small --source modelscope
+2 skipped in 0.01s
+```
+
+## 默认测试隔离
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+188 passed, 2 deselected in 1.62s
+```
+
+默认运行未加载真实模型（2 个 `real_model` 用例被 deselect）。
+
+## 边界
+
+- 真实模型测试仅在本机执行；Windows CI 不下载模型，因此不跑这两项。
+- 推理耗时随 CPU 负载波动；本文件记录单次实测，不用作性能硬断言。
+- CER/WER 依赖参考文本；`tests/test_samples.py` 会交叉校验代码常量与 `samples/reference.txt`，防止参考文本漂移。

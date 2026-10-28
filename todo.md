@@ -412,12 +412,14 @@
   - 结果：已完成（2026-10-27）；原始 M4A 保留本地并加入 `.gitignore`，仓库只提交派生 WAV/reference。
   - 备注：原始录音的录制环境未单独记录；reference 已注明来源与授权。
 
-- [ ] **T5.2 真实模型集成测试（中/英）**
+- [x] **T5.2 真实模型集成测试（中/英）**
   - 目标：用真实本地模型断言可识别且质量达标。
-  - 文件：`tests/test_real_model.py`、`pytest.ini`。
+  - 文件：`tests/test_real_model.py`、`tests/sample_data.py`、`app/services/metrics.py`、`tests/test_metrics.py`、`tests/test_samples.py`、`pytest.ini`、`docs/evidence/t5.2-real-model.txt`。
   - 前置：T5.1、T3.5、T3.6。
   - 完成标准：`@pytest.mark.real_model`；模型缺失时 skip 并提示下载；中文/英文各断言非空、语言脚本合理；计算并打印 CER/WER 与耗时；阈值按首轮实测校准（初定中文 CER ≤0.3、英文 WER ≤0.3）。
-  - 验证：`python -m pytest -q -m real_model tests/test_real_model.py` 通过；输出归档。
+  - 验证：`python -m pytest -q -m real_model tests/test_real_model.py` 2 passed；中文 CER 0.2308/RTF 0.262，英文 WER 0.0000/RTF 0.181；模型缺失时 2 skipped 且有下载提示；默认 188 passed、2 deselected。
+  - 结果：已完成（2026-10-28）；新增 CER/WER 工具与 10 个指标单测、5 个样本完整性单测；参考文本与样本目录交叉校验。
+  - 备注：样本对 T5.2 足够（中/英、5–15 s、参考已确认）；覆盖限于单人/安静/正常语速，未覆盖噪声、远场、混合语言，属增强项。
 
 - [ ] **T5.3 真实上传 API 流程测试**
   - 目标：验证“上传真实 WAV → 完整后端 → 文本”的端到端路径。

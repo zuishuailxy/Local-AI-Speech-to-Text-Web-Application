@@ -421,12 +421,14 @@
   - 结果：已完成（2026-10-28）；新增 CER/WER 工具与 10 个指标单测、5 个样本完整性单测；参考文本与样本目录交叉校验。
   - 备注：样本对 T5.2 足够（中/英、5–15 s、参考已确认）；覆盖限于单人/安静/正常语速，未覆盖噪声、远场、混合语言，属增强项。
 
-- [ ] **T5.3 真实上传 API 流程测试**
+- [x] **T5.3 真实上传 API 流程测试**
   - 目标：验证“上传真实 WAV → 完整后端 → 文本”的端到端路径。
-  - 文件：`tests/test_e2e_upload.py`（`real_model` 标记）。
+  - 文件：`tests/test_e2e_upload.py`（`real_model` 标记）、`tests/fixtures/speech-en.webm`、`tests/real_model_support.py`、`docs/evidence/t5.3-real-api.txt`。
   - 前置：T5.2、T3.7。
   - 完成标准：TestClient 上传中英文样本；断言 200、文本非空、language 回显、duration 与样本一致、processing_seconds ≥0；另测 webm fixture。
-  - 验证：`pytest -q -m real_model` 全绿；保存输出。
+  - 验证：中文 200/12.0 s/processing 4.441 s/CER 0.2308；英文 200/9.0 s/1.686 s/WER 0；WebM 200/8.999 s/1.912 s/WER 0；3 passed；全部 real_model 5 passed；默认 188 passed、5 deselected。
+  - 结果：已完成（2026-10-28）；新增本人录音派生的 `speech-en.webm`（PyAV/libopus），真实语音 WebM 走完整后端并得到非空文本。
+  - 备注：TestClient 不经过真实 TCP/浏览器；真实浏览器上传仍以 T4.6/T6 为准。Windows CI 不跑真实模型。
 
 - [ ] **T5.4 Playwright 浏览器 E2E（Windows CI 需要，默认不随 `pytest -q` 执行）**
   - 目标：自动验证页面加载、文件上传、假麦克风录音，作为无 Windows 实机时的浏览器证据。

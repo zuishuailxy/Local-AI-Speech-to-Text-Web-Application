@@ -15,35 +15,20 @@ from app.config import Settings
 from app.services.audio import decode_audio
 from app.services.metrics import cer, cjk_ratio, latin_ratio, wer
 from app.services.transcriber import WhisperTranscriber
+from tests.real_model_support import require_model
 from tests.sample_data import SAMPLE_CASES, SAMPLE_DIR
 
 pytestmark = pytest.mark.real_model
 
-MODEL_FILES = ("model.bin", "config.json", "tokenizer.json", "vocabulary.txt")
 CER_THRESHOLD = 0.30
 WER_THRESHOLD = 0.30
 SCRIPT_RATIO_MINIMUM = 0.80
 
 
-def _missing_model_files(settings: Settings) -> list[str]:
-    return [
-        name
-        for name in MODEL_FILES
-        if not (settings.asr_model_path / name).is_file()
-    ]
-
-
 @pytest.fixture(scope="module")
 def engine() -> tuple[Settings, WhisperTranscriber, float]:
     settings = Settings.from_env()
-    missing = _missing_model_files(settings)
-    if missing:
-        pytest.skip(
-            "本地模型缺失（"
-            + ", ".join(missing)
-            + f"）：{settings.asr_model_path}。先运行 "
-            "python scripts/download_model.py --model small --source modelscope"
-        )
+    require_model(settings)
 
     transcriber = WhisperTranscriber(settings)
     started = time.perf_counter()

@@ -1,0 +1,103 @@
+# T5.3 真实上传 API 端到端测试
+
+- 日期：2026-10-28
+- 模型：`models/faster-whisper-small`（CPU int8）
+- 路径：`TestClient` → FastAPI 路由 → 上传/解码 → `WhisperTranscriber` → JSON
+- 新增：`tests/test_e2e_upload.py`、`tests/fixtures/speech-en.webm`、`tests/real_model_support.py`
+
+## 测试内容
+
+- 中英文 `samples/*.wav` 分别上传，断言：
+  - HTTP 200
+  - 响应字段集合完整
+  - `text` 非空
+  - `language` 回显请求语言
+  - `duration_seconds` 与样本一致（±0.05 s）
+  - `processing_seconds > 0`，且不超过客户端观测耗时
+  - 中文 CER ≤0.30、汉字占比 ≥0.8；英文 WER ≤0.30、拉丁字母占比 ≥0.8
+- 另测 WebM/Opus 语音 fixture，断言 200、非空文本、英文语言、时长约 9 s、WER ≤0.30。
+
+### WebM fixture
+
+`tests/fixtures/speech-en.webm`：
+
+- 由本人录制的 `samples/english.wav` 用 PyAV/libopus 转码，48 kHz mono，48 kbps；
+- 时长 8.999 s（容器 9.013 s），55 KB；
+- 不是第三方素材，不包含个人信息；
+- 与原有 1 秒正弦波 `sample.webm` 区分：后者只用于容器/解码测试，不能用于语音识别断言。
+
+## 运行
+
+```bash
+.venv/bin/python -m pytest -q -m real_model tests/test_e2e_upload.py -s
+```
+
+```text
+[zh] upload=chinese.wav
+[zh] text: 轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+[zh] duration_seconds=12.0
+[zh] processing_seconds=4.441
+[zh] client_elapsed=4.457
+[zh] CER=0.2308
+
+[en] upload=english.wav
+[en] text: Never give up. Never lose hope. Always have faith. It allows you to cope.
+[en] duration_seconds=9.0
+[en] processing_seconds=1.686
+[en] client_elapsed=1.691
+[en] WER=0.0000
+
+[webm] upload=speech-en.webm
+[webm] text: Never give up. Never lose hope. Always have faith. It allows you to cope.
+[webm] duration_seconds=8.999
+[webm] processing_seconds=1.912
+[webm] WER=0.0000
+
+3 passed in 8.10s
+```
+
+中文首个请求的 `processing_seconds` 包含首次模型加载，因此高于后续请求；这符合接口定义（解码 + 首次加载 + 推理，不含下载）。
+
+## 全部真实模型测试
+
+```bash
+.venv/bin/python -m pytest -q -m real_model -s
+```
+
+```text
+5 passed, 188 deselected in 13.03s
+```
+
+包含 T5.2 的 2 项直接推理测试和 T5.3 的 3 项上传测试。
+
+## 默认测试隔离
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+188 passed, 5 deselected in 1.64s
+```
+
+默认运行不加载模型、不访问网络。
+
+## 模型缺失时的跳过
+
+```bash
+ASR_MODEL_PATH=/tmp/definitely-missing-model \
+  .venv/bin/python -m pytest -q -rs -m real_model tests/test_e2e_upload.py
+```
+
+```text
+sss                                                                      [100%]
+SKIPPED [2] tests/test_e2e_upload.py:60: 本地模型缺失（...）：/private/tmp/definitely-missing-model。先运行 python scripts/download_model.py --model small --source modelscope
+SKIPPED [1] tests/test_e2e_upload.py:109: 本地模型缺失（...）：同上
+3 skipped in 0.01s
+```
+
+## 边界
+
+- `TestClient` 走完整 ASGI 应用与真实模型，但不经过真实 TCP/浏览器；真实浏览器上传已在 T4.6/T6 单独验证。
+- WebM 由 WAV 转码，编码器为 PyAV 自带 libopus；不是浏览器 MediaRecorder 现场生成的容器，但容器/编码路径一致。
+- 真实模型测试仅在本地执行；Windows CI 不下载权重，因此这 5 项在 CI 中不会运行。

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-JS = (Path(__file__).resolve().parent.parent / "static" / "app.js").read_text(
-    encoding="utf-8"
-)
+ROOT = Path(__file__).resolve().parent.parent
+JS = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+HTML = (ROOT / "static" / "index.html").read_text(encoding="utf-8")
 
 
 def test_media_recorder_mime_candidates_are_declared() -> None:
@@ -128,3 +128,10 @@ def test_realtime_contract() -> None:
     assert "floatToPcm16" in JS
     assert 'payload.type === "partial"' in JS
     assert 'payload.type === "final"' in JS
+
+
+def test_auto_language_option_contract() -> None:
+    assert '<option value="auto">' in HTML
+    assert '"auto"' in JS
+    assert "自动检测" in JS
+    assert 'language === "auto"' in JS

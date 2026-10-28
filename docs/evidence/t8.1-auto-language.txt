@@ -1,0 +1,64 @@
+# T8.1 自动语言检测
+
+- 日期：2026-10-28
+- 分支：`main`（在 F6 之后）
+- 范围：HTTP / WebSocket / 页面；zh/en 原有契约不变
+
+## 实现
+
+- `validate_language(..., allow_auto=True)` 仅在上传/WS 路由接受 `auto`；默认仍拒绝 auto。
+- `WhisperTranscriber`：`auto` 时传 `language=None`，由 Whisper 检测；显式 zh/en 仍强制传对应 token。
+- 响应 `language` 返回检测到的 `zh`/`en`；无法判断时回退到输出脚本，最后才保留 `auto`。
+- 中文检测结果仍经 `zhconv` 繁转简。
+- HTTP `/api/transcribe`、WS `/ws/transcribe` 都支持 `language=auto`。
+- 页面语言下拉框新增“自动检测（zh / en）”。
+
+## 真实模型检测
+
+```text
+samples/chinese.wav:
+requested=auto detected=zh probability=0.9976
+text=轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+CER 通过
+
+samples/english.wav:
+requested=auto detected=en probability=0.7329
+text=Never give up. Never lose hope. Always have faith. It allows you to cope.
+WER 0.0
+```
+
+- 自动检测模型加载/推理与显式语言共享。
+- 英文检测概率约 0.73，短音频/噪声可能误判；重要场景仍建议手动选择。
+
+## 测试
+
+```text
+test_language: auto 仅显式允许
+test_transcriber_unit: auto → language=None，返回 detected
+test_transcribe_api: auto 返回 detected language
+test_ws: auto final 返回 detected language
+test_frontend_recording: auto option/label
+E2E: auto 上传
+全量: 217 passed, 12 deselected
+真实模型: 7 passed, 222 deselected
+E2E: 5 passed
+```
+
+## 契约
+
+- `zh`/`en` 请求行为不变。
+- `auto` 额外接受；响应 language 为检测结果。
+- 其他非法值（如 `fr`）仍 400 `invalid_language`。
+- 自动检测只对 zh/en 输出；其他语言不会新增支持。
+
+## 边界
+
+- 短音频/噪声/中英混合可能误判，未做大规模准确率评估。
+- 自动检测不改变“不翻译”约束。
+- 页面上自动模式的 partial 文本显示“自动检测”；final 显示检测语言。
+
+## 证据
+
+- 页面：`static/index.html` 自动选项
+- 代码：`app/services/transcriber.py`、`app/api/routes.py`、`app/api/ws.py`、`app/services/audio.py`
+- 测试：`test_language.py`、`test_transcriber_unit.py`、`test_transcribe_api.py`、`test_ws.py`、`test_frontend_recording.py`、`tests/e2e/test_browser.py`

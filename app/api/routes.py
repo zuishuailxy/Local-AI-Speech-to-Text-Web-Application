@@ -42,7 +42,9 @@ async def transcribe(
 
     started = time.perf_counter()
     settings = request.app.state.settings
-    normalized_language = validate_language(language, settings.supported_languages)
+    normalized_language = validate_language(
+        language, settings.supported_languages, allow_auto=True
+    )
     request_id = getattr(request.state, "request_id", "-")
     extension = Path(file.filename or "").suffix.lower() or "unknown"
 
@@ -60,6 +62,7 @@ async def transcribe(
         file,
         normalized_language,
         settings,
+        allow_auto=normalized_language == "auto",
     )
 
     logger.info(
@@ -99,11 +102,15 @@ async def transcribe(
         raise TranscriptionFailedError("语音识别失败，请稍后重试。") from exc
 
     processing_seconds = round(time.perf_counter() - started, 3)
+    response_language = (
+        result.language if normalized_language == "auto" else normalized_language
+    )
     logger.info(
-        "transcribe_complete request_id=%s language=%s duration_seconds=%.3f "
-        "processing_seconds=%.3f text_chars=%d",
+        "transcribe_complete request_id=%s language=%s response_language=%s "
+        "duration_seconds=%.3f processing_seconds=%.3f text_chars=%d",
         request_id,
         normalized_language,
+        response_language,
         audio.duration_seconds,
         processing_seconds,
         len(result.text),
@@ -111,7 +118,7 @@ async def transcribe(
 
     return TranscriptionResponse(
         text=result.text,
-        language=normalized_language,
+        language=response_language,
         duration_seconds=round(audio.duration_seconds, 3),
         processing_seconds=processing_seconds,
     )

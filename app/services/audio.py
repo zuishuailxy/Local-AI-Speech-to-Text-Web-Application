@@ -44,19 +44,28 @@ ALLOWED_AUDIO_EXTENSIONS: Final[frozenset[str]] = frozenset(
 
 _WAV_HEADER_SIZE = 12
 ASR_SAMPLE_RATE: Final[int] = 16_000
+AUTO_LANGUAGE: Final[str] = "auto"
 MAX_MULTIPART_OVERHEAD_BYTES: Final[int] = 1024 * 1024
 DEFAULT_CHUNK_SIZE: Final[int] = 1024 * 1024
 
 
 def validate_language(
-    language: str, supported: tuple[str, ...] = SUPPORTED_LANGUAGES
+    language: str,
+    supported: tuple[str, ...] = SUPPORTED_LANGUAGES,
+    *,
+    allow_auto: bool = False,
 ) -> str:
-    """Normalize and validate the requested language."""
+    """Normalize and validate the requested language.
+
+    ``auto`` is only accepted by endpoints that explicitly opt in; existing
+    zh/en upload contracts remain unchanged.
+    """
 
     normalized = (language or "").strip().lower()
-    if normalized not in supported:
+    allowed = (AUTO_LANGUAGE, *supported) if allow_auto else supported
+    if normalized not in allowed:
         raise InvalidLanguageError(
-            f"language 仅支持 {', '.join(supported)}，收到: {language!r}。"
+            f"language 仅支持 {', '.join(allowed)}，收到: {language!r}。"
         )
     return normalized
 
@@ -66,6 +75,8 @@ def validate_upload_metadata(
     size: int | None,
     language: str,
     supported_languages: tuple[str, ...] = SUPPORTED_LANGUAGES,
+    *,
+    allow_auto: bool = False,
 ) -> str:
     """Validate cheap metadata before reading the file body.
 
@@ -73,7 +84,7 @@ def validate_upload_metadata(
     are not trusted because browsers frequently send ``application/octet-stream``.
     """
 
-    validate_language(language, supported_languages)
+    validate_language(language, supported_languages, allow_auto=allow_auto)
 
     if not filename or not filename.strip():
         raise EmptyFileError("文件名为空，无法判断音频格式。")
@@ -102,6 +113,8 @@ async def validate_upload(
     file: UploadFile,
     language: str,
     supported_languages: tuple[str, ...] = SUPPORTED_LANGUAGES,
+    *,
+    allow_auto: bool = False,
 ) -> str:
     """Validate language, filename/extension, non-empty body and WAV header.
 
@@ -115,6 +128,7 @@ async def validate_upload(
         file.size,
         language,
         supported_languages,
+        allow_auto=allow_auto,
     )
 
     header = b""
@@ -184,6 +198,7 @@ async def save_upload_to_temp(
     *,
     temp_dir: Path | None = None,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
+    allow_auto: bool = False,
 ) -> StoredUpload:
     """Copy an upload to a temporary file while enforcing the byte limit.
 
@@ -196,7 +211,10 @@ async def save_upload_to_temp(
         raise ValueError("chunk_size must be positive")
 
     extension = await validate_upload(
-        file, language, settings.supported_languages
+        file,
+        language,
+        settings.supported_languages,
+        allow_auto=allow_auto,
     )
     await file.seek(0)
 
@@ -331,6 +349,7 @@ async def process_audio_upload(
     *,
     temp_dir: Path | None = None,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
+    allow_auto: bool = False,
 ) -> DecodedAudio:
     """Validate, stream to temp, decode, and always remove the temp file.
 
@@ -346,6 +365,7 @@ async def process_audio_upload(
         settings,
         temp_dir=temp_dir,
         chunk_size=chunk_size,
+        allow_auto=allow_auto,
     )
     logger.info(
         "audio_upload_stored extension=%s bytes=%d",
@@ -369,6 +389,7 @@ async def process_audio_upload(
 __all__ = [
     "ALLOWED_AUDIO_EXTENSIONS",
     "ASR_SAMPLE_RATE",
+    "AUTO_LANGUAGE",
     "DEFAULT_CHUNK_SIZE",
     "DecodedAudio",
     "MAX_MULTIPART_OVERHEAD_BYTES",

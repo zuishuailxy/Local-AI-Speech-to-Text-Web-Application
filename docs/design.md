@@ -318,7 +318,7 @@ docs/test-report.md        测试结果
 ### 14.1 WebSocket 协议
 
 ```text
-ws://127.0.0.1:8000/ws/transcribe?language=zh
+ws://127.0.0.1:8000/ws/transcribe?language=zh|en|auto
 ```
 
 客户端：
@@ -340,6 +340,7 @@ ws://127.0.0.1:8000/ws/transcribe?language=zh
 - stop 时对完整缓冲做 final；空音频返回空文本。
 - 单次实时录音上限 60 s；超限返回 `audio_too_long` 并关闭。
 - 非法语言/消息/PCM 返回 error 后关闭。
+- `language=auto` 使用 Whisper 自动检测；final 返回检测到的 zh/en。
 - 复用现有 `Transcriber`；Mock 测试不加载模型。
 - 不改变 `/api/transcribe` 和现有页面录音/上传路径。
 

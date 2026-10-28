@@ -31,3 +31,10 @@ def test_unsupported_language_is_rejected(raw: str) -> None:
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.code == "invalid_language"
+
+
+def test_auto_is_accepted_only_when_explicitly_enabled() -> None:
+    assert validate_language(" auto ", allow_auto=True) == "auto"
+
+    with pytest.raises(InvalidLanguageError):
+        validate_language("auto")

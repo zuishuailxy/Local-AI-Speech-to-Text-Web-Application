@@ -41,8 +41,9 @@
         <select id="language-select" name="language" class="select-control">
           <option value="zh" selected>中文普通话（zh）</option>
           <option value="en">English（en）</option>
+          <option value="auto">自动检测（zh / en）</option>
         </select>
-        <p class="hint">请选择与音频一致的语言；中文模式输出中文文本，English 模式输出英文文本，不做翻译。</p>
+        <p class="hint">可选择与音频一致的语言，或自动检测；自动模式只接受中英文，不做翻译。</p>
 
         <div class="status-line" aria-live="polite">
           <span id="status-badge" class="status-badge" data-tone="idle">Idle</span>

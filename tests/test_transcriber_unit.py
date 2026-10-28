@@ -16,15 +16,22 @@ from app.services.transcriber import WhisperTranscriber
 
 
 class FakeWhisperModel:
-    def __init__(self, text_parts: tuple[str, ...] = ("你", "好")) -> None:
+    def __init__(
+        self,
+        text_parts: tuple[str, ...] = ("你", "好"),
+        detected_language: str | None = None,
+    ) -> None:
         self.text_parts = text_parts
+        self.detected_language = detected_language
         self.calls: list[tuple[np.ndarray, dict[str, Any]]] = []
 
     def transcribe(self, samples: np.ndarray, **kwargs: Any):
         self.calls.append((samples, kwargs))
         return (
             iter([SimpleNamespace(text=part) for part in self.text_parts]),
-            SimpleNamespace(language=kwargs.get("language")),
+            SimpleNamespace(
+                language=kwargs.get("language") or self.detected_language
+            ),
         )
 
 
@@ -260,3 +267,18 @@ def test_english_output_is_not_simplified(tmp_path) -> None:
     result = engine.transcribe(np.zeros(16_000, dtype=np.float32), "en")
 
     assert result.text == "今天天氣"
+
+
+def test_auto_language_uses_detected_language_and_no_forced_token(tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    model = FakeWhisperModel(text_parts=("hello",), detected_language="en")
+    engine = WhisperTranscriber(
+        settings,
+        model_factory=lambda path, **kwargs: model,
+    )
+
+    result = engine.transcribe(np.zeros(16_000, dtype=np.float32), "auto")
+
+    assert result.language == "en"
+    assert result.text == "hello"
+    assert model.calls[0][1]["language"] is None

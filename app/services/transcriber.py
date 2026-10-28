@@ -26,6 +26,7 @@ from app.services.metrics import cjk_ratio, latin_ratio
 from app.services.text import to_simplified
 
 logger = logging.getLogger(__name__)
+AUTO_LANGUAGE = "auto"
 
 
 def _output_language_hint(text: str) -> str:
@@ -61,6 +62,7 @@ class FakeTranscriber:
         error: Exception | None = None,
         errors: list[Exception | None] | None = None,
         delay_seconds: float = 0.0,
+        detected_language: str | None = None,
     ) -> None:
         if delay_seconds < 0:
             raise ValueError("delay_seconds must be >= 0")
@@ -68,6 +70,7 @@ class FakeTranscriber:
         self.error = error
         self._errors = list(errors) if errors is not None else None
         self.delay_seconds = delay_seconds
+        self.detected_language = detected_language
         self.calls: list[tuple[np.ndarray, str]] = []
 
     def transcribe(self, samples: np.ndarray, language: str) -> TranscriptionResult:
@@ -80,7 +83,10 @@ class FakeTranscriber:
                 raise error
         elif self._errors is None and self.error is not None:
             raise self.error
-        return TranscriptionResult(text=self.text, language=language)
+        return TranscriptionResult(
+            text=self.text,
+            language=self.detected_language or language,
+        )
 
 
 ModelFactory = Callable[..., Any]
@@ -185,14 +191,23 @@ class WhisperTranscriber:
 
             started = time.perf_counter()
             try:
+                model_language = None if language == AUTO_LANGUAGE else language
                 segments, info = model.transcribe(
                     samples,
-                    language=language,
+                    language=model_language,
                     beam_size=self._settings.asr_beam_size,
                     vad_filter=self._settings.asr_vad_filter,
                 )
                 text = "".join(segment.text for segment in segments).strip()
-                if language == "zh":
+                detected_language = getattr(info, "language", None)
+                result_language = language
+                if language == AUTO_LANGUAGE:
+                    if detected_language in {"zh", "en"}:
+                        result_language = detected_language
+                    else:
+                        hint = _output_language_hint(text)
+                        result_language = hint if hint in {"zh", "en"} else AUTO_LANGUAGE
+                if result_language == "zh":
                     text = to_simplified(text)
             except ApiError:
                 raise
@@ -201,10 +216,9 @@ class WhisperTranscriber:
                 raise TranscriptionFailedError("语音识别失败，请稍后重试。") from exc
             inference_seconds = time.perf_counter() - started
 
-        detected_language = getattr(info, "language", None)
         language_probability = getattr(info, "language_probability", None)
         output_language = _output_language_hint(text)
-        normalization = "zhconv-zh-cn" if language == "zh" else "none"
+        normalization = "zhconv-zh-cn" if result_language == "zh" else "none"
         logger.info(
             "asr_complete requested_language=%s detected_language=%s "
             "language_probability=%s output_language=%s output_cjk_ratio=%.3f "
@@ -221,17 +235,19 @@ class WhisperTranscriber:
             inference_seconds,
             len(text),
         )
-        if output_language != "unknown" and output_language != language:
+        if output_language != "unknown" and output_language != result_language:
             logger.warning(
-                "asr_language_mismatch requested_language=%s output_language=%s "
-                "detected_language=%s text_chars=%d",
+                "asr_language_mismatch requested_language=%s "
+                "resolved_language=%s output_language=%s detected_language=%s "
+                "text_chars=%d",
                 language,
+                result_language,
                 output_language,
                 detected_language,
                 len(text),
             )
 
-        return TranscriptionResult(text=text, language=language)
+        return TranscriptionResult(text=text, language=result_language)
 
 
 __all__ = [

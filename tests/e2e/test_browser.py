@@ -44,7 +44,7 @@ def base_url() -> Iterator[str]:
         project_root=PROJECT_ROOT,
     )
     app = create_app(
-        transcriber=FakeTranscriber(text=E2E_TEXT),
+        transcriber=FakeTranscriber(text=E2E_TEXT, detected_language="en"),
         settings=settings,
     )
     server = uvicorn.Server(
@@ -233,5 +233,16 @@ def test_realtime_websocket_streaming(page: Any, base_url: str) -> None:
 
     page.click("#stop-button")
     _wait_phase(page, "success")
+    assert page.locator("#result-text").inner_text() == E2E_TEXT
+    assert "English" in page.locator("#result-language").inner_text()
+
+
+def test_auto_language_upload(page: Any, base_url: str) -> None:
+    page.goto(base_url)
+    page.select_option("#language-select", "auto")
+    page.set_input_files("#file-input", str(SAMPLE_WAV))
+    page.click("#upload-button")
+    _wait_phase(page, "success")
+
     assert page.locator("#result-text").inner_text() == E2E_TEXT
     assert "English" in page.locator("#result-language").inner_text()

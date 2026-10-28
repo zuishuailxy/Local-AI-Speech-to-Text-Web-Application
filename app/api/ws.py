@@ -48,7 +48,9 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
     settings = websocket.app.state.settings
     try:
         normalized_language = validate_language(
-            language or "", settings.supported_languages
+            language or "",
+            settings.supported_languages,
+            allow_auto=True,
         )
     except ApiError as exc:
         logger.info(
@@ -155,8 +157,14 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
                 normalized_language,
             )
             text = result.text
+            final_language = (
+                result.language
+                if normalized_language == "auto"
+                else normalized_language
+            )
         else:
             text = ""
+            final_language = normalized_language
         processing_seconds = round(time.perf_counter() - started, 3)
         logger.info(
             "ws_final connection_id=%s language=%s duration_seconds=%.3f "
@@ -172,7 +180,7 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
             {
                 "type": "final",
                 "text": text,
-                "language": normalized_language,
+                "language": final_language,
                 "duration_seconds": round(buffer.duration_seconds, 3),
                 "processing_seconds": processing_seconds,
             }

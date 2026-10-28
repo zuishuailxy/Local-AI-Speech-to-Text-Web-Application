@@ -24,10 +24,10 @@ python -m pytest -q
 ```
 
 ```text
-212 passed, 9 deselected in 1.68s
+217 passed, 12 deselected in 1.90s
 ```
 
-9 个默认排除项：5 个 `real_model` + 4 个 `e2e`。
+12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
 
 ### Mock/接口用例分布
 
@@ -40,24 +40,24 @@ python -m pytest -q
 | `test_errors.py` | 10 | 错误码、异常处理 |
 | `test_fixtures.py` | 8 | fixture/隔离 |
 | `test_frontend_accessibility.py` | 5 | label、aria、键盘 |
-| `test_frontend_recording.py` | 11 | MediaRecorder、计时、上传、请求、复制 |
+| `test_frontend_recording.py` | 12 | MediaRecorder、计时、上传、请求、复制、real-time |
 | `test_frontend_structure.py` | 5 | 页面结构、静态资源、favicon |
 | `test_health.py` | 4 | `/health`、首页 |
-| `test_language.py` | 10 | zh/en/非法语言 |
+| `test_language.py` | 11 | zh/en/auto/非法语言 |
 | `test_logging.py` | 5 | request_id、日志字段、文本不入日志 |
 | `test_metrics.py` | 10 | CER/WER/脚本占比 |
 | `test_samples.py` | 5 | WAV 参数、参考文本、无模型权重 |
-| `test_transcribe_api.py` | 20 | 200/4xx/5xx、空文本、重试 |
+| `test_transcribe_api.py` | 21 | 200/4xx/5xx、空文本、重试、auto |
 | `test_transcriber.py` | 7 | 协议/Fake |
-| `test_transcriber_unit.py` | 13 | 惰性加载、锁、推理、日志、繁转简 |
+| `test_transcriber_unit.py` | 14 | 惰性加载、锁、推理、日志、繁转简、auto |
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
-| `test_ws.py` | 8 | WebSocket/PCM/partial/final/错误 |
-| **合计** | **212** | 默认执行 |
+| `test_ws.py` | 9 | WebSocket/PCM/partial/final/错误/auto |
+| **合计** | **217** | 默认执行 |
 
 真实模型 5 项、E2E 4 项默认排除，分别需要模型/浏览器。
 
-当前 F6 全量为 212 passed、9 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前全量为 217 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -70,7 +70,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-5 passed, 216 deselected
+7 passed, 222 deselected
 ```
 
 | 测试 | 时长 | 处理/推理 | 质量 |
@@ -88,7 +88,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 ```
 
 ```text
-4 passed
+5 passed
 ```
 
 覆盖页面加载、WAV 上传 + 复制、假麦克风 WebM 录音。Windows CI 另用 Chromium 与 Edge 155 跑通同一套 3 项。
@@ -157,10 +157,11 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - WebSocket `/ws/transcribe?language=zh|en`，PCM16LE 16 kHz 分片。
 - partial 每约 2 s、最近 8 s 窗口；stop 后 final 全量。
 - 前端“实时识别（实验）”复选框，ScriptProcessor + 重采样 + PCM16。
-- Mock WS：8 passed；E2E：4 passed（Chrome 本地、Windows CI Chromium/Edge）。
+- Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI 自动检测后待重跑）。
+- T8.1 自动语言：HTTP/WS/页面支持 `auto`；中英文真实样本自动检测通过；原有 zh/en 契约不变。
 - 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；控制台有 ScriptProcessor deprecation **warning**，无 error。
 - 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40665695751` 成功。
-- 自动语言检测（`language=auto`）仍未实现。
+- 自动语言检测（`language=auto`）已实现：HTTP/WS/页面；中英文真实样本检测通过。
 
 ## 7. 已知问题与风险
 
@@ -185,7 +186,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 真实模型测试 | 通过（本机 + Windows CI） |
 | 测试报告基线 | 本文件 |
 | 所有必做项 | F1–F5 通过 |
-| F6 实时识别 | 已完成并合并；Windows CI 通过 |
+| F6 实时识别 | 已完成并合并；Windows CI（自动检测前）通过 |
 | Windows 11 实机/麦克风 | 未验证，已披露 |
 
 **G4：通过（带已披露限制）**。不把 Windows CI 写成 Windows 11 实机通过；F6 已完成并通过 Windows CI，但 Windows 11 桌面/真实麦克风仍未验证。

@@ -415,7 +415,14 @@
   }
 
   function languageLabel(language) {
-    return language === "zh" ? "中文（zh）" : language === "en" ? "English（en）" : language || "—";
+    if (language === "auto") {
+      return "自动检测（自动）";
+    }
+    return language === "zh"
+      ? "中文（zh）"
+      : language === "en"
+        ? "English（en）"
+        : language || "—";
   }
 
   function showResult(payload, blob) {

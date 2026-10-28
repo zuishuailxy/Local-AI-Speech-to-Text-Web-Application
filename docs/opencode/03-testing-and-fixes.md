@@ -187,6 +187,7 @@
 - T8.2：WebSocket/PCM 后端，8 个 WS 单测。
 - T8.3：ScriptProcessor + 重采样 + partial/final 前端，E2E 4 passed。
 - T8.4：真实麦克风 14.08 s、6 个 partials、final 1.742 s、CER 0.0455；HTTP 回归 200。
+- T8.1：auto 语言检测（HTTP/WS/页面），中英文真实样本检测通过；全量 217/12，真实 7，E2E 5。
 - ScriptProcessor deprecation warning 记录为 warning，非 error。
 - 分支：`feature/f6-realtime` 已合并；Windows CI run `40665695751` 通过。
 

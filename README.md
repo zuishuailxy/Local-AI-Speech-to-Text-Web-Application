@@ -162,6 +162,17 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 Chrome 会对 ScriptProcessor 显示 deprecation warning，这是兼容方案的提示，不是错误。
 
+### 自动语言检测（T8.1）
+
+语言下拉框增加 **自动检测（zh / en）**：
+
+- 后端把 `language=auto` 传给 Whisper 自动检测
+- 响应 `language` 返回实际检测到的 `zh`/`en`
+- HTTP 上传、WebSocket、页面均支持
+- 只接受中英文；检测到其他语言时按输出脚本回退，无法判断则保留 `auto`
+- 短音频/噪声可能误判，重要场景建议手动选择语言
+- `zh`/`en` 原有契约不变
+
 ## 6. API
 
 ### 健康检查
@@ -253,10 +264,10 @@ python -m pytest -q
 ```
 
 ```text
-212 passed, 9 deselected
+217 passed, 12 deselected
 ```
 
-8 个默认排除项：5 个 `real_model` + 3 个 `e2e`。
+12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
 
 ### 真实模型测试
 
@@ -267,7 +278,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-5 passed, 216 deselected
+7 passed, 222 deselected
 ```
 
 `-s` 会显示真实文本、参考文本、时长、推理耗时、RTF、CER/WER。使用：
@@ -276,7 +287,7 @@ python -m pytest -q -m real_model -s
 - `samples/english.wav`（9.0 s）
 - `tests/fixtures/speech-en.webm`（8.999 s）
 
-模型缺失时 5 项会 skip，并提示 ModelScope 下载命令。
+模型缺失时 7 项会 skip，并提示 ModelScope 下载命令。自动语言测试也对中英文样本做检测。
 
 ### 浏览器 E2E
 
@@ -295,10 +306,10 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 ```
 
 ```text
-4 passed
+5 passed
 ```
 
-覆盖页面加载、WAV 上传 + 复制、假麦克风录音。Windows CI 另使用 Edge channel 跑同一套测试。
+覆盖页面加载、WAV 上传 + 复制、自动语言上传、假麦克风录音、实时 WebSocket。Windows CI 另使用 Edge channel 跑同一套测试。
 
 ### 干净环境隔离
 
@@ -308,7 +319,7 @@ P7 必做版已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + 
 203 passed, 8 deselected in 2.53s
 ```
 
-F6 合并后在新 clone / 新 venv 中为 `212 passed, 9 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
+F6 合并后在新 clone / 新 venv 中为 `217 passed, 12 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
 
 ## 9. 离线验证
 
@@ -438,10 +449,10 @@ netstat -ano | findstr :8000       # Windows
 自动化结果：
 
 ```text
-默认：212 passed, 9 deselected
-真实模型：5 passed
-浏览器 E2E：4 passed
-Windows CI：Chromium + Edge + 真实模型通过（F6 合并后 Edge 4 项 E2E）
+默认：217 passed, 12 deselected
+真实模型：7 passed
+浏览器 E2E：5 passed
+Windows CI：Chromium + Edge + 真实模型通过（自动检测后待重跑 Edge 5 项 E2E）
 ```
 
 Windows CI 不能替代 Windows 11 实机验证；真实桌面/麦克风项在测试报告中单列为未验证。F6 已在本地真实麦克风和 Windows CI 验证。

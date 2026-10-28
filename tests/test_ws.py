@@ -136,3 +136,19 @@ def test_ws_rejects_invalid_message(tmp_path) -> None:
 
     assert error["type"] == "error"
     assert error["code"] == "invalid_message"
+
+
+def test_ws_auto_language_returns_detected_language(tmp_path) -> None:
+    fake = FakeTranscriber(text="auto ws", detected_language="zh")
+    client = make_client(tmp_path, fake)
+
+    with client.websocket_connect("/ws/transcribe?language=auto") as ws:
+        ws.send_bytes(pcm(2.0))
+        partial = ws.receive_json()
+        assert partial["type"] == "partial"
+        ws.send_text('{"type":"stop"}')
+        final = ws.receive_json()
+
+    assert final["type"] == "final"
+    assert final["language"] == "zh"
+    assert fake.calls[0][1] == "auto"

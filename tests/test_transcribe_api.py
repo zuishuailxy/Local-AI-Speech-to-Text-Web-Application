@@ -326,3 +326,14 @@ def test_upload_over_ten_mb_returns_413(tmp_path) -> None:
 
     assert response.status_code == 413
     assert response.json()["code"] == "file_too_large"
+
+
+def test_auto_language_returns_detected_language(tmp_path, wav_bytes: bytes) -> None:
+    fake = FakeTranscriber(text="auto detected", detected_language="en")
+    client = make_transcribe_client(tmp_path, fake)
+
+    response = post_wav(client, wav_bytes, language="auto")
+
+    assert response.status_code == 200
+    assert response.json()["language"] == "en"
+    assert fake.calls[0][1] == "auto"

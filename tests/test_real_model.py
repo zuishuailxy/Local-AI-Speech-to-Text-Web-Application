@@ -89,3 +89,29 @@ def test_real_model_transcribes_sample(
             f"英文输出中拉丁字母占比过低: {latin_ratio(text):.2f}"
         )
         assert score <= WER_THRESHOLD, f"英文 WER {score:.4f} 超过阈值"
+
+
+@pytest.mark.parametrize(
+    "case",
+    SAMPLE_CASES,
+    ids=[f"auto-{case['language']}" for case in SAMPLE_CASES],
+)
+def test_real_model_auto_detects_language(
+    engine: tuple[Settings, WhisperTranscriber, float],
+    case: dict[str, object],
+) -> None:
+    settings, transcriber, _ = engine
+    language = str(case["language"])
+    reference = str(case["reference"])
+    audio = decode_audio(SAMPLE_DIR / str(case["name"]), settings)
+
+    result = transcriber.transcribe(audio.samples, "auto")
+
+    print(f"\n[auto] expected={language} detected={result.language}")
+    print(f"[auto] text: {result.text}")
+    assert result.language == language
+    assert result.text.strip()
+    if language == "zh":
+        assert cer(reference, result.text) <= CER_THRESHOLD
+    else:
+        assert wer(reference, result.text) <= WER_THRESHOLD

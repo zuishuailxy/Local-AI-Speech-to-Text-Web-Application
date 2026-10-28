@@ -165,4 +165,6 @@
 - T6.9 真实断网：Wi-Fi 关闭，HF_HUB_OFFLINE=1；中文 4.357 s / CER 0.1795，英文 1.359 s / WER 0；无外网请求。
 - T6.10 Windows CI：Python 3.12.10、Edge 155；真实模型 5 项、Chromium/Edge E2E 3 项均通过；模型下载 136 s，缓存命中 6 s。
 - T6.11 Edge E2E：Edge 155 headless，3 passed，新增复制剪贴板断言；Run `40658826426`。
-- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`、`upload-webm.png`、`offline.txt`、`offline-zh.png`、`offline-en.png`、`windows-ci.txt`、`edge.txt`。
+- T6.12 P6 收尾：测试报告 `docs/test-report.md` 完成；6 项手动验证通过；G4 通过（Windows 11 实机/桌面 Edge 未验证，已披露）。
+- T6.13 Windows 11 实机补验：阻塞，无环境，不计为通过。
+- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`、`upload-webm.png`、`offline.txt`、`offline-zh.png`、`offline-en.png`、`windows-ci.txt`、`edge.txt`、`docs/test-report.md`。

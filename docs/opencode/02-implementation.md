@@ -1,7 +1,7 @@
 # 阶段二：功能开发与集成
 
-> 状态：P1/P2/P3/P4/P5 已完成；P6 待进行。
-> 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；会随 P6 继续补充。
+> 状态：P1–P6 已完成；P7 文档与交付进行中。
+> 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；P7 细节见阶段三记录。
 > 会话：`ses_e838f4101ffet1mEwSYEGuuSMK`（OpenCode Desktop，`deepseek-flash` high）
 > 日期：2026-10-27
 
@@ -399,12 +399,11 @@ P2/P3/P4 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc958
 
 ## 9. 待补充
 
-- P6 手动验证、断网、Windows 实机/云 VM；
-- 交付文档（README 完整版、requirements/design/test-report/ai-development）；
+- 交付文档（README 完整版、requirements/design/ai-development）；
 - 条件项 F6 实时识别（受 G5 门禁）。
 
 ## 10. 备注
 
 - P3 已下载并验证 small 模型；模型权重保留本地，`models/` 未进入 Git。
 - 生产 `app.main:app` 已接入真实引擎；默认 `create_app()` 仍不注入引擎，测试不加载模型。
-- P5 已完成：真实模型 5 项、浏览器 E2E 3 项、默认隔离/合规检查、全链路日志；下一步 P6 手动/离线/Windows 验证。
+- P5/P6 已完成：真实模型 5 项、浏览器 E2E 3 项、默认隔离/合规、全链路日志、6 项手动验证、离线、Windows CI、Edge；下一步 P7 文档收尾。

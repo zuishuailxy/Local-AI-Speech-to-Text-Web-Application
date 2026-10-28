@@ -1,7 +1,7 @@
 # 阶段二：功能开发与集成
 
-> 状态：进行中（P1/P2/P3 已完成；P4 前端待开始）。
-> 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；会随 P4 继续补充。
+> 状态：P1/P2/P3/P4 已完成；P5/P6 待进行。
+> 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；会随 P5/P6 继续补充。
 > 会话：`ses_e838f4101ffet1mEwSYEGuuSMK`（OpenCode Desktop，`deepseek-flash` high）
 > 日期：2026-10-27
 
@@ -255,7 +255,81 @@ httpx 0.28.1
 
 未触发：G2 已通过，small 的中英文结果可辨认、RTF 可接受；不进行 SenseVoice 时间盒评估。
 
-## 6. 测试矩阵（P1 + P2 + P3）
+## 6. P4 前端页面与浏览器交互
+
+### 6.1 T4.1 页面结构与视觉
+
+- 新增完整 `static/index.html` / `styles.css`。
+- 语言、录音、上传、pipeline、结果、错误、本地说明分区。
+- 状态样式：idle/requesting/recording/transcribing/success/error。
+- 无外部字体/CDN；桌面优先响应式。
+- 5 个结构测试；截图 `docs/evidence/t4.1-page.png`。
+
+### 6.2 T4.2 麦克风采集
+
+- Start 点击后才 `getUserMedia`。
+- MIME 能力检测：webm/opus → webm → ogg/opus → ogg → mp4。
+- `MediaRecorder.start(1000)` 分片；stop 合并 Blob。
+- 记录实际 MIME/扩展名/大小；释放 MediaStreamTrack。
+- 浏览器实测 `chooseMimeType() = audio/webm;codecs=opus`。
+- 自动化环境未完成真实麦克风授权，真实录音待 T6。
+
+### 6.3 T4.3 计时与状态机
+
+- 200ms 计时；60 秒自动 stop；`visibilitychange` 补检。
+- `idle → requesting → recording → transcribing → success/error`。
+- Start/Stop/文件选择统一由 phase 控制。
+- 假 MediaRecorder + 加速虚拟时钟验证 60 秒：recordedMs=60000、timer=01:00.0、stoppedByLimit=true、track 已停止。
+- 截图 `docs/evidence/t4.3-auto-stop.png`。
+
+### 6.4 T4.4 录音异常
+
+- 权限拒绝、无设备、设备占用、安全上下文、约束错误、Abort、空 Blob、浏览器不支持均有中文提示。
+- 错误面板 + 关闭/重试；错误后 Start 可用。
+- `recordingFailed` 防止 error 后 stop 事件覆盖为 success。
+- 截图 `docs/evidence/t4.4-error-state.png`。
+
+### 6.5 T4.5 文件选择
+
+- 扩展名/空文件/10 MB 客户端预检。
+- 合法文件显示名称+大小并启用 Upload；非法文件清空并禁用。
+- Upload 按钮默认 disabled。
+- 客户端校验不替代服务端校验。
+
+### 6.6 T4.6 请求与结果
+
+- 录音停止自动提交；文件上传复用 `submitAudio`。
+- FormData：file + language；`fetch('/api/transcribe')`。
+- 请求期间禁用相关控件，防重复提交；processing timer 100ms。
+- 成功展示四字段、音频预览、pipeline 完成、空文本提示。
+- 真实浏览器上传中文/英文样本成功：
+  - 中文 12s，processing 4.38s；
+  - 英文 9s，processing 1.70s。
+- 截图 `docs/evidence/t4.6-real-result.png`。
+
+### 6.7 T4.7 复制
+
+- Clipboard API 优先；失败回退 textarea + execCommand。
+- “已复制”1.6s 反馈；“复制失败”提示。
+- 空文本 disabled；新结果重置。
+- 真实浏览器捕获复制文本；强制 Clipboard 失败回退成功。
+
+### 6.8 T4.8 错误重试
+
+- 后端 `detail/code` 展示；fetch TypeError 转为“无法连接后端”。
+- 失败保留语言/文件/最近提交；重试优先当前文件，否则最近录音。
+- 关闭提示回 idle；成功后 Start/Upload 恢复。
+- 浏览器 503→retry 200、网络失败均验证。
+
+### 6.9 T4.9 P4 收尾与可用性
+
+- 5 个可访问性测试：按钮 type、label/for、aria-live、role=alert、音频 aria-label。
+- 键盘 Tab 顺序：language select → Start → file input；隐藏控件不参与。
+- 页面加载控制台无 error；`getUserMedia` 调用次数：点击前 0、点击后 1。
+- 用户修改的 CSS 保留，未被覆盖。
+- 证据：`docs/evidence/frontend-smoke.txt`。
+
+## 7. 测试矩阵（P1 + P2 + P3 + P4）
 
 | 模块 | 文件 | 测试数 |
 | --- | --- | --- |
@@ -271,7 +345,10 @@ httpx 0.28.1
 | WhisperTranscriber 单元 | `tests/test_transcriber_unit.py` | 9 |
 | 模型下载脚本 | `tests/test_download_model.py` | 10 |
 | CLI 冒烟 | `tests/test_verify_asr.py` | 6 |
-| 合计 | | **152** |
+| 前端结构 | `tests/test_frontend_structure.py` | 5 |
+| 前端录音/上传/请求/复制 | `tests/test_frontend_recording.py` | 11 |
+| 前端可访问性 | `tests/test_frontend_accessibility.py` | 5 |
+| 合计 | | **173** |
 
 命令：
 
@@ -279,11 +356,11 @@ httpx 0.28.1
 python -m pytest -q
 ```
 
-结果：`152 passed`。
+结果：`173 passed`。
 
-P2/P3 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc9587c`、`8722b7e`、`d5f97d4`、`46c75ed`、`02829b9`、`7c15d98`、`b0a402e`、`9038ef3`、`586da57`、`d90c04a` 均有 green run；具体 run ID 见证据目录。
+P2/P3/P4 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc9587c`、`8722b7e`、`d5f97d4`、`46c75ed`、`02829b9`、`7c15d98`、`b0a402e`、`9038ef3`、`586da57`、`d90c04a`、`286d9e3`、`3d6d045`、`6565c68`、`4365d89`、`c426b7e`、`fb40bb1`、`a365144`、`b542b9c` 均有 green run；具体 run ID 见证据目录。
 
-## 7. 遇到的问题与处理
+## 8. 遇到的问题与处理
 
 1. **默认 Python 3.9**：改用 uv 管理的 CPython 3.12，避免依赖/类型差异。
 2. **PyPI 下载超时**：pip 多次 retry 后成功；requirements 已完整锁定。
@@ -298,15 +375,20 @@ P2/P3 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc9587c`
 11. **faster-whisper 直接传文件与 PyAV 19 不兼容**：`WhisperModel.transcribe(path)` 内部 `av.open(metadata_errors=...)` 报 TypeError；应用统一先用自有 `decode_audio` 解码为 ndarray，再交给模型，因此主流程不受影响。CLI 走 ndarray 路径。
 12. **faster-whisper 脚本路径问题**：`python scripts/verify_asr.py` 的 sys.path 默认是 scripts 目录，已显式插入项目根。
 13. **中文同音错误**：small 对《再别康桥》片段有近音替换；CER 0.231 在阈值内，记录而不掩盖。
+14. **浏览器自动化麦克风权限**：Review 浏览器中 `getUserMedia` 权限请求无法完成，导致页面停在 requesting；没有伪造真实录音。改用注入 MediaRecorder/假 stream 验证计时、状态和停止逻辑，真实麦克风留给 T6。
+15. **T4.3 虚拟时钟首次不推进**：初版 Date.now 固定导致计时不动；改为基于 performance.now 的加速时钟后验证 60 秒自动停止。
+16. **T4.4 错误后 stop 覆盖**：MediaRecorder error 后仍触发 stop，可能把空 Blob 当成功；增加 `recordingFailed` 守卫。
+17. **T4.7 复制兼容性**：Clipboard API 可能被权限拒绝；增加 textarea + execCommand 回退并实测。
+18. **用户修改 CSS**：保留用户对 header 宽度/格式的修改，不回退或重写。
 
-## 8. 待补充
+## 9. 待补充
 
-- P4 前端录音/上传/展示；
+- P5 真实模型测试收口、Playwright E2E（可选）；
 - P6 手动验证、断网、Windows 实机/云 VM；
 - 阶段三测试报告与问题修复记录。
 
-## 9. 备注
+## 10. 备注
 
 - P3 已下载并验证 small 模型；模型权重保留本地，`models/` 未进入 Git。
 - 生产 `app.main:app` 已接入真实引擎；默认 `create_app()` 仍不注入引擎，测试不加载模型。
-- 下一步为 P4：T4.1 → T4.9（页面、录音、上传、结果展示、错误/复制）。
+- 下一步为 P5：真实模型测试收口（T5.2/T5.3/T5.5/T5.6），再做 P6 手动/离线/Windows 验证。

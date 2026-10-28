@@ -1,0 +1,92 @@
+# P4 前端冒烟与可访问性检查
+
+- 日期：2026-10-28
+- 页面：`http://127.0.0.1:8024/`（真实 uvicorn）
+- 浏览器：Review 面板 Chromium
+- 用户修改的 CSS 已保留
+
+## 自动化测试
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+173 passed
+```
+
+前端相关：
+
+- `tests/test_frontend_structure.py`：5
+- `tests/test_frontend_recording.py`：11
+- `tests/test_frontend_accessibility.py`：5
+
+JS 语法：
+
+```text
+node --check static/app.js
+```
+
+通过（Node 仅本地检查，不是运行依赖）。
+
+## 浏览器结果
+
+### 初始状态
+
+```text
+title: Local AI Speech-to-Text
+appState: idle
+console errors: 0
+errorPanel role: alert
+liveRegions: status-line / file-name / result-text
+uploadDisabled: true
+stopDisabled: true
+```
+
+### 键盘 Tab 顺序
+
+```text
+language-select
+start-button
+file-input
+language-select
+start-button
+file-input
+```
+
+- 隐藏的 Stop/Upload/Copy 不进入 Tab 顺序（disabled/hidden）。
+- file-picker 使用 `:focus-within` 提供焦点样式。
+
+### getUserMedia 调用时机
+
+```text
+点击前调用次数: 0
+点击后调用次数: 1
+```
+
+并返回权限拒绝提示；页面进入 error 状态，Start 仍可用。
+
+### 真实上传/结果（T4.6 复验）
+
+- 中文 12s，processing 4.38s
+- 英文 9s，processing 1.70s
+- 结果四字段、audio preview、pipeline done
+- 截图：`docs/evidence/t4.6-real-result.png`
+
+## 可访问性检查
+
+- 所有 button 使用 `type="button"`，有文本或 aria-label。
+- language-select/file-input 均有 label for。
+- status/file-name/result 有 aria-live。
+- error-panel `role="alert"`。
+- audio preview 有 aria-label。
+- 桌面布局无重叠；响应式断点存在。
+- 无外部字体/CDN。
+- 页面控制台无 error。
+
+## 已知未完成
+
+- 真实麦克风授权/录音：T6.1/T6.2
+- Edge：T6.11
+- 断网：T6.9
+- 真实 Windows 11 桌面/麦克风：未验证

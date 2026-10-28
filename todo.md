@@ -390,12 +390,14 @@
   - 结果：已完成（2026-10-28）；重试优先当前文件，否则最近录音；关闭提示回 idle；成功后 Start/Upload 恢复。
   - 备注：真实后端停止/模型目录改名与恢复在 T6.7；Edge 在 T6.11。
 
-- [ ] **T4.9 P4 阶段收尾与可访问性检查**
+- [x] **T4.9 P4 阶段收尾与可访问性检查**
   - 目标：提交前端并做基础可用性检查。
-  - 文件：Git 提交、`static/*`、`docs/evidence/frontend-smoke.txt`。
+  - 文件：Git 提交、`static/*`、`tests/test_frontend_accessibility.py`、`docs/evidence/frontend-smoke.txt`、`docs/opencode/02-implementation.md`、`docs/opencode/03-testing-and-fixes.md`。
   - 前置：T4.1–T4.8。
   - 完成标准：按钮/输入有 label 或 aria-label；键盘可操作；控制台无报错；`getUserMedia` 仅在点击后调用。
-  - 验证：Chrome 控制台、键盘 Tab、`GET /` 冒烟测试。
+  - 验证：173 passed；浏览器无 error；Tab 顺序 language→Start→file；点击前 getUserMedia=0、点击后=1；error role=alert；audio 有 aria-label。
+  - 结果：P4 已完成（2026-10-28）；用户 CSS 修改保留；OpenCode 阶段二记录补充 P4，阶段三测试/修复记录已生成。
+  - 备注：真实麦克风、Edge、断网、Windows 11 实机仍在 P6；E2E 可选在 T5.4。
 
 ---
 

@@ -125,6 +125,7 @@
 - 断网重启验证待 T6.9。
 - Playwright E2E 默认不执行，但已在 Windows CI 单独运行；假麦克风/FakeTranscriber 不代表真实设备/模型。
 - 语言选择不强制目标脚本；错配时日志有 `asr_language_mismatch`。
+- 60 秒自动停止的页面计时为 60.0 s，但服务端音频 57.18 s，差约 2.8 s；未超过上限，待排查 MediaRecorder/封装/后台节流。
 
 ## 7. 如何确认 AI 生成代码满足需求
 
@@ -156,4 +157,5 @@
 - T6.4 页面上传英文 WAV：9.0 s，processing 1.447 s，WER 0.0；截图误存后已重新确认。
 - T6.5 权限拒绝：提示与错误状态正确；恢复权限后 3 s 静音录音提交 200。
 - T6.6 无设备/占用：DevTools 注入 NotFoundError/NotReadableError，提示与失败状态正确；明确标注为模拟。
-- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`。
+- T6.7 异常上传/空语音/503：6 个上传分支页面提示与状态码正确；60 s 自动停止实测通过（页面 60.0 s，服务端音频 57.18 s，差异已记录）。
+- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`。

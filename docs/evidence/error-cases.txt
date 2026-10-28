@@ -1,0 +1,66 @@
+# T6.7 异常上传、空语音与模型不可用
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Chrome 156.0.8078.49
+- 服务：`uvicorn app.main:app`，`127.0.0.1:8001`；模型不可用用独立 `8002` 实例
+- 方式：6 个上传分支用 Playwright 驱动**真实页面 + 真实后端**逐项执行；60 秒自动停止由用户手动验证
+- 测试文件：`/tmp/t6.7/`
+
+## 测试文件
+
+| 文件 | 大小 | 说明 |
+| --- | --- | --- |
+| `empty.wav` | 0 B | 空文件 |
+| `corrupt.wav` | 19 B | 扩展名 wav，内容非音频 |
+| `notes.txt` | 9 B | 不支持格式 |
+| `oversize-valid.wav` | 10,560,044 B | 合法 WAV，>10 MB |
+| `silent.wav` | 64,044 B | 2 s 静音，16 kHz mono PCM16 |
+| `long.wav` | 4,000,044 B | 125 s 静音，超过 120 s 限制 |
+
+## 页面与接口结果
+
+| 场景 | 页面阶段 | 页面提示 | 服务端状态 |
+| --- | --- | --- | --- |
+| `.txt` 格式 | error | 不支持该文件格式，请上传 WAV、WebM、OGG、MP3、M4A、MP4 或 FLAC。 | 客户端拦截；直接请求为 415 `unsupported_format` |
+| 空文件 | error | 上传文件为空，请选择包含语音的音频文件。 | 客户端拦截；直接请求为 400 `empty_file` |
+| 超 10 MB | error | 上传文件超过 10 MB 限制，请选择更短的音频。 | 客户端拦截；直接请求为 413 `file_too_large` |
+| 损坏 WAV | error | 识别失败：文件扩展名为 .wav，但内容不是有效的 WAV 文件。 (invalid_audio) | 400 `invalid_audio` |
+| 2 s 静音 | success | 识别完成，未检测到可识别语音。结果区提示“未检测到可识别语音，请换一段更清晰、包含说话的音频。” | 200，`text=""`，2.0 s |
+| 125 s WAV | error | 识别失败：音频超过 120 秒上限，请缩短音频后重试。 (audio_too_long) | 400 `audio_too_long` |
+| 模型缺失 | error | 识别失败：本地识别模型不存在：.../models/faster-whisper-small。请先运行模型下载脚本。 (model_unavailable) | 503 `model_unavailable` |
+
+服务端实测：
+
+```text
+corrupt.wav       -> 400 {"code":"invalid_audio"}
+empty.wav         -> 400 {"code":"empty_file"}
+notes.txt         -> 415 {"code":"unsupported_format"}
+oversize-valid.wav-> 413 {"code":"file_too_large"}
+silent.wav        -> 200 {"text":"","language":"zh","duration_seconds":2.0}
+long.wav          -> 400 {"code":"audio_too_long"}
+模型缺失           -> 503 {"code":"model_unavailable"}
+```
+
+## 页面行为
+
+- 每个失败场景都保持页面可操作：Start/Upload 可用，错误面板有“重试/关闭提示”。
+- 静音场景进入 success，但文本为空并显示专门提示，不是 500。
+- 模型缺失时服务健康检查仍 200；恢复模型目录后可继续识别。
+- 上传失败不会清空已选语言。
+
+## 60 秒自动停止
+
+- 用户在 Chrome 真实麦克风录满 60 秒（未手动 Stop）。
+- 页面计时显示 `01:00.0`，自动停止并提交，状态显示“已达到 60 秒上限；识别完成。”
+- 服务端 request_id=`8090fee2f630`，解码时长 `57.180 s`，处理 `0.312 s`，`text=""`，200。
+- 截图：`docs/evidence/auto-stop-60s.png`。
+
+### 时长差异说明
+
+页面计时 60.0 s，服务端收到音频 57.180 s，差约 2.8 s。可能是 MediaRecorder/硬件启动延迟、后台标签页节流或 WebM 封装首尾丢帧；没有超过 60 s 上限。自动停止和提交逻辑通过，但“计时 60 s 是否对应 60 s 音频”需要后续排查。该差异不作为 T6.7 失败，已记录为已知问题。
+
+## 备注
+
+- 上传错误分支使用 Playwright 驱动真实页面/真实后端，等价于逐项点击；不是 Mock 前端。
+- 60 秒自动停止必须是真实等待，不能用虚拟时钟代替手动验收。
+- 模型缺失测试临时移走 `models/`，完成后已恢复（464 MB）。

@@ -18,6 +18,7 @@ SUPPORTED_LANGUAGES: tuple[str, ...] = ("zh", "en")
 
 _TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
 _FALSE_VALUES = frozenset({"0", "false", "no", "off"})
+_LOG_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"})
 
 
 def _read_env(env: Mapping[str, str], name: str, default: str) -> str:
@@ -49,6 +50,14 @@ def _parse_positive_int(
     return value
 
 
+def _parse_log_level(env: Mapping[str, str], name: str, default: str) -> str:
+    raw = _read_env(env, name, default).upper()
+    if raw not in _LOG_LEVELS:
+        allowed = ", ".join(sorted(_LOG_LEVELS))
+        raise ValueError(f"{name} must be one of: {allowed}; got: {raw!r}")
+    return raw
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     """Immutable settings resolved from environment variables."""
@@ -64,6 +73,7 @@ class Settings:
     asr_warmup: bool
     max_upload_mb: int
     max_audio_seconds: int
+    log_level: str = "INFO"
     supported_languages: tuple[str, ...] = SUPPORTED_LANGUAGES
 
     @property
@@ -103,6 +113,7 @@ class Settings:
             asr_warmup=_parse_bool(env, "ASR_WARMUP", True),
             max_upload_mb=_parse_positive_int(env, "MAX_UPLOAD_MB", 10),
             max_audio_seconds=_parse_positive_int(env, "MAX_AUDIO_SECONDS", 120),
+            log_level=_parse_log_level(env, "LOG_LEVEL", "INFO"),
             supported_languages=SUPPORTED_LANGUAGES,
         )
 

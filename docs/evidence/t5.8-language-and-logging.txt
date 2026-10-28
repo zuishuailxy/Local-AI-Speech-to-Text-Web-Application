@@ -1,0 +1,118 @@
+# T5.8 识别语言核对与全链路日志
+
+- 日期：2026-10-28
+- 范围：语言参数端到端核对、`logging` 接入、日志格式与隐私边界
+- 结论：语言参数已接入并影响解码，但 Whisper small 不保证在“音频语言与所选语言不一致”时强制输出目标语言；正常匹配场景符合 F3。
+- 新增/修改：`app/config.py`、`app/main.py`、`app/api/routes.py`、`app/services/audio.py`、`app/services/transcriber.py`、`app/errors.py`、`scripts/verify_asr.py`、`tests/test_logging.py`、`tests/test_config.py`、`tests/test_transcriber_unit.py`、`static/index.html`、`README.md`
+
+## 1. 语言参数是否生效
+
+### 代码链路
+
+1. 前端 `static/app.js` 从 `#language-select` 读取 `zh`/`en`，写入 `FormData` 的 `language` 字段。
+2. `POST /api/transcribe` 用 `validate_language()` 归一化并拒绝非法值。
+3. 路由把归一化后的语言传给 `WhisperTranscriber.transcribe(samples, language)`。
+4. 适配器调用 `model.transcribe(samples, language=language, ...)`。
+5. 响应 `language` 回显请求语言。
+
+单测 `test_model_is_lazy_and_factory_gets_local_config` 已断言 `language="zh"` 被传给模型；T5.2/T5.3 真实模型测试也使用该参数。
+
+### 真实模型对照实验
+
+用同一段音频强制不同 `language`，观察输出：
+
+| 音频 | 请求语言 | 输出文本 | 输出脚本 |
+| --- | --- | --- | --- |
+| `english.wav` | `zh` | `never give up, never lose hope, ...` | 英文 |
+| `english.wav` | `en` | `Never give up. Never lose hope. ...` | 英文 |
+| `english.wav` | `ja` | `あなたはあなたに負けない、...` | 日文 |
+| `chinese.wav` | `zh` | `轻轻地我走了,占如我轻轻地来。...` | 中文 |
+| `chinese.wav` | `en` | `轻轻地我走了,正如我轻轻地来,...` | 中文 |
+
+结论：
+
+- `language` **确实传到了模型并影响解码**：英文音频在 `ja` 下输出日文，而不是始终自动检测。
+- 但 Whisper small 在 `zh` 下仍可能用拉丁字母转写英文音频；在 `en` 下仍可能输出中文。`info.language` 会回显请求语言（`detected_language=zh`），不能单独用来判断实际输出脚本。
+- 因此“语言参数生效”不等于“强制翻译/强制输出目标语言”。题目 F3 要求的是：选择中文并说中文时输出中文，选择英文并说英文时输出英文；这两条正常路径均通过 T5.2/T5.3 验证。
+- 音频与所选语言不一致时，当前行为是“按音频实际语言转写”，响应仍回显所选语言。为避免误解，页面提示已改为“请选择与音频一致的语言”。
+
+后续若要彻底解决，可在 T8.1 做自动检测，或在 API 增加“输出脚本与所选语言不一致”的错误/警告；当前不改变既有四字段契约。
+
+## 2. 日志接入
+
+### 配置
+
+- 新增 `Settings.log_level`，环境变量 `LOG_LEVEL`，默认 `INFO`，支持 `DEBUG/INFO/WARNING/ERROR/CRITICAL`；非法值启动即报错并指出变量名。
+- `create_app()` 调用 `logging.basicConfig()` 并设置 `app` logger 级别。
+- CLI `scripts/verify_asr.py` 也按 `LOG_LEVEL` 初始化日志。
+
+### 记录点
+
+| 模块 | 事件 | 关键字段 |
+| --- | --- | --- |
+| `app.main` | 应用配置 | 模型路径、device、compute_type、线程、beam、VAD、上传/时长限制、日志级别 |
+| `app.main` | HTTP 请求 | method、path、status、duration_ms、request_id |
+| `app.api.routes` | 识别请求/解码/完成 | request_id、language、扩展名、字节数、时长、采样数、processing_seconds、text_chars |
+| `app.services.audio` | 上传落盘/解码/清理 | 扩展名、字节数、时长、采样率、采样数 |
+| `app.services.transcriber` | 模型加载/推理 | requested_language、detected_language、language_probability、output_language、CJK/Latin 占比、inference_seconds、text_chars |
+| `app.errors` | 4xx/5xx | request_id、status、code、message；未预期异常带堆栈 |
+| `scripts/verify_asr` | CLI 开始/完成 | 文件名、语言、时长、耗时、text_chars |
+
+### 隐私边界
+
+- 不记录音频字节、识别文本原文、请求体。
+- 文件名只记录扩展名；临时路径不记录。
+- `text_chars` 只记录长度，测试 `test_transcribe_logs_metadata_but_not_text` 断言识别文本不会出现在日志中。
+- `request_id` 可由客户端 `X-Request-ID` 传入（只保留字母/数字/`-_.`，最多 64 字符），否则生成 12 位十六进制；响应头回传，便于浏览器请求与后端日志对应。
+
+### 真实服务日志样例
+
+```text
+2026-10-28 12:08:36,018 INFO app.api.routes transcribe_request request_id=demo-zh-audio-zh language=zh extension=.wav size=384044
+2026-10-28 12:08:36,019 INFO app.services.audio audio_upload_stored extension=.wav bytes=384044
+2026-10-28 12:08:36,030 INFO app.services.audio audio_decoded duration_seconds=12.000 sample_rate=16000 samples=192000
+2026-10-28 12:08:36,031 INFO app.api.routes transcribe_decoded request_id=demo-zh-audio-zh language=zh duration_seconds=12.000 sample_rate=16000 samples=192000
+2026-10-28 12:08:36,032 INFO app.services.transcriber asr_start requested_language=zh samples=192000
+2026-10-28 12:08:37,120 INFO app.services.transcriber Loaded ASR model from .../models/faster-whisper-small (device=cpu, compute_type=int8, cpu_threads=4, model_load_seconds=1.088)
+2026-10-28 12:08:42,393 INFO app.services.transcriber asr_complete requested_language=zh detected_language=zh language_probability=1 output_language=zh output_cjk_ratio=1.000 output_latin_ratio=0.000 samples=192000 inference_seconds=5.273 text_chars=44
+2026-10-28 12:08:42,394 INFO app.api.routes transcribe_complete request_id=demo-zh-audio-zh language=zh duration_seconds=12.000 processing_seconds=6.376 text_chars=44
+2026-10-28 12:08:42,395 INFO app.main http_request method=POST path=/api/transcribe status=200 duration_ms=6378.4 request_id=demo-zh-audio-zh
+
+2026-10-28 12:08:46,353 INFO app.services.transcriber asr_complete requested_language=zh detected_language=zh language_probability=1 output_language=en output_cjk_ratio=0.000 output_latin_ratio=1.000 samples=144000 inference_seconds=3.876 text_chars=73
+2026-10-28 12:08:46,354 WARNING app.services.transcriber asr_language_mismatch requested_language=zh output_language=en detected_language=zh text_chars=73
+2026-10-28 12:08:46,355 INFO app.api.routes transcribe_complete request_id=demo-en-audio-zh language=zh duration_seconds=9.000 processing_seconds=3.931 text_chars=73
+```
+
+`faster_whisper` 自身的 INFO 日志（Processing audio / VAD filter）也会显示，属于库日志，不含文本。
+
+## 3. 测试
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+196 passed, 5 deselected in 2.56s
+```
+
+新增默认测试：
+
+- `tests/test_config.py`：日志级别默认值、覆盖、非法值。
+- `tests/test_logging.py`：request_id 生成/回传、请求日志、识别元数据日志、文本不入日志、4xx 错误码日志、日志级别生效。
+- `tests/test_transcriber_unit.py`：推理日志字段、语言脚本不一致警告且不改变返回结果。
+
+真实模型：
+
+```text
+5 passed, 196 deselected in 20.25s
+```
+
+## 4. 何时加入日志
+
+适合在**核心功能完成、接口稳定、进入真实模型/浏览器/离线/Windows 联调之前**加入。本项目选择在 T5.3 之后、T5.4/P6 之前，因为：
+
+- 此时 `/api/transcribe` 字段、错误码、模型适配层已稳定，不会反复改日志字段；
+- 后续 T5.5 隔离检查、T6 手动麦克风/断网/Edge、Windows CI 排查都需要日志；
+- 若等到测试报告或交付前才加，真实问题已经发生，缺少可追溯证据。
+
+不建议在 P1 脚手架阶段就铺满日志：需求与错误路径尚未稳定，容易产生无用字段和噪音。

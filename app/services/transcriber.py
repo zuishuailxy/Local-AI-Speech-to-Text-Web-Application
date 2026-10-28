@@ -22,8 +22,21 @@ from app.errors import (
     ModelUnavailableError,
     TranscriptionFailedError,
 )
+from app.services.metrics import cjk_ratio, latin_ratio
 
 logger = logging.getLogger(__name__)
+
+
+def _output_language_hint(text: str) -> str:
+    """Best-effort script hint for observability; never changes the result."""
+
+    cjk = cjk_ratio(text)
+    latin = latin_ratio(text)
+    if cjk >= 0.5 and cjk > latin:
+        return "zh"
+    if latin >= 0.5 and latin > cjk:
+        return "en"
+    return "unknown"
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,9 +157,12 @@ class WhisperTranscriber:
 
         self._model = model
         logger.info(
-            "Loaded ASR model from %s (device=%s, model_load_seconds=%.3f)",
+            "Loaded ASR model from %s (device=%s, compute_type=%s, "
+            "cpu_threads=%d, model_load_seconds=%.3f)",
             path,
             self._settings.asr_device,
+            self._settings.asr_compute_type,
+            self._settings.asr_cpu_threads,
             load_seconds,
         )
         return model
@@ -157,13 +173,18 @@ class WhisperTranscriber:
                 self._load_model()
 
     def transcribe(self, samples: np.ndarray, language: str) -> TranscriptionResult:
+        sample_count = int(samples.size)
+        logger.info(
+            "asr_start requested_language=%s samples=%d", language, sample_count
+        )
         with self._lock:
             model = self._model
             if model is None:
                 model = self._load_model()
 
+            started = time.perf_counter()
             try:
-                segments, _info = model.transcribe(
+                segments, info = model.transcribe(
                     samples,
                     language=language,
                     beam_size=self._settings.asr_beam_size,
@@ -175,6 +196,35 @@ class WhisperTranscriber:
             except Exception as exc:
                 logger.exception("ASR inference failed")
                 raise TranscriptionFailedError("语音识别失败，请稍后重试。") from exc
+            inference_seconds = time.perf_counter() - started
+
+        detected_language = getattr(info, "language", None)
+        language_probability = getattr(info, "language_probability", None)
+        output_language = _output_language_hint(text)
+        logger.info(
+            "asr_complete requested_language=%s detected_language=%s "
+            "language_probability=%s output_language=%s output_cjk_ratio=%.3f "
+            "output_latin_ratio=%.3f samples=%d inference_seconds=%.3f "
+            "text_chars=%d",
+            language,
+            detected_language,
+            language_probability,
+            output_language,
+            cjk_ratio(text),
+            latin_ratio(text),
+            sample_count,
+            inference_seconds,
+            len(text),
+        )
+        if output_language != "unknown" and output_language != language:
+            logger.warning(
+                "asr_language_mismatch requested_language=%s output_language=%s "
+                "detected_language=%s text_chars=%d",
+                language,
+                output_language,
+                detected_language,
+                len(text),
+            )
 
         return TranscriptionResult(text=text, language=language)
 

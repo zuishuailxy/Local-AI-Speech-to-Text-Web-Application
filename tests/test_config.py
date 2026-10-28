@@ -22,6 +22,7 @@ def test_defaults_are_stable(tmp_path: Path) -> None:
     assert settings.max_upload_mb == 10
     assert settings.max_upload_bytes == 10 * 1024 * 1024
     assert settings.max_audio_seconds == 120
+    assert settings.log_level == "INFO"
     assert settings.supported_languages == SUPPORTED_LANGUAGES
 
 
@@ -38,6 +39,7 @@ def test_environment_overrides_and_relative_model_path(tmp_path: Path) -> None:
             "ASR_WARMUP": "no",
             "MAX_UPLOAD_MB": "5",
             "MAX_AUDIO_SECONDS": "60",
+            "LOG_LEVEL": "debug",
         },
         project_root=tmp_path,
     )
@@ -52,6 +54,7 @@ def test_environment_overrides_and_relative_model_path(tmp_path: Path) -> None:
     assert settings.max_upload_mb == 5
     assert settings.max_upload_bytes == 5 * 1024 * 1024
     assert settings.max_audio_seconds == 60
+    assert settings.log_level == "DEBUG"
 
 
 def test_absolute_model_path_is_preserved(tmp_path: Path) -> None:
@@ -100,6 +103,14 @@ def test_boolean_parsing(raw: str, expected: bool, tmp_path: Path) -> None:
 def test_invalid_boolean_names_the_variable(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="ASR_VAD_FILTER"):
         Settings.from_env(environ={"ASR_VAD_FILTER": "sometimes"}, project_root=tmp_path)
+
+
+def test_invalid_log_level_names_the_variable(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="LOG_LEVEL"):
+        Settings.from_env(
+            environ={"LOG_LEVEL": "verbose"},
+            project_root=tmp_path,
+        )
 
 
 @pytest.mark.parametrize(

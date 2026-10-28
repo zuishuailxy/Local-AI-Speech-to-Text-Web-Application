@@ -10,6 +10,7 @@ The script uses ASR_MODEL_PATH (or --model-path) and never downloads weights.
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 import time
 from dataclasses import dataclass, replace
@@ -24,6 +25,8 @@ from app.config import Settings
 from app.errors import ApiError
 from app.services.audio import decode_audio, validate_language
 from app.services.transcriber import Transcriber, WhisperTranscriber
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,12 +52,25 @@ def run_verification(
     normalized_language = validate_language(
         language, settings.supported_languages
     )
+    logger.info(
+        "verify_asr_start audio=%s language=%s",
+        audio_path.name,
+        normalized_language,
+    )
     started = time.perf_counter()
     audio = decode_audio(audio_path, settings)
     engine = transcriber or WhisperTranscriber(settings)
     result = engine.transcribe(audio.samples, normalized_language)
     elapsed = time.perf_counter() - started
 
+    logger.info(
+        "verify_asr_complete language=%s duration_seconds=%.3f "
+        "processing_seconds=%.3f text_chars=%d",
+        normalized_language,
+        audio.duration_seconds,
+        elapsed,
+        len(result.text),
+    )
     return VerificationOutput(
         text=result.text,
         language=normalized_language,
@@ -86,6 +102,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     settings = Settings.from_env()
+    logging.basicConfig(
+        level=settings.log_level,
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
     if args.model_path is not None:
         settings = replace(
             settings,

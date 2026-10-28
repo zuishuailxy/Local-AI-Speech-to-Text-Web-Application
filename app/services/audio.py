@@ -6,6 +6,7 @@ supported containers to 16 kHz mono float32 and enforces the duration limit.
 
 from __future__ import annotations
 
+import logging
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,6 +26,8 @@ from app.errors import (
     InvalidLanguageError,
     UnsupportedFormatError,
 )
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_AUDIO_EXTENSIONS: Final[frozenset[str]] = frozenset(
     {
@@ -265,6 +268,11 @@ def decode_audio(path: Path, settings: Settings) -> DecodedAudio:
     max_samples = int(max_seconds * ASR_SAMPLE_RATE)
     chunks: list[np.ndarray] = []
     total_samples = 0
+    logger.debug(
+        "audio_decode_start suffix=%s max_audio_seconds=%d",
+        path.suffix.lower(),
+        max_seconds,
+    )
 
     try:
         with av.open(str(path), mode="r") as container:
@@ -308,6 +316,11 @@ def decode_audio(path: Path, settings: Settings) -> DecodedAudio:
         raise InvalidAudioError("音频中没有可解码的采样数据。")
 
     samples = np.concatenate(chunks) if len(chunks) > 1 else chunks[0]
+    logger.debug(
+        "audio_decode_complete duration_seconds=%.3f samples=%d",
+        len(samples) / ASR_SAMPLE_RATE,
+        len(samples),
+    )
     return DecodedAudio(samples=samples, sample_rate=ASR_SAMPLE_RATE)
 
 
@@ -334,10 +347,23 @@ async def process_audio_upload(
         temp_dir=temp_dir,
         chunk_size=chunk_size,
     )
+    logger.info(
+        "audio_upload_stored extension=%s bytes=%d",
+        stored.extension,
+        stored.size,
+    )
     try:
-        return decode_audio(stored.path, settings)
+        decoded = decode_audio(stored.path, settings)
+        logger.info(
+            "audio_decoded duration_seconds=%.3f sample_rate=%d samples=%d",
+            decoded.duration_seconds,
+            decoded.sample_rate,
+            decoded.samples.size,
+        )
+        return decoded
     finally:
         stored.cleanup()
+        logger.debug("audio_temp_cleaned")
 
 
 __all__ = [

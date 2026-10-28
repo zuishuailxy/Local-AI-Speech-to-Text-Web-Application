@@ -333,7 +333,7 @@ httpx 0.28.1
 
 | 模块 | 文件 | 测试数 |
 | --- | --- | --- |
-| 配置 | `tests/test_config.py` | 21 |
+| 配置 | `tests/test_config.py` | 22 |
 | 错误处理 | `tests/test_errors.py` | 10 |
 | fixture/隔离 | `tests/test_fixtures.py` | 8 |
 | 健康检查/静态页 | `tests/test_health.py` | 4 |
@@ -342,13 +342,16 @@ httpx 0.28.1
 | 语言 | `tests/test_language.py` | 10 |
 | `/api/transcribe` 契约/错误/重试 | `tests/test_transcribe_api.py` | 20 |
 | Transcriber 协议/Fake | `tests/test_transcriber.py` | 7 |
-| WhisperTranscriber 单元 | `tests/test_transcriber_unit.py` | 9 |
+| WhisperTranscriber 单元 | `tests/test_transcriber_unit.py` | 11 |
 | 模型下载脚本 | `tests/test_download_model.py` | 10 |
 | CLI 冒烟 | `tests/test_verify_asr.py` | 6 |
 | 前端结构 | `tests/test_frontend_structure.py` | 5 |
 | 前端录音/上传/请求/复制 | `tests/test_frontend_recording.py` | 11 |
 | 前端可访问性 | `tests/test_frontend_accessibility.py` | 5 |
-| 合计 | | **173** |
+| 质量指标 | `tests/test_metrics.py` | 10 |
+| 样本完整性 | `tests/test_samples.py` | 5 |
+| 日志/可观测性 | `tests/test_logging.py` | 5 |
+| 合计 | | **196** |
 
 命令：
 
@@ -356,7 +359,7 @@ httpx 0.28.1
 python -m pytest -q
 ```
 
-结果：`173 passed`。
+结果：`196 passed`。
 
 P2/P3/P4 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc9587c`、`8722b7e`、`d5f97d4`、`46c75ed`、`02829b9`、`7c15d98`、`b0a402e`、`9038ef3`、`586da57`、`d90c04a`、`286d9e3`、`3d6d045`、`6565c68`、`4365d89`、`c426b7e`、`fb40bb1`、`a365144`、`b542b9c` 均有 green run；具体 run ID 见证据目录。
 

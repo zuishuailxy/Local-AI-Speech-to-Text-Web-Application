@@ -196,3 +196,41 @@ def test_model_load_logs_seconds(tmp_path, caplog) -> None:
         engine.warmup()
 
     assert "model_load_seconds=" in caplog.text
+
+
+def test_inference_logs_language_and_inference_time(tmp_path, caplog) -> None:
+    settings = make_settings(tmp_path)
+    model = FakeWhisperModel(text_parts=("你好",))
+    engine = WhisperTranscriber(
+        settings,
+        model_factory=lambda path, **kwargs: model,
+    )
+
+    with caplog.at_level(logging.INFO, logger="app.services.transcriber"):
+        engine.transcribe(np.zeros(16_000, dtype=np.float32), "zh")
+
+    assert "requested_language=zh" in caplog.text
+    assert "detected_language=zh" in caplog.text
+    assert "output_language=zh" in caplog.text
+    assert "inference_seconds=" in caplog.text
+    assert "text_chars=2" in caplog.text
+
+
+def test_language_script_mismatch_is_warned_without_changing_result(
+    tmp_path, caplog
+) -> None:
+    settings = make_settings(tmp_path)
+    model = FakeWhisperModel(text_parts=("hello", " world"))
+    engine = WhisperTranscriber(
+        settings,
+        model_factory=lambda path, **kwargs: model,
+    )
+
+    with caplog.at_level(logging.INFO, logger="app.services.transcriber"):
+        result = engine.transcribe(np.zeros(16_000, dtype=np.float32), "zh")
+
+    assert result.language == "zh"
+    assert result.text == "hello world"
+    assert "asr_language_mismatch" in caplog.text
+    assert "requested_language=zh" in caplog.text
+    assert "output_language=en" in caplog.text

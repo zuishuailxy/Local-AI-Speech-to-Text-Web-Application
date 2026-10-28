@@ -125,30 +125,61 @@ def _http_detail(exc: StarletteHTTPException) -> str:
     return f"HTTP {exc.status_code}"
 
 
+def _request_id(request: Request) -> str:
+    return getattr(request.state, "request_id", "-")
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Register JSON handlers used by both the API and the browser client."""
 
     @app.exception_handler(ApiError)
-    async def handle_api_error(_: Request, exc: ApiError) -> JSONResponse:
+    async def handle_api_error(request: Request, exc: ApiError) -> JSONResponse:
+        logger.warning(
+            "api_error request_id=%s method=%s path=%s status=%d code=%s "
+            "message=%s",
+            _request_id(request),
+            request.method,
+            request.url.path,
+            exc.status_code,
+            exc.code,
+            exc.message,
+        )
         return JSONResponse(status_code=exc.status_code, content=exc.to_payload())
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(
-        _: Request, exc: RequestValidationError
+        request: Request, exc: RequestValidationError
     ) -> JSONResponse:
+        detail = _validation_detail(exc)
+        logger.info(
+            "validation_error request_id=%s method=%s path=%s detail=%s",
+            _request_id(request),
+            request.method,
+            request.url.path,
+            detail,
+        )
         return JSONResponse(
             status_code=422,
-            content={"detail": _validation_detail(exc), "code": "validation_error"},
+            content={"detail": detail, "code": "validation_error"},
         )
 
     @app.exception_handler(StarletteHTTPException)
     async def handle_http_error(
-        _: Request, exc: StarletteHTTPException
+        request: Request, exc: StarletteHTTPException
     ) -> JSONResponse:
+        detail = _http_detail(exc)
+        logger.info(
+            "http_error request_id=%s method=%s path=%s status=%d detail=%s",
+            _request_id(request),
+            request.method,
+            request.url.path,
+            exc.status_code,
+            detail,
+        )
         return JSONResponse(
             status_code=exc.status_code,
             content={
-                "detail": _http_detail(exc),
+                "detail": detail,
                 "code": _HTTP_CODES.get(exc.status_code, "http_error"),
             },
         )
@@ -157,7 +188,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
         # Do not log request bodies/audio; only the route and exception type.
         logger.exception(
-            "Unhandled error on %s %s", request.method, request.url.path
+            "Unhandled error on %s %s request_id=%s",
+            request.method,
+            request.url.path,
+            _request_id(request),
         )
         return JSONResponse(
             status_code=500,

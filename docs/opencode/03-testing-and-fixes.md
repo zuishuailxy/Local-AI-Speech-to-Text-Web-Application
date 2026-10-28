@@ -13,6 +13,7 @@
 | 音频 | 是 | 否 | 生成 WAV、WebM fixture、解码、时长、清理、错误码 |
 | Transcriber | 是 | 否 | 协议、Fake、惰性加载、并发、加载/推理失败 |
 | 前端静态/契约 | 是 | 否 | 结构、MediaRecorder、计时、上传、请求、复制、可访问性 |
+| 日志/可观测性 | 是 | 否 | 配置级别、request_id、请求/音频/识别元数据、错误码、文本不入日志 |
 | 质量指标/样本完整性 | 是 | 否 | CER/WER 归一化、编辑距离、脚本占比、WAV 参数与参考文本一致性 |
 | 真实模型 pytest | 手动 | 是 | 中英文样本转写、脚本占比、CER/WER、耗时 |
 | 真实上传 API | 手动 | 是 | TestClient + 真实后端/模型上传 WAV/WebM、字段与耗时 |
@@ -28,7 +29,7 @@
 ```
 
 ```text
-188 passed, 5 deselected
+196 passed, 5 deselected
 ```
 
 默认测试不加载真实模型、不下载权重、不访问麦克风。
@@ -53,6 +54,14 @@
 - WebM/Opus 语音 8.999 s，processing 1.912 s，WER 0.0000
 - 全部 real_model：5 passed
 
+语言核对：
+
+- `language` 从页面 FormData → 路由 → `model.transcribe(..., language=...)` 全程传递；
+- 英文音频强制 `ja` 会输出日文，说明参数确实影响解码；
+- 但英文音频强制 `zh` 仍可能输出英文，中文音频强制 `en` 仍可能输出中文；
+- 新增 `output_language` 脚本占比与 `asr_language_mismatch` 警告，页面提示改为“请选择与音频一致的语言”；
+- 不改变四字段响应契约；强制输出目标语言/自动检测留给 T8.1。
+
 ## 3. 真实问题与修复记录
 
 | # | 问题 | 定位 | 修复 | 复测 |
@@ -70,6 +79,7 @@
 | 11 | Clipboard API 可能失败 | 强制 `writeText` 抛错 | textarea + `execCommand("copy")` 回退 | 按钮“已复制”，页面无 error |
 | 12 | 上传失败后需保留上下文 | T4.8 浏览器拦截 503/网络错误 | 保留语言/文件/最近提交；重试优先当前文件 | 503→200、网络失败提示均验证 |
 | 13 | 多次 GitHub 443 超时 | push/fetch | 仅以成功 push / Actions run 为准；失败重试 | 所有已推送 commit 的 Windows run success |
+| 14 | 语言选择未强制输出目标语言 | 同一音频强制 zh/en/ja 对照 | 记录 requested/detected/output script；不改变契约；页面提示与 mismatch 警告 | 正常中/英匹配路径通过；错配可在日志中定位 |
 
 ## 4. 测试证据索引
 
@@ -78,6 +88,7 @@
 - ASR 引擎：`t3.1-transcriber-protocol.txt`、`t3.2-whisper-engine.txt`
 - 真实模型：`model-download.txt`、`asr-baseline.md`、`t3.7-real-api.txt`、`t5.2-real-model.txt`、`t5.3-real-api.txt`、`model-failure.txt`
 - 前端：`t4.1-frontend-structure.txt`、`t4.2-media-recorder.txt`、`t4.3-timer-state.txt`、`t4.4-error-handling.txt`、`t4.5-file-selection.txt`、`t4.6-request-result.txt`、`t4.7-copy.txt`、`t4.8-error-retry-reset.txt`
+- 语言/日志：`t5.8-language-and-logging.txt`
 - Windows CI：各 evidence 文件中记录 run ID；GitHub Actions 页面可复核
 
 ## 5. 真实浏览器验证摘要

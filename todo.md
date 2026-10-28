@@ -760,6 +760,55 @@
 
 ---
 
+## 阶段 P10：交付后优化（用户确认继续 2–6）
+
+> 分支：`optimization/post-delivery`；`v1.0-submission` 保持稳定。若优化失败，丢弃分支，不影响已交付版本。
+> 目标：按顺序处理 60 s 对齐、auto 鲁棒性、实时延迟、中文准确率、日志工程化；每项都要有测试/证据。
+
+- [ ] **T10.1 对齐 60 秒计时与音频时长**
+  - 目标：缩小页面计时与后端解码时长的差异（当前 60.0 s vs 57.18 s）。
+  - 文件：`static/app.js`、`tests/test_frontend_recording.py`、`docs/evidence/t10.1-60s-alignment.txt`。
+  - 前置：T9.4。
+  - 完成标准：定位差异来源；若可修，5/10/60 s 录音差异 ≤0.5 s；不可修则记录原因和可接受上限。
+  - 验证：真实 Chrome 麦克风 5/10/60 s 至少各一次；对比页面计时/服务端时长；回归原录音流程。
+
+- [ ] **T10.2 提升 auto 语言检测鲁棒性**
+  - 目标：短音频/噪声/中英混合时减少静默误判，并给用户可理解提示。
+  - 文件：`app/services/transcriber.py`、`app/api/routes.py`、`static/app.js`、`tests/test_transcriber_unit.py`、`tests/test_transcribe_api.py`、`docs/evidence/t10.2-auto-robustness.txt`。
+  - 前置：T8.1。
+  - 完成标准：记录 `language_probability`；低置信度/混合时按脚本回退并记录 warning；不破坏 zh/en/auto 契约；新增测试。
+  - 验证：真实中文/英文样本仍正确；构造低置信度/混合/短音频用例；页面提示不误导。
+
+- [ ] **T10.3 降低实时 partial 延迟**
+  - 目标：当前约 2 s 触发、8 s 窗口、首包约 3 s；优化首包/更新延迟。
+  - 文件：`app/services/streaming.py`、`static/app.js`、`tests/test_ws.py`、`docs/evidence/t10.3-realtime-latency.txt`。
+  - 前置：T8.4。
+  - 完成标准：首 partial ≤2.5 s（样本/真实麦克风目标）；更新间隔 ≤2 s；不产生并发推理；final 完整；回归必做。
+  - 验证：真实样本分片 + 真实麦克风手动；记录延迟/CPU；失败则保留原参数并说明。
+
+- [ ] **T10.4 评估中文识别准确率优化**
+  - 目标：在不显著增加 CPU 的前提下改善中文近音字。
+  - 文件：`app/config.py`、`app/services/transcriber.py`、`tests/test_transcriber_unit.py`、`docs/evidence/t10.4-chinese-accuracy.md`。
+  - 前置：T10.2。
+  - 完成标准：对比 baseline / 可选 initial_prompt 或热词；记录 CER、耗时、幻觉风险；无明显收益则不启用。
+  - 验证：`samples/chinese.wav` + 手动中文；不修改参考文本掩盖错误。
+
+- [ ] **T10.5 日志工程化**
+  - 目标：可选文件保存、结构化 JSON、基础轮转；保持隐私边界。
+  - 文件：`app/config.py`、`app/logging_config.py`、`app/main.py`、`tests/test_config.py`、`tests/test_logging.py`、`docs/evidence/t10.5-logging.txt`、`README.md`。
+  - 前置：T9.4。
+  - 完成标准：`LOG_FILE` 可写文件；`LOG_FORMAT=text|json`；轮转大小/备份可配；不记录音频/文本原文；不破坏默认 stderr。
+  - 验证：启动写入临时日志；JSON 可解析；请求成功/失败含 outcome/request_id；关闭默认无文件。
+
+- [ ] **T10.6 优化回归与版本标记**
+  - 目标：证明优化未破坏必做/F6，并给优化版 tag。
+  - 文件：`docs/test-report.md`、`docs/evidence/t10.6-regression.txt`、Git tag。
+  - 前置：T10.1–T10.5。
+  - 完成标准：默认/真实/E2E/Windows CI 通过；6 项手动抽测；F6/auto 回归；打 `v1.0.1-optimizations`（或书面放弃项）。
+  - 验证：全量回归 + 真实麦克风 + CI。
+
+---
+
 ## 交付前总检查（Definition of Done）
 
 - [x] `python -m pytest -q` 在无模型、无麦克风、无外网环境通过。

@@ -1,0 +1,76 @@
+# T6.3 页面上传中文 WAV
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Chrome 156.0.8078.49
+- 服务：`uvicorn app.main:app`，`127.0.0.1:8001`，真实 faster-whisper small
+- 文件：`samples/chinese.wav`
+- 截图：`docs/evidence/upload-zh.png`（用户自行截图）
+
+## 操作
+
+1. Chrome 打开 `http://127.0.0.1:8001`
+2. 语言选择中文普通话（zh）
+3. 选择 `samples/chinese.wav`
+4. 点击 Upload & Transcribe
+5. 等待结果
+
+## 结果
+
+页面显示：
+
+```text
+轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+```
+
+- 语言：中文（zh）
+- 音频时长：12.0 s
+- 处理耗时：3.98 s（服务端 3.978 s）
+- 推理耗时：2.926 s
+- 模型加载：1.027 s
+- 文件：`chinese.wav`，375.0 KB
+- CER：0.2308（阈值 0.30）
+
+服务端日志：
+
+```text
+request_id=a9406d40d1d4
+language=zh
+extension=.wav
+size=384044
+duration_seconds=12.000
+processing_seconds=3.978
+inference_seconds=2.926
+model_load_seconds=1.027
+text_chars=44
+status=200
+```
+
+## 质量说明
+
+与参考文本相比有近音字错误：
+
+- 正如 → 占如
+- 招手 → 抓手
+- 作别 → 做别
+- 金柳 → 金牛
+- 夕阳 → 西洋
+
+输出为简体，未出现空文本或整段幻觉；CER 0.2308 在阈值内。该结果与 T5.2/T5.3 的真实样本结果一致。
+
+## 检查项
+
+- [x] 页面选择 `chinese.wav`
+- [x] 文件名校验通过
+- [x] 上传成功（200）
+- [x] 真实模型识别
+- [x] 音频时长 12.0 s
+- [x] 处理耗时展示
+- [x] 中文结果展示
+- [x] CER 计算并记录
+- [x] 用户自行截图
+
+## 备注
+
+- 首次上传包含模型加载，processing 3.978 s；后续同长度请求约 3 s。
+- 截图显示文件 `chinese.wav`、12.0 s、3.98 s 和完整文本。
+- 浏览器未再出现 favicon 404，日志为 `favicon.svg 304`。

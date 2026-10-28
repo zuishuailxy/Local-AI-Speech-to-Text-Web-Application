@@ -494,12 +494,13 @@
   - 验证：Chrome 156 真实麦克风 7.14 s；页面 7.1 s / 2.59 s；文本“Never give up. Never lose hope. Always have faith.”；WER 0.0；输出英文；截图 `mic-en.png`。
   - 结果：已完成（2026-10-28）；发现并修复 favicon 404（新增 `static/favicon.svg`），浏览器 E2E 改为断言 0 console error。
 
-- [ ] **T6.3 手动：上传中文 WAV**
+- [x] **T6.3 手动：上传中文 WAV**
   - 目标：验证 F2 + F3 中文上传。
-  - 文件：`docs/test-report.md`、`docs/evidence/upload-zh.png`。
+  - 文件：`docs/test-report.md`（后续汇总）、`docs/evidence/upload-zh.png`、`docs/evidence/t6.3-upload-zh.txt`。
   - 前置：T5.1。
   - 完成标准：选择 `samples/chinese.wav` 上传成功；结果与参考文本一致/接近。
-  - 验证：对比 `reference.txt`；记录 duration/processing。
+  - 验证：Chrome 156 上传 `chinese.wav`（375 KB）；12.0 s；页面 3.98 s（服务端 3.978 s）；CER 0.2308；文本含占如/抓手/做别/金牛/西洋近音错误；截图 `upload-zh.png`。
+  - 结果：已完成（2026-10-28）；真实模型上传链路正常，输出简体，无空文本/幻觉；favicon 404 已消失。
 
 - [ ] **T6.4 手动：上传英文 WAV**
   - 目标：验证英文上传。

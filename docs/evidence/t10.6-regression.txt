@@ -20,8 +20,8 @@
 ## 回归
 
 ```text
-默认：233 passed, 12 deselected
-真实模型：7 passed, 238 deselected
+默认：234 passed, 12 deselected
+真实模型：7 passed, 239 deselected
 E2E：5 passed
 ```
 

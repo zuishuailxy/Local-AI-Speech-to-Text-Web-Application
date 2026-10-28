@@ -94,7 +94,7 @@
 | CPU only | 通过 |
 | 无 Docker/DB/云 | 通过 |
 | Windows 11 x64 | 第三方 Win11 x64 + Chrome 156 + Sony 麦克风通过；Edge 未测试 |
-| 默认测试无模型/麦克风/外网 | 通过（233/12；P7 干净 203/8） |
+| 默认测试无模型/麦克风/外网 | 通过（234/12；P7 干净 203/8） |
 | 真实模型 | 7 passed |
 | 6 项手动 | 全部完成 |
 | Windows CI | 真实模型 + Chromium + Edge 通过（Edge 5 项，run `40697700916`） |
@@ -107,7 +107,7 @@
 | 前端 AudioWorklet + 重采样（ScriptProcessor 仅回退） | 完成；E2E 5 passed |
 | partial 中间文本 | 真实麦克风出现（6 partials） |
 | final 完整文本 | 14.08 s / 1.742 s；CER 0.0455 |
-| 必做回归 | 233 passed / 真实模型 7 / HTTP 200 |
+| 必做回归 | 234 passed / 真实模型 7 / HTTP 200 |
 | Windows CI F6 | 已通过（run `40697700916`，Edge E2E 5 项） |
 | ScriptProcessor warning | 主路径已迁 AudioWorklet，E2E 无 warning；旧浏览器回退未实机 |
 | 自动语言检测 | 已实现（T8.1）：HTTP/WS/页面 auto，中英文真实样本通过 |

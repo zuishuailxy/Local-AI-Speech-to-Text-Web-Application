@@ -277,13 +277,13 @@ h2 {
   gap: 8px;
   margin-top: 14px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
 }
 
 .realtime-toggle input {
   accent-color: var(--accent, #0f766e);
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .realtime-toggle input:focus-visible {

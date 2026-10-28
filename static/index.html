@@ -37,16 +37,22 @@
           <span class="pill">中文 / English</span>
         </div>
 
-        <label id="language-label" class="field-label" for="language-select">当前选择</label>
+        <label id="language-label" class="field-label" for="language-select"
+          >当前选择</label
+        >
         <select id="language-select" name="language" class="select-control">
           <option value="zh" selected>中文普通话（zh）</option>
           <option value="en">English（en）</option>
           <option value="auto">自动检测（zh / en）</option>
         </select>
-        <p class="hint">可选择与音频一致的语言，或自动检测；自动模式只接受中英文，不做翻译。</p>
+        <p class="hint">
+          可选择与音频一致的语言，或自动检测；自动模式只接受中英文，不做翻译。
+        </p>
 
         <div class="status-line" aria-live="polite">
-          <span id="status-badge" class="status-badge" data-tone="idle">Idle</span>
+          <span id="status-badge" class="status-badge" data-tone="idle"
+            >Idle</span
+          >
           <span id="status-text">准备就绪，可以开始录音或上传音频。</span>
         </div>
       </section>
@@ -57,21 +63,33 @@
             <p class="step-label">02 / MICROPHONE</p>
             <h2 id="record-heading">麦克风录音</h2>
           </div>
-          <span id="record-indicator" class="record-indicator" aria-hidden="true"></span>
+          <span
+            id="record-indicator"
+            class="record-indicator"
+            aria-hidden="true"
+          ></span>
         </div>
 
         <div class="record-controls">
           <button id="start-button" class="button button-primary" type="button">
             Start Recording
           </button>
-          <button id="stop-button" class="button button-danger" type="button" disabled>
+          <button
+            id="stop-button"
+            class="button button-danger"
+            type="button"
+            disabled
+          >
             Stop Recording
           </button>
         </div>
 
         <label class="realtime-toggle" for="realtime-toggle">
           <input id="realtime-toggle" type="checkbox" />
-          <span>实时识别（实验）：录音时显示中间文本，仅供预览</span>
+          <span
+            ><strong>实时识别</strong
+            >：录音时显示的中间文本，仅供预览。识别结果以最终结果为准。</span
+          >
         </label>
 
         <div class="timer-row">
@@ -86,8 +104,10 @@
         </div>
 
         <p class="hint">
-          单次录音最长 60 秒；停止录音后才会提交本次完整音频。首次使用需要允许浏览器访问麦克风。
-          录音计时是浏览器墙钟，音频时长和处理耗时以服务端返回为准，可能有 0.1–0.2 s 差异。
+          单次录音最长 60
+          秒；停止录音后才会提交本次完整音频。首次使用需要允许浏览器访问麦克风。
+          录音计时是浏览器墙钟，音频时长和处理耗时以服务端返回为准，可能有
+          0.1–0.2 s 差异。
         </p>
         <div id="permission-note" class="permission-note" hidden>
           麦克风权限被拒绝时，请检查浏览器地址栏的站点权限后重试。
@@ -118,13 +138,22 @@
             />
           </label>
 
-          <button id="upload-button" class="button button-secondary" type="button" disabled>
+          <button
+            id="upload-button"
+            class="button button-secondary"
+            type="button"
+            disabled
+          >
             Upload &amp; Transcribe
           </button>
         </div>
 
-        <p id="file-name" class="file-name" aria-live="polite">尚未选择文件。</p>
-        <p class="hint">上传与录音共用同一条本地识别流程；超过 10 MB 或格式不支持时会被拒绝。</p>
+        <p id="file-name" class="file-name" aria-live="polite">
+          尚未选择文件。
+        </p>
+        <p class="hint">
+          上传与录音共用同一条本地识别流程；超过 10 MB 或格式不支持时会被拒绝。
+        </p>
       </section>
 
       <section class="panel status-panel" aria-labelledby="status-heading">
@@ -137,11 +166,21 @@
         </div>
 
         <ol class="pipeline" aria-label="识别处理步骤">
-          <li id="step-capture" class="pipeline-step" data-step="capture">采集音频</li>
-          <li id="step-upload" class="pipeline-step" data-step="upload">上传请求</li>
-          <li id="step-decode" class="pipeline-step" data-step="decode">解码与校验</li>
-          <li id="step-infer" class="pipeline-step" data-step="infer">本地模型识别</li>
-          <li id="step-result" class="pipeline-step" data-step="result">返回结果</li>
+          <li id="step-capture" class="pipeline-step" data-step="capture">
+            采集音频
+          </li>
+          <li id="step-upload" class="pipeline-step" data-step="upload">
+            上传请求
+          </li>
+          <li id="step-decode" class="pipeline-step" data-step="decode">
+            解码与校验
+          </li>
+          <li id="step-infer" class="pipeline-step" data-step="infer">
+            本地模型识别
+          </li>
+          <li id="step-result" class="pipeline-step" data-step="result">
+            返回结果
+          </li>
         </ol>
 
         <p class="hint">
@@ -160,7 +199,12 @@
             <p class="step-label">05 / RESULT</p>
             <h2 id="result-heading">识别结果</h2>
           </div>
-          <button id="copy-button" class="button button-quiet" type="button" disabled>
+          <button
+            id="copy-button"
+            class="button button-quiet"
+            type="button"
+            disabled
+          >
             复制文本
           </button>
         </div>
@@ -187,7 +231,13 @@
           <p id="result-text" class="result-text" aria-live="polite" hidden></p>
         </div>
 
-        <audio id="audio-preview" class="audio-preview" controls aria-label="音频预览" hidden></audio>
+        <audio
+          id="audio-preview"
+          class="audio-preview"
+          controls
+          aria-label="音频预览"
+          hidden
+        ></audio>
       </section>
 
       <section id="error-panel" class="panel alert-panel" role="alert" hidden>
@@ -197,10 +247,18 @@
           <p id="error-message" class="error-message"></p>
         </div>
         <div class="alert-actions">
-          <button id="retry-button" class="button button-secondary" type="button">
+          <button
+            id="retry-button"
+            class="button button-secondary"
+            type="button"
+          >
             重试
           </button>
-          <button id="dismiss-error-button" class="button button-quiet" type="button">
+          <button
+            id="dismiss-error-button"
+            class="button button-quiet"
+            type="button"
+          >
             关闭提示
           </button>
         </div>
@@ -228,7 +286,9 @@
     </footer>
 
     <noscript>
-      <p class="noscript-note">本页面需要启用 JavaScript 才能录音、上传和显示识别结果。</p>
+      <p class="noscript-note">
+        本页面需要启用 JavaScript 才能录音、上传和显示识别结果。
+      </p>
     </noscript>
 
     <script src="/static/app.js" defer></script>

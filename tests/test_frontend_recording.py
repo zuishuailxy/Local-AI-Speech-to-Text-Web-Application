@@ -146,3 +146,9 @@ def test_timer_and_result_labels_are_distinct_and_precise() -> None:
     assert "音频时长（服务端）" in HTML
     assert "处理耗时（服务端）" in HTML
     assert "toFixed(2)" in JS
+
+
+def test_realtime_toggle_is_not_labeled_experimental() -> None:
+    assert "实时识别（实验）" not in HTML
+    assert "实时识别" in HTML
+    assert "识别结果以最终结果为准" in HTML

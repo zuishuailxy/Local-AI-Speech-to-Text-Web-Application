@@ -18,6 +18,9 @@ from typing import Iterator
 
 import pytest
 import uvicorn
+
+pytest.importorskip("playwright.sync_api")
+
 from playwright.sync_api import Browser, Error, Page, sync_playwright
 
 from app.config import PROJECT_ROOT, Settings

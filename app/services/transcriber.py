@@ -23,6 +23,7 @@ from app.errors import (
     TranscriptionFailedError,
 )
 from app.services.metrics import cjk_ratio, latin_ratio
+from app.services.text import to_simplified
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +192,8 @@ class WhisperTranscriber:
                     vad_filter=self._settings.asr_vad_filter,
                 )
                 text = "".join(segment.text for segment in segments).strip()
+                if language == "zh":
+                    text = to_simplified(text)
             except ApiError:
                 raise
             except Exception as exc:
@@ -201,17 +204,19 @@ class WhisperTranscriber:
         detected_language = getattr(info, "language", None)
         language_probability = getattr(info, "language_probability", None)
         output_language = _output_language_hint(text)
+        normalization = "zhconv-zh-cn" if language == "zh" else "none"
         logger.info(
             "asr_complete requested_language=%s detected_language=%s "
             "language_probability=%s output_language=%s output_cjk_ratio=%.3f "
-            "output_latin_ratio=%.3f samples=%d inference_seconds=%.3f "
-            "text_chars=%d",
+            "output_latin_ratio=%.3f normalization=%s samples=%d "
+            "inference_seconds=%.3f text_chars=%d",
             language,
             detected_language,
             language_probability,
             output_language,
             cjk_ratio(text),
             latin_ratio(text),
+            normalization,
             sample_count,
             inference_seconds,
             len(text),

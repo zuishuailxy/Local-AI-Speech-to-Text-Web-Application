@@ -39,3 +39,4 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 uvicorn==0.54.0
 websockets==17.3
+zhconv==1.4.3

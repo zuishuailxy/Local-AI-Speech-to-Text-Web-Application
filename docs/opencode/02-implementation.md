@@ -342,7 +342,7 @@ httpx 0.28.1
 | 语言 | `tests/test_language.py` | 10 |
 | `/api/transcribe` 契约/错误/重试 | `tests/test_transcribe_api.py` | 20 |
 | Transcriber 协议/Fake | `tests/test_transcriber.py` | 7 |
-| WhisperTranscriber 单元 | `tests/test_transcriber_unit.py` | 11 |
+| WhisperTranscriber 单元 | `tests/test_transcriber_unit.py` | 13 |
 | 模型下载脚本 | `tests/test_download_model.py` | 10 |
 | CLI 冒烟 | `tests/test_verify_asr.py` | 6 |
 | 前端结构 | `tests/test_frontend_structure.py` | 5 |
@@ -351,7 +351,8 @@ httpx 0.28.1
 | 质量指标 | `tests/test_metrics.py` | 10 |
 | 样本完整性 | `tests/test_samples.py` | 5 |
 | 日志/可观测性 | `tests/test_logging.py` | 5 |
-| 合计 | | **196** |
+| 中文繁转简 | `tests/test_text.py` | 5 |
+| 合计 | | **203** |
 
 命令：
 
@@ -359,7 +360,7 @@ httpx 0.28.1
 python -m pytest -q
 ```
 
-结果：`196 passed`。
+结果：`203 passed`。
 
 另有 5 个 `real_model` 与 3 个 `e2e` 用例默认排除。浏览器 E2E 使用 Playwright + 假麦克风 + FakeTranscriber：
 

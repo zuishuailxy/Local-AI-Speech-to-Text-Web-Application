@@ -42,6 +42,10 @@ LOG_LEVEL=DEBUG python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 日志不记录音频内容、识别文本原文或请求体。响应头 `X-Request-ID` 可用于把浏览器请求与后端日志对应起来。
 
+### Chinese output
+
+Whisper 的 `zh` 只约束语言，不区分简体/繁体。后端对中文识别结果使用本地 `zhconv` 统一转为简体；英文结果不变。该步骤不修复同音字错误。
+
 ## Tests
 
 默认测试不加载模型、不下载权重、不访问麦克风或外网：

@@ -234,3 +234,29 @@ def test_language_script_mismatch_is_warned_without_changing_result(
     assert "asr_language_mismatch" in caplog.text
     assert "requested_language=zh" in caplog.text
     assert "output_language=en" in caplog.text
+
+
+def test_chinese_output_is_normalized_to_simplified(tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    model = FakeWhisperModel(text_parts=("今天天氣很好", "，我們開始測試。"))
+    engine = WhisperTranscriber(
+        settings,
+        model_factory=lambda path, **kwargs: model,
+    )
+
+    result = engine.transcribe(np.zeros(16_000, dtype=np.float32), "zh")
+
+    assert result.text == "今天天气很好，我们开始测试。"
+
+
+def test_english_output_is_not_simplified(tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    model = FakeWhisperModel(text_parts=("今天天氣",))
+    engine = WhisperTranscriber(
+        settings,
+        model_factory=lambda path, **kwargs: model,
+    )
+
+    result = engine.transcribe(np.zeros(16_000, dtype=np.float32), "en")
+
+    assert result.text == "今天天氣"

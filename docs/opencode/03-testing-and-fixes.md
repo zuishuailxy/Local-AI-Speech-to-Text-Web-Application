@@ -15,6 +15,7 @@
 | 前端静态/契约 | 是 | 否 | 结构、MediaRecorder、计时、上传、请求、复制、可访问性 |
 | 日志/可观测性 | 是 | 否 | 配置级别、request_id、请求/音频/识别元数据、错误码、文本不入日志 |
 | 质量指标/样本完整性 | 是 | 否 | CER/WER 归一化、编辑距离、脚本占比、WAV 参数与参考文本一致性 |
+| 中文繁转简 | 是 | 否 | zhconv 繁转简、简繁/英文不变、空文本 |
 | 真实模型 pytest | 手动 | 是 | 中英文样本转写、脚本占比、CER/WER、耗时 |
 | 真实上传 API | 手动 | 是 | TestClient + 真实后端/模型上传 WAV/WebM、字段与耗时 |
 | 浏览器 E2E | 手动 | 否 | Playwright 页面加载、WAV 上传、假麦克风录音（FakeTranscriber） |
@@ -30,7 +31,7 @@
 ```
 
 ```text
-196 passed, 5 deselected
+203 passed, 8 deselected
 ```
 
 默认测试不加载真实模型、不下载权重、不访问麦克风。
@@ -89,6 +90,7 @@
 | 13 | 多次 GitHub 443 超时 | push/fetch | 仅以成功 push / Actions run 为准；失败重试 | 所有已推送 commit 的 Windows run success |
 | 14 | 语言选择未强制输出目标语言 | 同一音频强制 zh/en/ja 对照 | 记录 requested/detected/output script；不改变契约；页面提示与 mismatch 警告 | 正常中/英匹配路径通过；错配可在日志中定位 |
 | 15 | 默认 Windows CI 因 e2e 模块导入 playwright 失败 | run `40633226986` 的 Run tests；模块导入早于 marker 过滤 | 将 Playwright 导入移到 e2e fixture 内延迟执行 | run `40633358118` 默认测试、Chromium 安装、浏览器 E2E 全部 success |
+| 16 | 真实麦克风中文输出繁体 | T6.1 实测 `今天天氣...`；Whisper `zh` 不区分字形 | 中文结果经本地 `zhconv` 转简体；保留原始同音错误 | 单测 5 项；T6.1 复测待做 |
 
 ## 4. 测试证据索引
 
@@ -134,9 +136,9 @@
 ## 8. P5 收尾
 
 - 样本、测试、证据已进 Git；模型权重、M4A、`.wheelhouse-check/` 未进 Git。
-- 默认：196 passed、8 deselected。
+- 默认：203 passed、8 deselected（T6.1 增加繁转简测试后）。
 - 真实模型：5 passed（中文 CER 0.2308、英文 WER 0、WebM WER 0）。
 - 浏览器 E2E：本地 3 passed，Windows CI 3 passed。
-- 隔离：干净 venv + 模型移走 + 离线/代理阻塞，196 passed、8 deselected、2.73s。
+- 隔离：干净 venv + 模型移走 + 离线/代理阻塞，196 passed、8 deselected、2.73s（当时 41 个依赖；后续增加本地 `zhconv`）。
 - 语言/日志：`language` 已贯通；日志不记录文本原文；错配可告警。
 - 详细清单：`docs/evidence/p5-summary.txt`。

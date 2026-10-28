@@ -48,6 +48,48 @@ E2E: 5 passed
 
 - Run `40667909367`：success；默认 217、真实 7、Edge E2E 5。
 
+
+## 手动验证（用户，18:14–18:15）
+
+页面服务为 `127.0.0.1:8000`（最新代码）：
+
+### 中文 WAV + auto
+
+- 截图：`docs/evidence/mic-auto-zh.png`
+- 文件：`chinese.wav`
+- 页面语言：中文（zh）
+- 音频时长：12.0 s
+- 处理耗时：3.29 s
+- Network `language: "zh"`
+- 文本：`轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。`
+
+### 英文 WAV + auto
+
+- 截图：`docs/evidence/mic-auto-en.png`
+- 文件：`english.wav`
+- 页面语言：English（en）
+- 音频时长：9.0 s
+- 处理耗时：2.18 s
+- Network `language: "en"`
+- 文本：`Never give up. Never lose hope. Always have faith. It allows you to cope.`
+
+### 实时语音 + auto
+
+- 截图：`docs/evidence/realtime-auto.png`
+- 勾选实时识别 + auto
+- 录音 12.0 s，处理 2.40 s
+- WebSocket `/ws/transcribe?language=auto`
+- partial/final 帧可见
+- final 语言：中文（zh）
+- final 文本：`Hello, How are you? I'm fine, thanks今天天气不错,我们来做这个语音识别的测试吧`
+- 说明：中英混合语句被判定为 zh，符合“只支持 zh/en、混合语音可能误判”的已知限制
+
+## 截图
+
+- `mic-auto-zh.png`
+- `mic-auto-en.png`
+- `realtime-auto.png`
+
 ## 契约
 
 - `zh`/`en` 请求行为不变。

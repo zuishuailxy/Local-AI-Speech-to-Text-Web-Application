@@ -61,7 +61,7 @@ F6 WebSocket 6 partials + final 成功
 - 中文 small 近音字错误；CER 0.18–0.23。
 - 语言选择不强制目标脚本。
 - ScriptProcessor deprecation warning（非 error，后续可迁 AudioWorklet）。
-- 自动语言检测已实现；短音频/噪声误判仍需评估。
+- 自动语言检测已实现并手动验证中文/英文/实时 auto；短音频/噪声/混合语言仍可能误判。
 
 ## 后续优先级
 

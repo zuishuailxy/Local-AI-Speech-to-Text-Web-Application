@@ -683,7 +683,7 @@
   - 文件：`app/services/transcriber.py`、`app/api/routes.py`、`app/api/ws.py`、`app/services/audio.py`、`static/index.html`、`static/app.js`、`tests/`、`docs/evidence/t8.1-auto-language.txt`。
   - 前置：T8.0；F6 主流程稳定后。
   - 完成标准：额外接受 `language=auto`（zh/en 契约不变）；自动检测；响应返回检测语言；页面增加“自动”选项；非法值仍 400。
-  - 验证：真实中英文 auto 检测 zh/en；HTTP/WS/页面支持；zh/en 回归；全量 217 passed、12 deselected；真实 7 passed；E2E 5 passed。
+  - 验证：真实中英文 auto 检测 zh/en；HTTP/WS/页面支持；zh/en 回归；全量 217 passed、12 deselected；真实 7 passed；E2E 5 passed；用户手动 auto 中文/英文/实时截图。
   - 结果：已完成（2026-10-28，约 30 分钟）；自动检测只返回 zh/en，其他非法值仍 400；短音频/噪声误判列为限制。
 
 - [x] **T8.2 实时识别后端（WebSocket + PCM 分片）**

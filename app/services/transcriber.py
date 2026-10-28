@@ -27,6 +27,7 @@ from app.services.text import to_simplified
 
 logger = logging.getLogger(__name__)
 AUTO_LANGUAGE = "auto"
+AUTO_MIN_PROBABILITY = 0.55
 
 
 def _output_language_hint(text: str) -> str:
@@ -202,11 +203,27 @@ class WhisperTranscriber:
                 detected_language = getattr(info, "language", None)
                 result_language = language
                 if language == AUTO_LANGUAGE:
-                    if detected_language in {"zh", "en"}:
+                    probability = getattr(info, "language_probability", None)
+                    confident = (
+                        probability is None
+                        or probability >= AUTO_MIN_PROBABILITY
+                    )
+                    if detected_language in {"zh", "en"} and confident:
                         result_language = detected_language
                     else:
                         hint = _output_language_hint(text)
-                        result_language = hint if hint in {"zh", "en"} else AUTO_LANGUAGE
+                        result_language = (
+                            hint if hint in {"zh", "en"} else AUTO_LANGUAGE
+                        )
+                        logger.warning(
+                            "asr_auto_low_confidence detected_language=%s "
+                            "language_probability=%s fallback_language=%s "
+                            "text_language=%s",
+                            detected_language,
+                            probability,
+                            result_language,
+                            hint,
+                        )
                 if result_language == "zh":
                     text = to_simplified(text)
             except ApiError:

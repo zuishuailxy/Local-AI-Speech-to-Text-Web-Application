@@ -20,9 +20,11 @@ class FakeWhisperModel:
         self,
         text_parts: tuple[str, ...] = ("你", "好"),
         detected_language: str | None = None,
+        language_probability: float = 1.0,
     ) -> None:
         self.text_parts = text_parts
         self.detected_language = detected_language
+        self.language_probability = language_probability
         self.calls: list[tuple[np.ndarray, dict[str, Any]]] = []
 
     def transcribe(self, samples: np.ndarray, **kwargs: Any):
@@ -30,7 +32,8 @@ class FakeWhisperModel:
         return (
             iter([SimpleNamespace(text=part) for part in self.text_parts]),
             SimpleNamespace(
-                language=kwargs.get("language") or self.detected_language
+                language=kwargs.get("language") or self.detected_language,
+                language_probability=self.language_probability,
             ),
         )
 
@@ -282,3 +285,24 @@ def test_auto_language_uses_detected_language_and_no_forced_token(tmp_path) -> N
     assert result.language == "en"
     assert result.text == "hello"
     assert model.calls[0][1]["language"] is None
+
+
+def test_auto_low_confidence_falls_back_to_script(tmp_path, caplog) -> None:
+    settings = make_settings(tmp_path)
+    model = FakeWhisperModel(
+        text_parts=("你好",),
+        detected_language="en",
+        language_probability=0.2,
+    )
+    engine = WhisperTranscriber(
+        settings,
+        model_factory=lambda path, **kwargs: model,
+    )
+
+    with caplog.at_level(logging.WARNING, logger="app.services.transcriber"):
+        result = engine.transcribe(np.zeros(16_000, dtype=np.float32), "auto")
+
+    assert result.language == "zh"
+    assert result.text == "你好"
+    assert "asr_auto_low_confidence" in caplog.text
+    assert "fallback_language=zh" in caplog.text

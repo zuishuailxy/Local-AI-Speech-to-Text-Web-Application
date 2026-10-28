@@ -1,0 +1,32 @@
+# T10.2 auto 语言检测鲁棒性
+
+- 日期：2026-10-28
+- 分支：`optimization/post-delivery`
+- 目标：低置信度/混合/短音频不静默误判；保持 zh/en/auto 契约
+
+## 实现
+
+- `AUTO_MIN_PROBABILITY=0.55`
+- auto 在 `language_probability >= 0.55` 且检测为 zh/en 时使用检测语言
+- 低置信度或检测为其他语言：
+  - 按输出文本脚本 `cjk_ratio`/`latin_ratio` 回退到 zh/en
+  - 无法判断则保留 `auto`
+  - 记录 `asr_auto_low_confidence` warning（检测语言/概率/回退/文本脚本）
+- 响应仍返回 `text/language/duration_seconds/processing_seconds`
+- zh/en 显式请求不受影响
+
+## 测试
+
+```text
+tests/test_transcriber_unit.py
+- auto 高置信度 en → en
+- auto 低置信度（0.2）+ 中文文本 → 回退 zh，warning
+全量：218 passed, 12 deselected
+```
+
+真实 auto 中文/英文仍正确（T8.1 样本；检测概率 0.9976 / 0.7329）。
+
+## 边界
+
+- 混合语句仍可能按一种语言输出；当前只做低置信度回退，不做逐词语言标记。
+- 短音频/噪声误判不能完全消除；页面已有“重要场景手动选择”提示。

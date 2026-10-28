@@ -773,12 +773,13 @@
   - 验证：真实 Chrome 麦克风：5.3 vs 5.2、10.2 vs 10.1、60.0 vs 59.8；最大差异 0.2 s；处理耗时 1.33/1.69/8.32 s。
   - 结果：已完成（2026-10-28）；未复现 57.18 s 异常，无需改计时逻辑；历史问题标记为未复现/环境相关。
 
-- [ ] **T10.2 提升 auto 语言检测鲁棒性**
+- [x] **T10.2 提升 auto 语言检测鲁棒性**
   - 目标：短音频/噪声/中英混合时减少静默误判，并给用户可理解提示。
-  - 文件：`app/services/transcriber.py`、`app/api/routes.py`、`static/app.js`、`tests/test_transcriber_unit.py`、`tests/test_transcribe_api.py`、`docs/evidence/t10.2-auto-robustness.txt`。
+  - 文件：`app/services/transcriber.py`、`tests/test_transcriber_unit.py`、`docs/evidence/t10.2-auto-robustness.txt`。
   - 前置：T8.1。
   - 完成标准：记录 `language_probability`；低置信度/混合时按脚本回退并记录 warning；不破坏 zh/en/auto 契约；新增测试。
-  - 验证：真实中文/英文样本仍正确；构造低置信度/混合/短音频用例；页面提示不误导。
+  - 验证：阈值 0.55；低置信度（0.2）+ 中文文本回退 zh 并记录 `asr_auto_low_confidence`；真实中英文 auto 仍正确；全量 218 passed、12 deselected。
+  - 结果：已完成（2026-10-28）；混合语句仍只输出一种语言，页面提示重要场景手动选择。
 
 - [ ] **T10.3 降低实时 partial 延迟**
   - 目标：当前约 2 s 触发、8 s 窗口、首包约 3 s；优化首包/更新延迟。

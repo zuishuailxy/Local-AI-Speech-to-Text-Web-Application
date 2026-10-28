@@ -91,6 +91,7 @@
 | 14 | 语言选择未强制输出目标语言 | 同一音频强制 zh/en/ja 对照 | 记录 requested/detected/output script；不改变契约；页面提示与 mismatch 警告 | 正常中/英匹配路径通过；错配可在日志中定位 |
 | 15 | 默认 Windows CI 因 e2e 模块导入 playwright 失败 | run `40633226986` 的 Run tests；模块导入早于 marker 过滤 | 将 Playwright 导入移到 e2e fixture 内延迟执行 | run `40633358118` 默认测试、Chromium 安装、浏览器 E2E 全部 success |
 | 16 | 真实麦克风中文输出繁体 | T6.1 实测 `今天天氣...`；Whisper `zh` 不区分字形 | 中文结果经本地 `zhconv` 转简体 | 单测 5 项；T6.1 复测 8.16 s，简体且 CER 0.0 |
+| 17 | DevTools 显示 1 个问题 | 服务端日志为 `/favicon.ico` 404 | 新增本地 `static/favicon.svg` 并在页面声明 | 静态资源测试 + E2E 0 console error |
 
 ## 4. 测试证据索引
 
@@ -100,7 +101,7 @@
 - 真实模型：`model-download.txt`、`asr-baseline.md`、`t3.7-real-api.txt`、`t5.2-real-model.txt`、`t5.3-real-api.txt`、`pytest-real-model.txt`、`model-failure.txt`
 - 前端：`t4.1-frontend-structure.txt`、`t4.2-media-recorder.txt`、`t4.3-timer-state.txt`、`t4.4-error-handling.txt`、`t4.5-file-selection.txt`、`t4.6-request-result.txt`、`t4.7-copy.txt`、`t4.8-error-retry-reset.txt`
 - 语言/日志：`t5.8-language-and-logging.txt`
-- 真实麦克风：`t6.1-mic-zh.txt`、`mic-zh.png`
+- 真实麦克风：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`mic-zh.png`、`mic-en.png`
 - 浏览器 E2E：`e2e.txt`、`t5.4-e2e-upload.png`、`t5.4-e2e-microphone.png`
 - Windows CI：Run `40633358118`（含 Chromium 安装与 3 项浏览器 E2E）；其他 run ID 见各 evidence 文件
 
@@ -144,3 +145,11 @@
 - 隔离：干净 venv + 模型移走 + 离线/代理阻塞，196 passed、8 deselected、2.73s（当时 41 个依赖；后续增加本地 `zhconv`）。
 - 语言/日志：`language` 已贯通；日志不记录文本原文；错配可告警。
 - 详细清单：`docs/evidence/p5-summary.txt`。
+
+
+## 9. P6 手动验证（进行中）
+
+- T6.1 中文真实麦克风：8.16 s，processing 1.712 s，简体，CER 0.0，控制台无报错。
+- T6.2 英文真实麦克风：7.14 s，processing 2.592 s，WER 0.0，输出英文。
+- T6.2 的 DevTools `1 个问题` 定位为 favicon 404；已补 `static/favicon.svg`，E2E 现在断言 0 console error。
+- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`mic-zh.png`、`mic-en.png`。

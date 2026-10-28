@@ -1,0 +1,83 @@
+# T6.2 Chrome 麦克风录制英文并识别
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Chrome 156.0.8078.49（真实麦克风）
+- 服务：`uvicorn app.main:app`，`127.0.0.1:8001`，真实 faster-whisper small
+- 语言：English（en）
+- 截图：`docs/evidence/mic-en.png`
+
+## 操作
+
+1. Chrome 打开 `http://127.0.0.1:8001`
+2. 语言切换到 English（en）
+3. 点击 Start Recording，授予麦克风权限
+4. 朗读：`Never give up. Never lose hope. Always have faith.`
+5. 点击 Stop Recording，等待结果
+
+## 结果
+
+页面显示：
+
+```text
+Never give up. Never lose hope. Always have faith.
+```
+
+- 语言：English（en）
+- 录音时长：7.1 s（页面显示；服务端 7.140 s）
+- 处理耗时：2.59 s（服务端 2.592 s）
+- 推理耗时：1.438 s
+- 模型加载：1.120 s
+- 文本与参考完全一致，WER 0.0
+- 输出为英文，未被繁转简步骤影响
+
+服务端日志：
+
+```text
+request_id=63d358bf740c
+language=en
+duration_seconds=7.140
+processing_seconds=2.592
+inference_seconds=1.438
+model_load_seconds=1.120
+normalization=none
+text_chars=50
+status=200
+```
+
+## 控制台
+
+本次打开 DevTools 后显示 `1 个问题`，服务端日志对应为：
+
+```text
+GET /favicon.ico 404 Not Found
+```
+
+不是 `app.js` 或接口错误。已补 `static/favicon.svg` 并在页面声明：
+
+```html
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+```
+
+新增测试：
+
+- 静态资源测试检查 favicon 返回 200 / `image/svg+xml`
+- 浏览器 E2E 页面加载现在断言 **0 个 console error**（不再过滤 favicon）
+- `PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e` → 3 passed
+
+## 检查项
+
+- [x] 英文语言选择
+- [x] 麦克风授权
+- [x] 录音计时（7.1 s）
+- [x] 手动停止
+- [x] 真实模型识别
+- [x] 输出英文
+- [x] 文本/语言/时长/处理耗时展示
+- [x] WER 0.0
+- [x] favicon 已补，E2E 控制台无错误
+
+## 备注
+
+- 这是真实麦克风与真实模型，不是 Playwright 假麦克风/FakeTranscriber。
+- 截图已裁掉浏览器标签/书签/DevTools，仅保留应用页面。
+- T6.2 录音 7.14 s，落在 5–10 s 目标内。

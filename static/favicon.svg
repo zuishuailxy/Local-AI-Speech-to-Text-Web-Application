@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Local Speech-to-Text">
+  <rect width="64" height="64" rx="14" fill="#0f766e"/>
+  <path d="M32 12a8 8 0 0 0-8 8v12a8 8 0 0 0 16 0V20a8 8 0 0 0-8-8Z" fill="#ffffff"/>
+  <path d="M18 32a14 14 0 0 0 28 0M32 46v8M24 54h16" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+</svg>

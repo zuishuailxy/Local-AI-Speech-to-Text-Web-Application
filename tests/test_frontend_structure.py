@@ -102,6 +102,7 @@ def test_no_external_assets() -> None:
     assert "https://" not in html
     assert "/static/styles.css" in html
     assert "/static/app.js" in html
+    assert "/static/favicon.svg" in html
     assert 'src="http' not in html
     assert 'href="http' not in html
 
@@ -112,6 +113,7 @@ def test_static_assets_are_served() -> None:
     page_response = client.get("/")
     css_response = client.get("/static/styles.css")
     js_response = client.get("/static/app.js")
+    icon_response = client.get("/static/favicon.svg")
 
     assert page_response.status_code == 200
     assert "Local AI Speech-to-Text" in page_response.text
@@ -120,3 +122,5 @@ def test_static_assets_are_served() -> None:
     assert "[data-state=\"recording\"]" in css_response.text
     assert js_response.status_code == 200
     assert "javascript" in js_response.headers["content-type"]
+    assert icon_response.status_code == 200
+    assert "image/svg+xml" in icon_response.headers["content-type"]

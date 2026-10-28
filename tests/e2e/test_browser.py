@@ -157,11 +157,7 @@ def test_page_loads_with_expected_contract(page: Any, base_url: str) -> None:
     assert page.locator("#language-select").input_value() == "zh"
     assert page.locator("#status-text").inner_text().strip()
 
-    # The favicon is intentionally absent; ignore only that 404.
-    relevant_errors = [
-        error for error in errors if "favicon" not in error.lower()
-    ]
-    assert relevant_errors == []
+    assert errors == []
 
 
 def test_upload_wav_through_browser(page: Any, base_url: str) -> None:

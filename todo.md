@@ -486,12 +486,13 @@
   - 验证：Chrome 156 真实麦克风，8.16 s 中文；页面 8.2 s / 1.71 s；文本“今天天气很好,我们开始测试本地语音识别系统。”；简体；忽略标点 CER 0.0；控制台无报错；截图 `mic-zh.png`。
   - 结果：已完成（2026-10-28）；修复 Whisper 繁体输出（新增本地 `zhconv` 繁转简）后复测通过；早期 10.5 s 录音的繁体/同音字问题已记录。
 
-- [ ] **T6.2 手动：Chrome 麦克风录制英文并识别**
+- [x] **T6.2 手动：Chrome 麦克风录制英文并识别**
   - 目标：验证英文主流程。
-  - 文件：`docs/test-report.md`、`docs/evidence/mic-en.png`。
+  - 文件：`docs/test-report.md`（后续汇总）、`docs/evidence/mic-en.png`、`docs/evidence/t6.2-mic-en.txt`。
   - 前置：T6.1。
   - 完成标准：英文模式识别成功；输出为英文；记录耗时。
-  - 验证：人工朗读英文 5–10 秒；截图。
+  - 验证：Chrome 156 真实麦克风 7.14 s；页面 7.1 s / 2.59 s；文本“Never give up. Never lose hope. Always have faith.”；WER 0.0；输出英文；截图 `mic-en.png`。
+  - 结果：已完成（2026-10-28）；发现并修复 favicon 404（新增 `static/favicon.svg`），浏览器 E2E 改为断言 0 console error。
 
 - [ ] **T6.3 手动：上传中文 WAV**
   - 目标：验证 F2 + F3 中文上传。

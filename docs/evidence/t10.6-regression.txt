@@ -23,7 +23,7 @@
 E2E：5 passed
 ```
 
-Windows CI run `40680120089`：默认测试、真实模型、Chromium/Edge E2E 全部 success。
+Windows CI run `40680120089`、`40682285556`：默认测试、真实模型、Chromium/Edge E2E 全部 success。
 
 ## Windows CI 说明
 

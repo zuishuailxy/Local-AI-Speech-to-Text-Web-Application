@@ -154,4 +154,5 @@
 - T6.2 的 DevTools `1 个问题` 定位为 favicon 404；已补 `static/favicon.svg`，E2E 现在断言 0 console error。
 - T6.3 页面上传中文 WAV：12.0 s，processing 3.978 s，CER 0.2308；近音字错误如实记录。
 - T6.4 页面上传英文 WAV：9.0 s，processing 1.447 s，WER 0.0；截图误存后已重新确认。
-- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`。
+- T6.5 权限拒绝：提示与错误状态正确；恢复权限后 3 s 静音录音提交 200。
+- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`。

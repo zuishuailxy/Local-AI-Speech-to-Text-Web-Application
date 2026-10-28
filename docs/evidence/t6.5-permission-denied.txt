@@ -1,0 +1,69 @@
+# T6.5 麦克风权限被拒绝
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Chrome 156.0.8078.49
+- 服务：`uvicorn app.main:app`，`127.0.0.1:8001`
+- 截图：`docs/evidence/permission-denied.png`（用户自行截图）
+
+## 操作
+
+1. 在 Chrome 站点设置中把麦克风改为“禁止”
+2. 刷新 `http://127.0.0.1:8001`
+3. 点击 Start Recording
+
+## 结果
+
+页面显示：
+
+```text
+麦克风启动失败
+麦克风权限被拒绝时，请检查浏览器地址栏的站点权限后重试。
+```
+
+- 状态：Error
+- 录音计时：00:00.0
+- 识别耗时：0.0 s
+- Pipeline：第 1 步“采集音频”失败，后续步骤未执行
+- 结果区保持空状态
+- Start Recording 仍可点击，页面未崩溃
+- 未产生 `/api/transcribe` 请求（权限失败在浏览器端终止）
+
+## 恢复权限
+
+按站点设置把麦克风恢复为“允许”，刷新页面后：
+
+```text
+Start Recording → 计时正常 → Stop
+POST /api/transcribe → 200
+```
+
+服务端日志：
+
+```text
+request_id=01cf86be4a29
+language=zh
+extension=.webm
+size=893
+duration_seconds=3.000
+processing_seconds=0.101
+text_chars=0
+status=200
+```
+
+这次恢复测试只录了 3 秒静音，VAD 去掉全部音频，模型返回空文本；接口仍正常 200，页面进入空结果提示。说明权限恢复后录音与上传链路可用。
+
+## 检查项
+
+- [x] 站点权限禁止后点击录音
+- [x] 页面显示明确权限提示
+- [x] 状态机进入 error，未崩溃
+- [x] Start 仍可重试
+- [x] 未发起无效后端请求
+- [x] 恢复权限后可录音并提交
+- [x] 用户自行截图
+
+## 备注
+
+- 截图显示错误状态、权限提示和失败的 pipeline。
+- 恢复测试是 3 秒静音，不是语音识别质量测试；真实语音识别已在 T6.1/T6.2 验证。
+- 页面提示文案来自 `permission-note`，错误详情来自 `describeMediaError(NotAllowedError)`。

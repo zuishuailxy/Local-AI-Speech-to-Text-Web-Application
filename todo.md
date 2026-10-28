@@ -510,12 +510,13 @@
   - 验证：Chrome 156 上传 `english.wav`（281.3 KB）；9.0 s；页面 1.45 s（服务端 1.447 s）；输出与参考完全一致；WER 0.0；截图 `upload-en.png`。
   - 结果：已完成（2026-10-28）；首次截图误存中文结果，已重新截图确认。
 
-- [ ] **T6.5 手动：麦克风权限被拒绝**
+- [x] **T6.5 手动：麦克风权限被拒绝**
   - 目标：验证 F5 权限异常。
-  - 文件：`docs/test-report.md`、`docs/evidence/permission-denied.png`。
+  - 文件：`docs/test-report.md`（后续汇总）、`docs/evidence/permission-denied.png`、`docs/evidence/t6.5-permission-denied.txt`。
   - 前置：T4.4。
   - 完成标准：Chrome 站点设置阻止麦克风后点击录音；页面显示明确权限提示；无崩溃；恢复权限后可录音。
-  - 验证：截图提示文案；刷新/恢复后重试成功。
+  - 验证：Chrome 156 禁止麦克风后提示“麦克风权限被拒绝时，请检查浏览器地址栏的站点权限后重试。”；Error 状态、Pipeline 失败、Start 可重试；未发起无效请求；恢复后 3 s 录音提交 200（静音空文本）。
+  - 结果：已完成（2026-10-28）；截图 `permission-denied.png`。
 
 - [ ] **T6.6 手动：无可用麦克风/设备不可用**
   - 目标：验证 `NotFoundError`/`NotReadableError` 分支。

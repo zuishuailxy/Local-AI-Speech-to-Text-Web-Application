@@ -1,0 +1,83 @@
+# T6.9 断网离线识别
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Chrome 156.0.8078.49
+- 服务：`uvicorn app.main:app`，`127.0.0.1:8001`
+- 启动环境：
+
+```text
+HF_HUB_OFFLINE=1
+TRANSFORMERS_OFFLINE=1
+HF_HUB_DISABLE_TELEMETRY=1
+```
+
+- 操作：用户真实关闭 Wi-Fi，确认网络断开后，在页面上传中文/英文样本；完成后恢复 Wi-Fi。
+- 截图：
+  - `docs/evidence/offline-zh.png`
+  - `docs/evidence/offline-en.png`
+
+## 中文
+
+```text
+轻轻地我走了,正如我轻轻地来,我轻轻地抓手,作别西天的云彩,那河畔的金牛是西洋中的新娘。
+```
+
+- 音频：`samples/chinese.wav`，12.0 s
+- 处理耗时：4.36 s（服务端 4.357 s）
+- 推理耗时：3.312 s
+- 模型加载：1.021 s（从本地目录）
+- CER：0.1795
+- 输出简体
+
+服务端：
+
+```text
+request_id=709811c85620
+language=zh
+duration_seconds=12.000
+processing_seconds=4.357
+inference_seconds=3.312
+model_load_seconds=1.021
+status=200
+```
+
+## 英文
+
+```text
+Never give up. Never lose hope. Always have faith. It allows you to cope.
+```
+
+- 音频：`samples/english.wav`，9.0 s
+- 处理耗时：1.36 s（服务端 1.359 s）
+- 推理耗时：1.304 s
+- WER：0.0
+
+服务端：
+
+```text
+request_id=5a894b5f74d8
+language=en
+duration_seconds=9.000
+processing_seconds=1.359
+inference_seconds=1.304
+status=200
+```
+
+## 断网证据
+
+- 截图右上角 Wi-Fi 菜单显示“Wi-Fi 关闭”。
+- 断网期间两次上传均返回 200，页面无网络错误提示。
+- 模型首次加载耗时 1.021 s，来自本地 `models/faster-whisper-small`，未触发下载。
+- 服务启动时设置 `HF_HUB_OFFLINE=1`、`TRANSFORMERS_OFFLINE=1`，即使存在隐藏下载路径也会直接失败。
+- DevTools Network 只有本机 `/api/transcribe` 请求，没有外部域名请求。
+
+## 结果说明
+
+- 中文 CER 0.1795，优于 T5.2/T6.3 的 0.2308；仍有“抓手/金牛/西洋”等近音错误。
+- 英文完全匹配，WER 0。
+- 用户消息中的中文耗时 2.14 s 与截图/日志的 4.36 s 不一致；本记录以截图和服务端日志为准。
+- 日志中另有一次 `language=en` + `chinese.wav` 的误选请求（200，输出中文，出现 `asr_language_mismatch` 警告），不属于本项验收结果。
+
+## 结论
+
+模型准备完成后，断网状态下中英文识别均成功，耗时正常，无外网请求。T6.9 通过。

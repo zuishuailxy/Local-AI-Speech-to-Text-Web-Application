@@ -544,12 +544,14 @@
   - 验证：`speech-en.webm` 8.999 s / 1.438 s / WER 0；剪贴板 SHA-256 与页面一致；停 8001 后网络错误，重启点“重试”复用同一 WebM，8.999 s / 2.446 s 成功；连续录音见 T6.1/T6.2，连续上传见 T6.3/T6.4。
   - 结果：已完成（2026-10-28）；重试未重新选文件，错误面板关闭；截图 `upload-webm.png`。
 
-- [ ] **T6.9 断网验证（核心）**
+- [x] **T6.9 断网验证（核心）**
   - 目标：证明模型准备完成后完全离线识别。
-  - 文件：`docs/test-report.md`、`docs/evidence/offline.txt`。
+  - 文件：`docs/test-report.md`（后续汇总）、`docs/evidence/offline.txt`、`docs/evidence/offline-zh.png`、`docs/evidence/offline-en.png`。
   - 前置：T5.6、T6.1–T6.4。
   - 完成标准：断开网络/禁用网卡；设置 `HF_HUB_OFFLINE=1` 后重启服务；中英文各完成一次麦克风或上传识别；无外网请求；耗时正常。
-  - 验证：系统网络面板确认断网；记录时间、文本；可用抓包/防火墙辅助确认无出站。
+  - 验证：真实关闭 Wi-Fi；HF_HUB_OFFLINE=1 重启；中文 12.0 s / 4.357 s / CER 0.1795；英文 9.0 s / 1.359 s / WER 0；模型本地加载 1.021 s；页面无网络错误，Network 无外部请求。
+  - 结果：已完成（2026-10-28）；截图显示 Wi-Fi 关闭；用户消息的 2.14 s 与截图/日志 4.36 s 不一致，以截图/日志为准。
+  - 备注：日志另有一次 en+chinese.wav 误选请求，不计入本项结果。
 
 - [ ] **T6.10 Windows 兼容性验证（GitHub Actions 替代，最高风险）**
   - 目标：在没有 Windows 11 实机的情况下，尽可能验证 Windows x64 + Python 3.12 的安装、启动与识别链路。

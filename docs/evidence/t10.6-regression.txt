@@ -3,7 +3,7 @@
 - 日期：2026-10-28
 - 分支：`optimization/post-delivery` 已合并到 `main`
 - 合并提交：`8a38205`
-- Windows CI：`40687099376` success
+- Windows CI：`40690657742` success
 - 版本 tag：`v1.0.1-optimizations`
 
 ## 优化项
@@ -25,7 +25,7 @@
 E2E：5 passed
 ```
 
-Windows CI run `40680120089`、`40687099376`：默认测试、真实模型、Chromium/Edge E2E 全部 success。
+Windows CI run `40680120089`、`40690657742`：默认测试、真实模型、Chromium/Edge E2E 全部 success。
 
 ## Windows CI 说明
 

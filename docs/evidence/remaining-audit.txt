@@ -2,7 +2,7 @@
 
 - 日期：2026-10-28
 - 范围：`todo.md`、`plan.md`、README、docs、Git/tag、CI
-- 当前：默认 232 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40687099376` success
+- 当前：默认 232 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40690657742` success
 - Tag：`v1.0-submission`（F1–F6 基线）、`v1.0.1-optimizations`（T10 优化版）、`v1.0-must-have`（回滚）
 
 ## 已完成
@@ -35,7 +35,7 @@
 
 1. **Windows 11/桌面 Edge/真实麦克风补验**：唯一环境阻塞项。
 2. **中文准确率**：medium 已评估并作为批量可选（CER 0.0769）；进一步可做领域微调。
-3. **实时体验**：重叠窗口/增量拼接，争取首个非空文本 ≤2.5 s。
+3. **实时体验**：首字已降至 2.24–2.27 s；可继续做重叠窗口/增量拼接，改善中间文本稳定性。
 4. **样本覆盖**：噪声、远场、中英混合、数字/专有名词。
 5. **测试补充**：AudioWorklet 回退、auto 混合语句、真实 60 s 音频。
 6. **CI 成本**：real-model job 每次 push 都跑；可按路径过滤或手动触发。

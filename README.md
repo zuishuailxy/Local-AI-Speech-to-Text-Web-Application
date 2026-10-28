@@ -499,7 +499,7 @@ netstat -ano | findstr :8000       # Windows
 默认：232 passed, 12 deselected
 真实模型：7 passed
 浏览器 E2E：5 passed
-Windows CI：Chromium + Edge + 真实模型通过（最新 run `40687099376`，Edge 5 项 E2E）
+Windows CI：Chromium + Edge + 真实模型通过（最新 run `40690657742`，Edge 5 项 E2E）
 ```
 
 Windows CI 不能替代 Windows 11 实机验证；真实桌面/麦克风项在测试报告中单列为未验证。F6 已在本地真实麦克风和 Windows CI 验证。

@@ -142,7 +142,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 | `40651812439` | 缓存命中；Python/Edge 版本与模型耗时 | success |
 | `40658826426` | Edge 复制断言补充后复跑 | success |
 | `40680120089` | T10 优化 + 计时标签 + 截图 | success |
-| `40687099376` | T10.4 prompt opt-in | success |
+| `40690657742` | T10.4 prompt opt-in | success |
 
 Windows 真实模型耗时：
 
@@ -161,11 +161,11 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - 首个 partial 约 1.2 s 触发，之后每约 1.5 s；最近 3 s 窗口，partial 用 beam 1；stop 后 final 全量、beam 5。
 - 真实样本 WebSocket：首个非空文本 2.22–2.27 s（旧 3.0 s），后续 partial 1.2–1.7 s，final 3.0 s。
 - 前端“实时识别（实验）”复选框，AudioWorklet 主路径 + 重采样 + PCM16；旧浏览器回退 ScriptProcessor。
-- Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40687099376` Edge 5 项通过）。
+- Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40690657742` Edge 5 项通过）。
 - T8.1 自动语言：HTTP/WS/页面支持 `auto`；中英文真实样本自动检测通过；用户手动中文/英文/实时 auto 截图；原有 zh/en 契约不变。
 - 日志：成功事件带 `outcome=success`，失败事件带 `outcome=error`；支持 `LOG_FILE`/JSON/轮转；不记录音频/文本原文。
 - 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；迁移 AudioWorklet 后实时 E2E 无 ScriptProcessor deprecation warning。
-- 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40687099376` 成功。
+- 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40690657742` 成功。
 - 自动语言检测（`language=auto`）已实现：HTTP/WS/页面；中英文真实样本检测通过。
 
 ### medium 模型评估（T10.7）

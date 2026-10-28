@@ -66,6 +66,10 @@
 E2E：5 passed
 ```
 
+## 版本
+
+- `v1.0.3-realtime`：首个 partial 1.2 s 触发、partial beam 1、首字日志字段。
+
 ## 待补
 
 - 真实麦克风复测：需要用户录 10–12 s，确认页面首条 partial 和 `ws_final` 日志的 `first_text_seconds`。

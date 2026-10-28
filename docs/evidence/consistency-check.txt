@@ -31,7 +31,7 @@ PLAYWRIGHT_CHANNEL=chrome ... -m e2e 5 passed
 
 - P7 必做版干净隔离为 203 passed、8 deselected；README/test-report 已明确标注为 P7 基线。
 - F6 分支新增 `test_ws.py` 8 项和前端实时契约 1 项，当前 212/9。
-- Windows CI 已通过必做版（真实模型 + Chromium + Edge）；F6 合并后 run `40665695751`，T8.1 后 run `40667909367` 通过，Edge 5 项。
+- Windows CI 已通过必做版（真实模型 + Chromium + Edge）；F6 合并后 run `40665695751`，T8.1 后 run `40671754255` 通过，Edge 5 项。
 
 ## 命令
 
@@ -48,7 +48,7 @@ README、design、test-report、requirements 中的命令一致。
 ## F6 状态
 
 - 代码/测试/手动演示：完成（分支）
-- Windows CI：run `40667909367` 通过（F6 + auto，Edge 5）
+- Windows CI：run `40671754255` 通过（F6 + auto，Edge 5）
 - 主分支/tag：`v1.0-must-have` 未改变
 - 文档已更新为 F6 已合并、Windows CI 通过
 

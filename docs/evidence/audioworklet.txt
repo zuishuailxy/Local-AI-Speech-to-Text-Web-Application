@@ -1,0 +1,44 @@
+# AudioWorklet 迁移与前端日志
+
+- 日期：2026-10-28
+- 提交：`09ae8e6 fix: use AudioWorklet for realtime capture`
+- 背景：T8.4 真实麦克风验证时 Chrome 提示 ScriptProcessorNode deprecated warning
+
+## 迁移
+
+- 新增 `static/pcm-worklet.js`（`PcmCaptureProcessor`）
+- 主路径：
+  - `AudioContext.audioWorklet.addModule("/static/pcm-worklet.js")`
+  - `new AudioWorkletNode(context, "pcm-capture", {processorOptions:{frameSize:4096}})`
+  - Worklet 按 4096 帧 post Float32Array
+  - 主线程复用 `resampleTo16k` / `floatToPcm16` / WebSocket
+- 回退：
+  - AudioWorklet 不可用或 addModule 失败时，才使用 ScriptProcessor
+  - 旧浏览器可能仍有 deprecation warning，功能正常
+
+## 验证
+
+```text
+PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
+5 passed
+```
+
+E2E 实时测试监听 console，断言不再出现：
+
+```text
+ScriptProcessorNode is deprecated
+```
+
+Windows CI run `40671754255` success（默认 217、真实 7、Edge E2E 5）。
+
+## 前端日志建议
+
+- 默认不打印 console 日志，避免噪音。
+- 需要排查时使用 `?debug=1`：
+  - realtime_open
+  - realtime_partial（index/duration/processing）
+  - realtime_final（duration/processing/text_chars）
+  - realtime_error
+  - http_result（status/request_id）
+- 不记录音频、识别文本原文。
+- 浏览器 console 不自动持久化；长期留存使用后端日志重定向文件。

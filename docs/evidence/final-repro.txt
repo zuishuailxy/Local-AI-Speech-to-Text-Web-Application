@@ -1,0 +1,76 @@
+# T9.1 干净环境按 README 复现
+
+- 日期：2026-10-28
+- 分支：`feature/f6-realtime`（commit `8351bdd`，含 F6）
+- 新目录：`/tmp/stt-t91`（git clone）
+- 新 venv：`/tmp/stt-t91-venv`（Python 3.12.13）
+- 模型：通过 `ASR_MODEL_PATH` 复用已下载的本地 `models/faster-whisper-small`（464 MB），不在 clone 内下载
+
+## 步骤
+
+```bash
+git clone --branch feature/f6-realtime <repo> /tmp/stt-t91
+python -m venv /tmp/stt-t91-venv
+/tmp/stt-t91-venv/bin/python -m pip install --upgrade pip
+/tmp/stt-t91-venv/bin/python -m pip install -r /tmp/stt-t91/requirements.txt
+/tmp/stt-t91-venv/bin/python -m pip check
+```
+
+```text
+Successfully installed ... (42 packages)
+No broken requirements found.
+```
+
+```bash
+cd /tmp/stt-t91
+/tmp/stt-t91-venv/bin/python -m pytest -q
+```
+
+```text
+212 passed, 9 deselected in 2.76s
+```
+
+启动：
+
+```bash
+ASR_MODEL_PATH="<repo>/models/faster-whisper-small" \
+/tmp/stt-t91-venv/bin/python -m uvicorn app.main:app \
+  --host 127.0.0.1 --port 8010
+```
+
+## 冒烟结果
+
+```text
+GET /health -> 200 {"status":"ok"}
+GET /       -> 200 text/html; charset=utf-8
+```
+
+中文上传：
+
+```json
+{"text":"轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。","language":"zh","duration_seconds":12.0,"processing_seconds":6.268}
+```
+
+英文上传：
+
+```json
+{"text":"Never give up. Never lose hope. Always have faith. It allows you to cope.","language":"en","duration_seconds":9.0,"processing_seconds":1.706}
+```
+
+F6 WebSocket（同一新环境，12 s 样本分片）：
+
+```text
+partials=6
+final=轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+final processing_seconds=3.028
+```
+
+说明：
+
+- 干净 clone 默认测试不依赖模型；真实识别通过 `ASR_MODEL_PATH` 使用本地权重。
+- 模型权重按设计不进入 Git；README 已说明首次下载/本地路径。
+- 上传与 WebSocket 均在新 venv/新进程下通过。
+
+## 结论
+
+T9.1 通过：新目录、新 venv、按 README 命令安装/启动，健康检查、页面、中文/英文上传、F6 WebSocket 均成功。

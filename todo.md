@@ -725,12 +725,13 @@
 
 ## 阶段 P9：终验与交付确认
 
-- [ ] **T9.1 干净环境按 README 复现**
+- [x] **T9.1 干净环境按 README 复现**
   - 目标：验证交付物可独立复现。
   - 文件：`docs/evidence/final-repro.txt`。
   - 前置：T7.9（或 T7.8）；若进入 P8，则还需 T8.4 或 T8.5 完成。
   - 完成标准：新目录/新 venv；执行 `python -m pip install -r requirements.txt`；执行 `python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`；`/health` 200；页面可开；上传识别成功。
-  - 验证：逐字照 README；记录耗时/问题。
+  - 验证：`/tmp/stt-t91` + 新 venv/42 包；212 passed、9 deselected；port 8010 /health 200、/ 200；zh 12.0 s / 6.268 s；en 9.0 s / 1.706 s；WS 6 partials / final 3.028 s。
+  - 结果：已完成（2026-10-28）；模型通过 `ASR_MODEL_PATH` 复用本地权重，未在 clone 内下载。
 
 - [ ] **T9.2 必做需求逐项核对**
   - 目标：确保 F1–F5、接口、环境、测试、文档无遗漏。

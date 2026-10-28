@@ -189,3 +189,9 @@
 - T8.4：真实麦克风 14.08 s、6 个 partials、final 1.742 s、CER 0.0455；HTTP 回归 200。
 - ScriptProcessor deprecation warning 记录为 warning，非 error。
 - 分支：`feature/f6-realtime`；待合并/终验。
+
+
+## 12. P9 终验
+
+- T9.1：新 clone `/tmp/stt-t91` + 新 venv；42 包安装；212 passed、9 deselected；`/health`/页面/中英文上传/F6 WebSocket 均通过。
+- 证据：`docs/evidence/final-repro.txt`。

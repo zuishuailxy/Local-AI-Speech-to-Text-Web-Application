@@ -1,0 +1,117 @@
+# T5.6 真实模型统一命令执行记录
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Apple M1 / 16 GB / Python 3.12.13
+- 模型：`models/faster-whisper-small`（CTranslate2，CPU int8，beam 5，VAD on）
+- 样本：`samples/chinese.wav`（12.0 s）、`samples/english.wav`（9.0 s）、`tests/fixtures/speech-en.webm`（8.999 s）
+- README 命令：
+
+```bash
+python -m pytest -q -m real_model -s
+```
+
+## 执行结果
+
+```text
+5 passed, 199 deselected in 17.73s
+```
+
+5 项包括：
+
+- T5.2 直接推理：中文、英文各 1 项
+- T5.3 上传 API：中文 WAV、英文 WAV、英文 WebM 各 1 项
+
+## 关键输出
+
+### 中文 WAV 上传
+
+```text
+[zh] upload=chinese.wav
+[zh] text: 轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+[zh] duration_seconds=12.0
+[zh] processing_seconds=7.073
+[zh] client_elapsed=7.082
+[zh] CER=0.2308
+```
+
+### 英文 WAV 上传
+
+```text
+[en] upload=english.wav
+[en] text: Never give up. Never lose hope. Always have faith. It allows you to cope.
+[en] duration_seconds=9.0
+[en] processing_seconds=1.723
+[en] client_elapsed=1.728
+[en] WER=0.0000
+```
+
+### 英文 WebM 上传
+
+```text
+[webm] upload=speech-en.webm
+[webm] text: Never give up. Never lose hope. Always have faith. It allows you to cope.
+[webm] duration_seconds=8.999
+[webm] processing_seconds=1.785
+[webm] WER=0.0000
+```
+
+### 直接推理
+
+```text
+model_load_seconds=0.865
+
+[zh] duration_seconds=12.000
+[zh] inference_seconds=4.025
+[zh] rtf=0.3354
+[zh] CER=0.2308 (threshold 0.30)
+
+[en] duration_seconds=9.000
+[en] inference_seconds=1.818
+[en] rtf=0.2020
+[en] WER=0.0000 (threshold 0.30)
+```
+
+### 模型加载日志
+
+```text
+INFO app.services.transcriber Loaded ASR model from .../models/faster-whisper-small
+(device=cpu, compute_type=int8, cpu_threads=4, model_load_seconds=2.294)
+```
+
+首次上传请求的 `processing_seconds=7.073` 包含模型加载；后续请求约 1.7 s。
+
+## 汇总
+
+| 测试 | 输入 | 时长 | 推理/处理 | 质量 |
+| --- | --- | --- | --- | --- |
+| 中文 WAV API | `chinese.wav` | 12.0 s | 7.073 s（含加载） | CER 0.2308 |
+| 英文 WAV API | `english.wav` | 9.0 s | 1.723 s | WER 0.0000 |
+| 英文 WebM API | `speech-en.webm` | 8.999 s | 1.785 s | WER 0.0000 |
+| 中文直接推理 | `chinese.wav` | 12.0 s | 4.025 s，RTF 0.3354 | CER 0.2308 |
+| 英文直接推理 | `english.wav` | 9.0 s | 1.818 s，RTF 0.2020 | WER 0.0000 |
+
+阈值：中文 CER ≤0.30，英文 WER ≤0.30，均通过。
+
+## 模型缺失时的行为
+
+```bash
+ASR_MODEL_PATH=/tmp/definitely-missing-model \
+  .venv/bin/python -m pytest -q -rs -m real_model
+```
+
+```text
+sssss                                                                    [100%]
+SKIPPED [2] tests/test_e2e_upload.py:60: 本地模型缺失（...）
+SKIPPED [1] tests/test_e2e_upload.py:109: 本地模型缺失（...）
+SKIPPED [2] tests/test_real_model.py:41: 本地模型缺失（...）
+5 skipped, 199 deselected in 0.19s
+```
+
+提示中包含 ModelScope 下载命令，不会静默失败。
+
+## 备注
+
+- 真实模型输出中的中文近音错误（占如、抓手、做别、金牛、西洋）如实保留，不修改参考文本。
+- 本次耗时受 CPU 负载影响，仅记录本次实测；不作为性能硬阈值。
+- Windows CI 不下载模型，因此不执行这 5 项。
+- 命令与 README 的 “Tests → Real model tests” 一致。

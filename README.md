@@ -42,3 +42,53 @@ LOG_LEVEL=DEBUG python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 日志不记录音频内容、识别文本原文或请求体。响应头 `X-Request-ID` 可用于把浏览器请求与后端日志对应起来。
 
+## Tests
+
+默认测试不加载模型、不下载权重、不访问麦克风或外网：
+
+```bash
+python -m pytest -q
+```
+
+```text
+196 passed, 8 deselected
+```
+
+8 个默认排除项为 5 个 `real_model` + 3 个 `e2e`。
+
+### Real model tests
+
+先完成模型初始化，再显式启用 `real_model`：
+
+```bash
+python scripts/download_model.py --model small
+python -m pytest -q -m real_model -s
+```
+
+```text
+5 passed, 199 deselected
+```
+
+`-s` 会显示真实文本、参考文本、时长、推理耗时、RTF、CER/WER。测试使用 `samples/chinese.wav`、`samples/english.wav` 和 `tests/fixtures/speech-en.webm`，模型缺失时会 skip 并提示下载命令。
+
+### Browser E2E
+
+浏览器 E2E 默认不执行，使用假麦克风与 `FakeTranscriber`，不需要模型：
+
+```bash
+python -m pip install -r requirements-e2e.txt
+python -m playwright install chromium
+python -m pytest -q -m e2e
+```
+
+本机没有 Playwright Chromium 时，可使用系统 Chrome：
+
+```bash
+PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
+```
+
+```text
+3 passed
+```
+
+E2E 覆盖页面加载、WAV 上传、假麦克风录音；真实麦克风仍按手动验证执行。

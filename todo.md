@@ -448,12 +448,14 @@
   - 结果：已完成（2026-10-28）；默认套件不依赖 Playwright（e2e 延迟导入）、不加载模型、不访问麦克风或外网。
   - 备注：`scripts/download_model.py` 仍可通过 HuggingFace/ModelScope 准备模型，这是题目允许的一次性步骤；运行/识别路径不下载。
 
-- [ ] **T5.6 执行真实模型统一命令并归档**
+- [x] **T5.6 执行真实模型统一命令并归档**
   - 目标：满足“真实模型测试单独提供”。
-  - 文件：`README.md`（测试章节）、`docs/evidence/pytest-real-model.txt`。
+  - 文件：`README.md`（Tests 章节）、`docs/evidence/pytest-real-model.txt`。
   - 前置：T5.2、T5.3、T3.5。
   - 完成标准：README 写明 `python -m pytest -q -m real_model`（或环境变量门控）；实际执行通过；记录真实文本与耗时。
-  - 验证：照 README 从零执行一次。
+  - 验证：`python -m pytest -q -m real_model -s` → 5 passed、199 deselected、17.73s；中文 WAV CER 0.2308、英文 WAV WER 0、WebM WER 0；模型缺失时 5 skipped 并提示下载。
+  - 结果：已完成（2026-10-28）；README 增加默认/真实模型/浏览器 E2E 三组命令与预期输出；真实文本、耗时、RTF、加载时间已归档。
+  - 备注：真实模型测试需本地权重，Windows CI 不执行；命令与 README 一致。
 
 - [ ] **T5.7 P5 阶段收尾**
   - 目标：提交样本、测试与结果。

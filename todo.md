@@ -457,19 +457,20 @@
   - 结果：已完成（2026-10-28）；README 增加默认/真实模型/浏览器 E2E 三组命令与预期输出；真实文本、耗时、RTF、加载时间已归档。
   - 备注：真实模型测试需本地权重，Windows CI 不执行；命令与 README 一致。
 
-- [ ] **T5.7 P5 阶段收尾**
+- [x] **T5.7 P5 阶段收尾**
   - 目标：提交样本、测试与结果。
-  - 文件：Git 提交、`docs/evidence/`、`docs/opencode/03-testing-and-fixes.md`（起始）。
+  - 文件：Git 提交、`docs/evidence/p5-summary.txt`、`docs/opencode/03-testing-and-fixes.md`。
   - 前置：T5.1–T5.6。
   - 完成标准：样本/测试进 Git；模型权重/临时文件未进 Git；测试输出归档。
-  - 验证：`git status`；`git ls-files samples tests` 检查。
+  - 验证：`git status` 干净；`git ls-files samples` 仅 WAV/reference/.gitkeep；`git ls-files models .wheelhouse-check` 为 0；33 个 samples/tests 文件已跟踪；样本 SHA-256 已归档。
+  - 结果：已完成（2026-10-28）；P5 总结见 `docs/evidence/p5-summary.txt`；默认 196 passed/8 deselected、真实模型 5 passed、E2E 3 passed。
 
 - [x] **T5.8 识别语言核对与全链路日志（横切，提前执行）**
   - 目标：确认语言参数端到端生效，并为应用、请求、音频、识别、错误接入可诊断日志。
   - 文件：`app/config.py`、`app/main.py`、`app/api/routes.py`、`app/services/audio.py`、`app/services/transcriber.py`、`app/errors.py`、`scripts/verify_asr.py`、`tests/test_logging.py`、`docs/evidence/t5.8-language-and-logging.txt`、`README.md`。
   - 前置：T5.3（接口/模型链稳定）。
   - 完成标准：语言从页面到模型全程可追踪；`LOG_LEVEL` 可配置；请求带 request_id 与耗时；识别日志含请求/检测语言、脚本占比、推理耗时、文本长度；不记录音频/文本原文；4xx/5xx 有 code。
-  - 验证：196 passed、5 deselected；真实模型 5 passed；真实 uvicorn 日志含 request_id、language、duration、text_chars；识别文本不出现在日志。
+  - 验证：196 passed、8 deselected；真实模型 5 passed；真实 uvicorn 日志含 request_id、language、duration、text_chars；识别文本不出现在日志。
   - 结果：已完成（2026-10-28）；语言参数确实传入并影响解码，但 Whisper small 在音频与所选语言不一致时不强制目标语言；新增 output_language 脚本占比与 mismatch 警告，页面提示改为“请选择与音频一致的语言”。
   - 备注：强制输出目标语言/自动检测留给 T8.1；当前保持四字段契约不变。
 

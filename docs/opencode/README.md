@@ -7,7 +7,7 @@
 | 阶段 | 文件 | 状态 | 主要内容 |
 | --- | --- | --- | --- |
 | 阶段一：需求理解与技术设计 | [`01-requirements-and-design.md`](./01-requirements-and-design.md) | 已完成 | 读取题目、需求拆解、ASR 选型、实施计划、D1–D7 决策 |
-| 阶段二：功能开发与集成 | [`02-implementation.md`](./02-implementation.md) | 已完成（P1–P4） | 脚手架、配置、音频处理、识别接口、真实模型、前端页面与交互、Windows CI |
+| 阶段二：功能开发与集成 | [`02-implementation.md`](./02-implementation.md) | 已完成（P1–P5） | 脚手架、配置、音频处理、识别接口、真实模型、前端页面与交互、测试与 Windows CI |
 | 阶段三：测试与问题修复 | [`03-testing-and-fixes.md`](./03-testing-and-fixes.md) | 已完成 | 测试分层、真实失败/修复、真实模型/浏览器复测、证据索引 |
 
 ## 导出原则

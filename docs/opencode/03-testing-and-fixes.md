@@ -119,7 +119,8 @@
 - 真实 Windows 11 桌面/麦克风未验证；CI 是 Windows Server，需在报告中披露。
 - Edge 尚未手动验证。
 - 断网重启验证待 T6.9。
-- Playwright E2E 为可选，默认不执行。
+- Playwright E2E 默认不执行，但已在 Windows CI 单独运行；假麦克风/FakeTranscriber 不代表真实设备/模型。
+- 语言选择不强制目标脚本；错配时日志有 `asr_language_mismatch`。
 
 ## 7. 如何确认 AI 生成代码满足需求
 
@@ -129,3 +130,13 @@
 4. 用 GitHub Actions windows-latest 复跑 Python 3.12 安装/测试。
 5. 对错误路径做手动注入（503、网络失败、权限拒绝、空 Blob），确认页面可恢复。
 6. 以测试报告和证据文件为准，文档中的“通过”必须有命令输出或截图支持。
+
+## 8. P5 收尾
+
+- 样本、测试、证据已进 Git；模型权重、M4A、`.wheelhouse-check/` 未进 Git。
+- 默认：196 passed、8 deselected。
+- 真实模型：5 passed（中文 CER 0.2308、英文 WER 0、WebM WER 0）。
+- 浏览器 E2E：本地 3 passed，Windows CI 3 passed。
+- 隔离：干净 venv + 模型移走 + 离线/代理阻塞，196 passed、8 deselected、2.73s。
+- 语言/日志：`language` 已贯通；日志不记录文本原文；错配可告警。
+- 详细清单：`docs/evidence/p5-summary.txt`。

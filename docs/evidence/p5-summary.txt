@@ -1,0 +1,145 @@
+# P5 阶段收尾
+
+- 日期：2026-10-28
+- 阶段：样本、真实模型测试与自动化收口（T5.1–T5.8）
+- 结论：P5 完成，可进入 P6 手动/离线/Windows 验证。
+
+## 任务完成情况
+
+| 任务 | 内容 | 状态 |
+| --- | --- | --- |
+| T5.1 | 中英文 WAV + 参考文本 | 完成 |
+| T5.2 | 真实模型 CER/WER 测试 | 完成 |
+| T5.3 | 真实上传 API（WAV/WebM） | 完成 |
+| T5.4 | Playwright 浏览器 E2E + Windows CI | 完成 |
+| T5.5 | 默认测试隔离与合规静态检查 | 完成 |
+| T5.6 | 真实模型统一命令 + README | 完成 |
+| T5.7 | P5 收尾 | 完成 |
+| T5.8 | 语言核对 + 全链路日志（横切） | 完成 |
+
+## Git 检查
+
+```bash
+git status -sb
+```
+
+```text
+## main...origin/main
+```
+
+工作区干净，无未提交文件。
+
+样本：
+
+```bash
+git ls-files samples
+```
+
+```text
+samples/.gitkeep
+samples/chinese.wav
+samples/english.wav
+samples/reference.txt
+```
+
+- 原始 M4A 未提交，`.gitignore` 规则：`samples/*.m4a`
+- `samples/Chinese.m4a`、`samples/English.m4a` 本地保留
+
+测试：
+
+```bash
+git ls-files tests
+```
+
+包含：
+
+- 默认单测 20 个文件 + `conftest.py`
+- `tests/e2e/test_browser.py`
+- `tests/test_e2e_upload.py`、`tests/test_real_model.py`
+- `tests/fixtures/sample.webm`、`tests/fixtures/speech-en.webm`
+- `tests/fixtures/README.md`
+
+模型权重与临时文件：
+
+```bash
+git ls-files models .wheelhouse-check | wc -l
+```
+
+```text
+0
+```
+
+忽略规则已验证：
+
+```text
+.gitignore:22:models/                  models/faster-whisper-small/model.bin
+.gitignore:23:.wheelhouse-check/        .wheelhouse-check/*.whl
+.gitignore:27:samples/*.m4a             samples/Chinese.m4a
+```
+
+已跟踪文件中最大的是 `samples/chinese.wav`（376 KB），没有模型权重或大体积临时文件。
+
+## 样本校验和
+
+```text
+8dcae91b1e237bac6eef1be30137a43bb3d34c7f6a0fab73a7b2a29f48348deb  samples/chinese.wav
+3b8bab69d8d328a1e2d43d4ceb80ee5d637309edef5ee4d88da033d4f949502d  samples/english.wav
+d0a76cd4ce87c3f2488588d8c02f44c59a5cfcfb1e44e24f309a0fc59eda235d  samples/reference.txt
+403443f7ac6bd124fa1f7c6db702f84dff0c25b13e3752666d7cbc308aa3e227  tests/fixtures/speech-en.webm
+```
+
+## 测试状态
+
+默认：
+
+```text
+196 passed, 8 deselected in 1.81s
+```
+
+真实模型：
+
+```text
+5 passed, 199 deselected
+```
+
+- 中文 WAV：CER 0.2308，12.0 s
+- 英文 WAV：WER 0.0000，9.0 s
+- 英文 WebM：WER 0.0000，8.999 s
+- 直接推理：中文 RTF 0.3354、英文 RTF 0.2020
+
+浏览器 E2E：
+
+```text
+3 passed
+```
+
+- 本地 Chrome 156
+- Windows CI 使用 Playwright Chromium，假麦克风 + FakeTranscriber
+
+隔离验证（clean venv、模型移走、离线/代理阻塞）：
+
+```text
+196 passed, 8 deselected in 2.73s
+```
+
+## 证据索引
+
+- 样本：`docs/evidence/sample-audio-check.txt`
+- 真实模型：`docs/evidence/asr-baseline.md`、`t5.2-real-model.txt`、`pytest-real-model.txt`
+- 真实上传：`docs/evidence/t5.3-real-api.txt`
+- 浏览器 E2E：`docs/evidence/e2e.txt`、`t5.4-e2e-upload.png`、`t5.4-e2e-microphone.png`
+- 默认隔离：`docs/evidence/pytest-default.txt`
+- 合规：`docs/evidence/compliance-check.txt`
+- 语言/日志：`docs/evidence/t5.8-language-and-logging.txt`
+
+## 遗留与限制
+
+- 中文 small 模型存在近音错误：占如、抓手、做别、金牛、西洋；如实保留。
+- 样本只覆盖单人、安静环境、正常语速；噪声/远场/中英混合未覆盖。
+- 语言选择不强制输出目标语言；正常中/英匹配路径通过，错配已在日志中标记。
+- 真实麦克风、Edge、断网、Windows 11 实机仍在 P6；Windows CI 是 Server，不等于 Windows 11 桌面。
+- Playwright E2E 使用假麦克风和 FakeTranscriber，不代表真实麦克风/真实模型。
+
+## 下一步
+
+进入 P6：T6.1 起逐项完成 6 个手动验证、离线、Windows CI 兼容性与 Edge 验证。

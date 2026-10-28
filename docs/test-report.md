@@ -3,7 +3,7 @@
 - 日期：2026-10-28
 - 项目：Local AI Speech-to-Text Web Application
 - 范围：必做 F1–F5、F6、自动语言、真实模型、离线、Windows CI、Edge、手动验证、T10 优化
-- 结论：必做项、F6、6 项指定手动验证通过；T10 优化已验证；Windows 11 实机/真实桌面 Edge 未验证，已单独披露
+- 结论：必做项、F6、6 项指定手动验证通过；T10 优化已验证；第三方 Windows clone 上传/实时通过，Win11/Edge/真实麦克风细节待确认
 
 ## 1. 测试环境
 
@@ -203,7 +203,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | --- | --- | --- |
 | ~~中~~ 已关闭 | 60 秒计时与实际音频不一致 | T10.1 复测 5.3/5.2、10.2/10.1、60.0/59.8，最大差 0.2 s；历史 57.18 s 未复现 |
 | 中 | 中文近音字错误 | small 模型把招手/金柳/夕阳识别为近音词；CER 0.18–0.23，未超过阈值 |
-| 中 | Windows 11 实机/真实麦克风未验证 | 仅有 Windows Server CI；不得写成 Windows 11 实机通过 |
+| 低 | Windows 实机细节待确认 | 第三方 Windows clone 上传 + 实时通过；Win11/浏览器/真实麦克风未记录，不写成全部通过 |
 | 低 | 桌面 Edge 未手动验证 | 仅有 Windows CI headless Edge + 假麦克风 |
 | 低 | 语言选择不强制目标脚本 | 音频与所选语言不一致时可能输出源语言；日志有 `asr_language_mismatch` |
 | 低 | 无设备验证为模拟 | macOS 内置麦克风无法安全禁用；真实 NotFound/NotReadable 待其他设备 |
@@ -222,15 +222,15 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 测试报告基线 | 本文件 |
 | 所有必做项 | F1–F5 通过 |
 | F6 实时识别 | 已完成并合并；Windows CI 通过 |
-| Windows 11 实机/麦克风 | 未验证，已披露 |
+| Windows 实机 | 第三方 clone 上传/实时通过；细节待确认 |
 
-**G4：通过（带已披露限制）**。不把 Windows CI 写成 Windows 11 实机通过；F6 已完成并通过 Windows CI，但 Windows 11 桌面/真实麦克风仍未验证。
+**G4：通过（带已披露限制）**。不把 Windows CI 写成 Windows 11 实机通过；第三方 Windows clone 测试已通过上传 + 实时，但 Windows 版本/浏览器/真实麦克风细节待确认。
 
 ### 未执行/未验证项
 
 | 项 | 状态 | 原因 |
 | --- | --- | --- |
-| 真实 Windows 11 桌面/麦克风 | 未验证 | 无实机；CI 是 Windows Server |
+| 真实 Windows 11 桌面/麦克风 | 部分验证 | 第三方 Windows clone 上传/实时通过；版本/浏览器/麦克风待确认 |
 | 桌面 Edge 手动操作 | 未验证 | 本机无 Edge；仅 CI headless Edge |
 | 真实无设备/设备占用 | 未验证 | 内置麦克风无法安全禁用；T6.6 为 DevTools 模拟 |
 | 噪声/远场/中英混合 | 未覆盖 | 样本为单人安静环境 |
@@ -240,7 +240,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 
 - 测试隔离/合规：`pytest-default.txt`、`compliance-check.txt`
 - 真实模型：`asr-baseline.md`、`t5.2-real-model.txt`、`t5.3-real-api.txt`、`pytest-real-model.txt`
-- 手动：`t6.1-mic-zh.txt` … `t6.11` 对应文件
+- 手动：`t6.1-mic-zh.txt` … `t6.11` 对应文件；第三方 Windows：`t6.13-windows-third-party.txt`
 - 错误/边界：`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`
 - CI：`windows-ci.txt`、`edge.txt`
 - 准确率：`t10.7-medium-model.txt`、`t10.7-medium-benchmark.json`

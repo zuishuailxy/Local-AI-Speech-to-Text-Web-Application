@@ -54,7 +54,7 @@ F6 WebSocket partials + final 成功
 
 ## 已知限制
 
-- Windows CI 是 Windows Server，不是 Windows 11 桌面；真实桌面/麦克风未验证。
+- Windows CI 是 Windows Server；第三方 Windows clone 上传 + 实时通过，版本/浏览器/麦克风细节待确认。
 - 桌面 Edge 未手动验证；CI 为 headless Edge + 假麦克风。
 - 无设备/设备占用为 DevTools 模拟。
 - 60 s 计时已验证为 59.8 s（差 0.2 s），未复现旧 57.18 s；不再作为当前缺陷。
@@ -65,7 +65,7 @@ F6 WebSocket partials + final 成功
 
 ## 后续优先级
 
-1. 真实 Windows 11 / 桌面 Edge / 真实麦克风补验（唯一环境阻塞项）。
+1. 补第三方 Windows 测试的版本/浏览器/麦克风信息；如需严格 Win11/Edge 结论再补实机。
 2. 中文准确率：medium 已作为批量可选；进一步可做领域数据微调。
 3. 实时体验：首字 2.2–2.3 s；可继续做重叠窗口/增量拼接。
 4. 噪声/远场/中英混合样本覆盖；AudioWorklet 回退路径实机验证。

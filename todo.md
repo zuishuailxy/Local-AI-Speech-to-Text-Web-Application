@@ -586,8 +586,8 @@
   - 前置：可获得 Windows 11 x64 实机或云 VM；T6.10 通过。
   - 完成标准：按 README 启动；Chrome/Edge 录音中文/英文成功；上传样本；记录版本与耗时。
   - 验证：逐字执行 README；截图 + 命令输出。
-  - 结果：**阻塞**（2026-10-28）；当前无 Windows 11 实机/云 VM，未执行，不计为通过。
-  - 备注：Windows CI 是 Windows Server；真实桌面/麦克风仍需补验；不阻塞 G4（G4 以 Windows CI 替代）。
+  - 结果：**部分通过**（2026-10-28）；朋友 clone 后在 Windows 上测试上传识别和实时识别，均正常。
+  - 备注：Windows 版本/浏览器/是否真实麦克风/截图尚未记录；在补齐前不写成 Windows 11 桌面 Edge 全部通过。CI 仍是 Windows Server。证据：`docs/evidence/t6.13-windows-third-party.txt`。
 
 ---
 

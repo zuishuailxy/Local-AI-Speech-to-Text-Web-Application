@@ -39,6 +39,7 @@ T8.4 的真实麦克风验证使用旧 2/8 配置；本优化后的真实麦克�
 - 中间文本出现：是
 - 控制台：无 ScriptProcessor warning / 无 error
 - final 文本：`今天天气很好我来做本地实实语音词别你的心情怎么样呢?我的心情不错`
+- 截图：`docs/evidence/realtime-latency.png`（显示 `pcm-worklet.js`、partial/final 帧、12.2 s / 2.0 s）
 
 推理耗时：
 

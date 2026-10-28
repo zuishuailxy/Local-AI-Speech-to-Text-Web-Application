@@ -415,6 +415,7 @@ netstat -ano | findstr :8000       # Windows
 ## 13. 证据与文档
 
 - 测试报告：[`docs/test-report.md`](docs/test-report.md)
+- 需求说明：[`docs/requirements.md`](docs/requirements.md)
 - 证据目录：[`docs/evidence/`](docs/evidence/)
 - OpenCode 三阶段记录：[`docs/opencode/`](docs/opencode/)
 - Windows CI：[`docs/evidence/windows-ci.txt`](docs/evidence/windows-ci.txt)

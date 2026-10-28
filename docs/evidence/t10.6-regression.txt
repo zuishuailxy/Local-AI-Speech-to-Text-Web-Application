@@ -1,0 +1,38 @@
+# T10.6 优化回归与版本标记
+
+- 日期：2026-10-28
+- 分支：`optimization/post-delivery` 已合并到 `main`
+- 合并提交：`8a38205`
+- Windows CI：`40677386222` success
+- 版本 tag：`v1.0.1-optimizations`
+
+## 优化项
+
+- T10.1 60 s 计时：5.3/5.2、10.2/10.1、60.0/59.8，最大差异 0.2 s（旧 57.18 未复现）
+- T10.2 auto 低置信度回退：阈值 0.55，`asr_auto_low_confidence`
+- T10.3 实时 partial：2.0/8.0 → 1.5/3.0；热模型首包 1.221 s，后续 1.47–2.01 s
+- T10.4 中文 prompt 评估：CER 0.2308 → 0.2051，收益有限，默认不启用
+- T10.5 日志：`LOG_FILE`/JSON/RotatingFileHandler；默认 stderr；不记录文本原文
+- T10.6 回归/标记
+
+## 回归
+
+```text
+默认：223 passed, 12 deselected
+真实模型：7 passed, 222 deselected
+E2E：5 passed
+```
+
+Windows CI run `40677386222`：默认测试、真实模型、Chromium/Edge E2E 全部 success。
+
+## Windows CI 说明
+
+- CI 是 Windows Server + headless Edge + 假麦克风；不是 Windows 11 实机。
+- T10.3 的真实麦克风首包/更新延迟尚未在优化后复测；脚本真实模型样本已达到热模型目标。
+- T10.4 只做样本实验，未启用 prompt。
+
+## Tag
+
+- `v1.0-submission`：F1–F6 + auto 的交付基线
+- `v1.0.1-optimizations`：包含 T10.1–T10.5 优化和回归
+- 回滚仍可用 `v1.0-must-have`

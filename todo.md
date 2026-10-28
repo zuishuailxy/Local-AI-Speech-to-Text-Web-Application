@@ -805,12 +805,13 @@
   - 验证：文本/JSON 文件测试；RotatingFileHandler 参数；默认无文件；secret 不出现；全量 223 passed、12 deselected。
   - 结果：已完成（2026-10-28）；文件日志只接管 app logger，uvicorn 日志仍走 stderr/重定向。
 
-- [ ] **T10.6 优化回归与版本标记**
+- [x] **T10.6 优化回归与版本标记**
   - 目标：证明优化未破坏必做/F6，并给优化版 tag。
   - 文件：`docs/test-report.md`、`docs/evidence/t10.6-regression.txt`、Git tag。
   - 前置：T10.1–T10.5。
   - 完成标准：默认/真实/E2E/Windows CI 通过；6 项手动抽测；F6/auto 回归；打 `v1.0.1-optimizations`（或书面放弃项）。
-  - 验证：全量回归 + 真实麦克风 + CI。
+  - 验证：默认 223/12、真实 7/222、E2E 5；Windows CI `40677386222` success；T10.1 手动 5/10/60；F6/auto 回归。
+  - 结果：已完成（2026-10-28）；tag `v1.0.1-optimizations`；T10.3 优化后的真实麦克风延迟待复测，T10.4 prompt 默认不启用。
 
 ---
 

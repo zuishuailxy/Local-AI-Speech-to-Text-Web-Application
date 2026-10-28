@@ -5,7 +5,7 @@
 - 仓库：`https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application`
 - 分支：`main`
 - 必做回滚 tag：`v1.0-must-have`
-- 最终 tag：`v1.0-submission`（本提交后创建）
+- 最终 tag：`v1.0-submission`（必做/F6 基线）、`v1.0.1-optimizations`（T10 优化版）
 
 ## 交付内容
 
@@ -24,7 +24,7 @@
 
 ```text
 python -m pytest -q
-217 passed, 12 deselected
+223 passed, 12 deselected
 
 python -m pytest -q -m real_model
 7 passed, 222 deselected
@@ -36,7 +36,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 Windows CI：
 
 ```text
-Run 40673661197
+Run 40677386222
 Windows / Python 3.12: success
 Windows / real model: success
 Edge E2E: 5 passed
@@ -46,7 +46,7 @@ Edge E2E: 5 passed
 干净复现：
 
 ```text
-新 clone + 新 venv 217 passed
+新 clone + 新 venv 223 passed
 /health 200
 中文/英文上传成功
 F6 WebSocket 6 partials + final 成功
@@ -57,7 +57,7 @@ F6 WebSocket 6 partials + final 成功
 - Windows CI 是 Windows Server，不是 Windows 11 桌面；真实桌面/麦克风未验证。
 - 桌面 Edge 未手动验证；CI 为 headless Edge + 假麦克风。
 - 无设备/设备占用为 DevTools 模拟。
-- 60 s 计时与 57.18 s 音频差异待排查。
+- 60 s 计时已验证为 59.8 s（差 0.2 s），未复现旧 57.18 s；不再作为当前缺陷。
 - 中文 small 近音字错误；CER 0.18–0.23。
 - 语言选择不强制目标脚本。
 - ScriptProcessor deprecation warning（非 error，后续可迁 AudioWorklet）。
@@ -69,4 +69,4 @@ F6 WebSocket 6 partials + final 成功
 2. 60 s 计时与音频时长对齐。
 3. AudioWorklet 迁移。
 4. 中文准确率（更大模型/热词）与 CPU 权衡。
-5. 自动语言检测、样本覆盖（噪声/远场/混合）。
+5. 自动语言检测、样本覆盖（噪声/远场/混合）、AudioWorklet 回退实机。

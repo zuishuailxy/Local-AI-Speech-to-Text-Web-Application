@@ -28,7 +28,7 @@ Windows CI run `40677386222`：默认测试、真实模型、Chromium/Edge E2E �
 ## Windows CI 说明
 
 - CI 是 Windows Server + headless Edge + 假麦克风；不是 Windows 11 实机。
-- T10.3 的真实麦克风首包/更新延迟尚未在优化后复测；脚本真实模型样本已达到热模型目标。
+- T10.3 真实麦克风复测：12.032 s、7 partials、首个非空文本 3.0 s、后续推理 ≤1.38 s、final 1.970 s；首个非空文本未完全达到 2.5 s 目标，已记录。
 - T10.4 只做样本实验，未启用 prompt。
 
 ## Tag

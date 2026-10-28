@@ -14,14 +14,10 @@ import socket
 import threading
 import time
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
 
 import pytest
 import uvicorn
-
-pytest.importorskip("playwright.sync_api")
-
-from playwright.sync_api import Browser, Error, Page, sync_playwright
 
 from app.config import PROJECT_ROOT, Settings
 from app.main import create_app
@@ -79,7 +75,8 @@ def base_url() -> Iterator[str]:
 
 
 @pytest.fixture(scope="module")
-def browser() -> Iterator[Browser]:
+def browser() -> Iterator[Any]:
+    sync_api = pytest.importorskip("playwright.sync_api")
     channel = os.environ.get("PLAYWRIGHT_CHANNEL", "").strip() or None
     launch_kwargs: dict[str, object] = {
         "headless": True,
@@ -93,10 +90,10 @@ def browser() -> Iterator[Browser]:
     if channel:
         launch_kwargs["channel"] = channel
 
-    with sync_playwright() as playwright:
+    with sync_api.sync_playwright() as playwright:
         try:
             launched = playwright.chromium.launch(**launch_kwargs)
-        except Error as exc:
+        except sync_api.Error as exc:
             pytest.skip(
                 "Playwright Chromium 未安装："
                 "python -m playwright install chromium；"
@@ -109,7 +106,7 @@ def browser() -> Iterator[Browser]:
 
 
 @pytest.fixture
-def page(browser: Browser, base_url: str) -> Iterator[Page]:
+def page(browser: Any, base_url: str) -> Iterator[Any]:
     context = browser.new_context(permissions=["microphone"])
     page = context.new_page()
     page.set_default_timeout(15_000)
@@ -119,7 +116,7 @@ def page(browser: Browser, base_url: str) -> Iterator[Page]:
         context.close()
 
 
-def _wait_phase(page: Page, phase: str, timeout: int = 20_000) -> None:
+def _wait_phase(page: Any, phase: str, timeout: int = 20_000) -> None:
     page.wait_for_function(
         "(expected) => window.recordingApp.getState().phase === expected",
         arg=phase,
@@ -127,14 +124,14 @@ def _wait_phase(page: Page, phase: str, timeout: int = 20_000) -> None:
     )
 
 
-def _screenshot(page: Page, name: str) -> None:
+def _screenshot(page: Any, name: str) -> None:
     if SCREENSHOT_DIR:
         directory = Path(SCREENSHOT_DIR)
         directory.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(directory / name), full_page=True)
 
 
-def _console_errors(page: Page) -> list[str]:
+def _console_errors(page: Any) -> list[str]:
     errors: list[str] = []
 
     def record_console(message) -> None:
@@ -147,7 +144,7 @@ def _console_errors(page: Page) -> list[str]:
     return errors
 
 
-def test_page_loads_with_expected_contract(page: Page, base_url: str) -> None:
+def test_page_loads_with_expected_contract(page: Any, base_url: str) -> None:
     errors = _console_errors(page)
 
     page.goto(base_url)
@@ -167,7 +164,7 @@ def test_page_loads_with_expected_contract(page: Page, base_url: str) -> None:
     assert relevant_errors == []
 
 
-def test_upload_wav_through_browser(page: Page, base_url: str) -> None:
+def test_upload_wav_through_browser(page: Any, base_url: str) -> None:
     page.goto(base_url)
     page.select_option("#language-select", "en")
     page.set_input_files("#file-input", str(SAMPLE_WAV))
@@ -188,7 +185,7 @@ def test_upload_wav_through_browser(page: Page, base_url: str) -> None:
     _screenshot(page, "t5.4-e2e-upload.png")
 
 
-def test_fake_microphone_recording(page: Page, base_url: str) -> None:
+def test_fake_microphone_recording(page: Any, base_url: str) -> None:
     page.goto(base_url)
     page.select_option("#language-select", "en")
 

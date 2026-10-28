@@ -89,11 +89,10 @@ ModuleNotFoundError: No module named 'playwright'
 
 原因：默认 CI 只安装 `requirements.txt`，但 pytest 收集 `tests/e2e/test_browser.py` 时会先执行模块导入，即使 3 个用例会被 `-m "not e2e"` 排除。
 
-修复：在 e2e 模块导入 Playwright 前增加
+修复分两步：
 
-```python
-pytest.importorskip("playwright.sync_api")
-```
+1. 先在 e2e 模块加 `pytest.importorskip("playwright.sync_api")`，让默认 CI 不再失败。
+2. 随后把 Playwright 导入移到 `browser` fixture 内延迟执行，默认套件即使没装 Playwright 也能正常收集并 deselect。
 
 第二次 run `40633358118`：
 

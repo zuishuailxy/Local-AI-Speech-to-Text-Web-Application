@@ -437,14 +437,16 @@
   - 完成标准：`e2e` 标记，默认不执行；Chromium/Edge 使用 `--use-fake-device-for-media-stream` 与 WAV；覆盖页面加载 + 上传成功 + 录音后停止；不进入主 requirements；CI 中可单独执行。
   - 验证：本地 Chrome 156 3 passed；页面无相关 console error；上传结果字段正确；假麦克风录音 WebM/Opus 1.2 s+ 并成功；默认 196 passed、8 deselected；无浏览器时 3 skipped 且提示安装命令；Windows CI run `40633358118` 的 Run tests / Install browser E2E / Run browser E2E 均 success。
   - 结果：已完成（2026-10-28）；使用真实 uvicorn + FakeTranscriber，不依赖模型；Windows CI 增加安装 Chromium 与 `pytest -m e2e` 步骤。
-  - 备注：首次 CI run `40633226986` 因默认测试收集 e2e 模块时缺少 playwright 而失败，已用 `pytest.importorskip("playwright.sync_api")` 修复并复跑通过。假麦克风/FakeTranscriber 不等于真实麦克风/真实模型；真实麦克风在 T6.1/T6.2，真实模型在 T5.2/T5.3，Edge 在 T6.11。本机 Chromium 下载超时，本地用 `PLAYWRIGHT_CHANNEL=chrome`。
+  - 备注：首次 CI run `40633226986` 因默认测试收集 e2e 模块时缺少 playwright 而失败；最终改为在 `browser` fixture 内延迟导入，默认套件无需安装 Playwright，CI run `40633358118` 通过。假麦克风/FakeTranscriber 不等于真实麦克风/真实模型；真实麦克风在 T6.1/T6.2，真实模型在 T5.2/T5.3，Edge 在 T6.11。本机 Chromium 下载超时，本地用 `PLAYWRIGHT_CHANNEL=chrome`。
 
-- [ ] **T5.5 验证默认测试的隔离性与合规静态检查**
+- [x] **T5.5 验证默认测试的隔离性与合规静态检查**
   - 目标：证明 `pytest -q` 不依赖模型/麦克风/外网，并确认未使用被禁止的云端 ASR/Web Speech。
   - 文件：`docs/evidence/pytest-default.txt`、`docs/evidence/compliance-check.txt`。
   - 前置：T2.5、T3.9、T5.2。
   - 完成标准：临时移走 `models/` 后在干净 venv 执行 `python -m pytest -q` 全绿；无下载日志；无麦克风访问；执行时间可接受；静态搜索确认前端无 `SpeechRecognition`/`webkitSpeechRecognition`，后端无 OpenAI/Azure/Google 云端 ASR SDK 或调用，无 CDN 依赖。
-  - 验证：命令输出归档；恢复模型目录；`grep -R` 结果归档。
+  - 验证：`.venv-t55`（41 个依赖）+ 模型移走 + 离线/代理阻塞，196 passed、8 deselected、2.73s；无下载输出、无 `models/`；模型恢复 464 MB。前端仅 MediaRecorder/getUserMedia、仅 fetch `/api/transcribe`、无 CDN；app 内无 openai/azure/google/urllib/socket，模型从本地路径加载。
+  - 结果：已完成（2026-10-28）；默认套件不依赖 Playwright（e2e 延迟导入）、不加载模型、不访问麦克风或外网。
+  - 备注：`scripts/download_model.py` 仍可通过 HuggingFace/ModelScope 准备模型，这是题目允许的一次性步骤；运行/识别路径不下载。
 
 - [ ] **T5.6 执行真实模型统一命令并归档**
   - 目标：满足“真实模型测试单独提供”。

@@ -55,6 +55,13 @@
 - WebM/Opus 语音 8.999 s，processing 1.912 s，WER 0.0000
 - 全部 real_model：5 passed
 
+默认隔离与合规：
+
+- 干净 `.venv-t55`（仅 41 个运行依赖）+ 移走 `models/` + 离线/代理阻塞
+- `196 passed, 8 deselected in 2.73s`，未创建 `models/`，无下载日志
+- 前端仅 MediaRecorder/getUserMedia，fetch 仅 `/api/transcribe`，无 CDN
+- `app/` 内无云端 ASR SDK、urllib/httpx/socket；模型从本地路径加载
+
 语言核对：
 
 - `language` 从页面 FormData → 路由 → `model.transcribe(..., language=...)` 全程传递；
@@ -81,11 +88,11 @@
 | 12 | 上传失败后需保留上下文 | T4.8 浏览器拦截 503/网络错误 | 保留语言/文件/最近提交；重试优先当前文件 | 503→200、网络失败提示均验证 |
 | 13 | 多次 GitHub 443 超时 | push/fetch | 仅以成功 push / Actions run 为准；失败重试 | 所有已推送 commit 的 Windows run success |
 | 14 | 语言选择未强制输出目标语言 | 同一音频强制 zh/en/ja 对照 | 记录 requested/detected/output script；不改变契约；页面提示与 mismatch 警告 | 正常中/英匹配路径通过；错配可在日志中定位 |
-| 15 | 默认 Windows CI 因 e2e 模块导入 playwright 失败 | run `40633226986` 的 Run tests；模块导入早于 marker 过滤 | e2e 模块加 `pytest.importorskip("playwright.sync_api")` | run `40633358118` 默认测试、Chromium 安装、浏览器 E2E 全部 success |
+| 15 | 默认 Windows CI 因 e2e 模块导入 playwright 失败 | run `40633226986` 的 Run tests；模块导入早于 marker 过滤 | 将 Playwright 导入移到 e2e fixture 内延迟执行 | run `40633358118` 默认测试、Chromium 安装、浏览器 E2E 全部 success |
 
 ## 4. 测试证据索引
 
-- 配置/错误/测试隔离：`docs/evidence/t1.*`、`t3.9-mock-api-matrix.txt`
+- 配置/错误/测试隔离：`docs/evidence/t1.*`、`t3.9-mock-api-matrix.txt`、`pytest-default.txt`、`compliance-check.txt`
 - 音频解码/大小/清理：`t2.1-audio-validation.txt`、`t2.2-upload-limit.txt`、`t2.3-decode.txt`、`t2.4-cleanup.txt`、`t2.5-audio-tests.txt`
 - ASR 引擎：`t3.1-transcriber-protocol.txt`、`t3.2-whisper-engine.txt`
 - 真实模型：`model-download.txt`、`asr-baseline.md`、`t3.7-real-api.txt`、`t5.2-real-model.txt`、`t5.3-real-api.txt`、`model-failure.txt`

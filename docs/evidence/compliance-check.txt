@@ -1,0 +1,141 @@
+# T5.5 合规静态检查
+
+- 日期：2026-10-28
+- 范围：前端识别 API、外部依赖/CDN、后端云端 ASR/SDK、运行时网络调用、本地模型加载
+- 结论：未发现 Web Speech API、云端 ASR SDK、CDN 依赖或运行时下载路径。
+
+## 1. 前端识别 API
+
+```bash
+grep -RInE "SpeechRecognition|webkitSpeechRecognition|MediaRecorder|getUserMedia" static
+```
+
+```text
+static/app.js:84:    if (typeof MediaRecorder === "undefined") {
+static/app.js:87:    if (typeof MediaRecorder.isTypeSupported !== "function") {
+static/app.js:92:        MediaRecorder.isTypeSupported(candidate)
+static/app.js:730:    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+static/app.js:735:    if (typeof MediaRecorder === "undefined") {
+static/app.js:736:      showError("当前浏览器不支持 MediaRecorder，请使用最新 Chrome 或 Edge。");
+static/app.js:764:      const stream = await navigator.mediaDevices.getUserMedia({
+static/app.js:777:        ? new MediaRecorder(stream, { mimeType: selectedMimeType })
+static/app.js:778:        : new MediaRecorder(stream);
+static/app.js:794:        const error = event.error || new Error("MediaRecorder error");
+```
+
+- 只有 `getUserMedia` + `MediaRecorder`。
+- 无 `SpeechRecognition` / `webkitSpeechRecognition`。
+- 识别在后端完成，前端不上传云端。
+
+## 2. 前端外部 URL / CDN
+
+```bash
+grep -RInE "https?://|@import|cdn|unpkg|jsdelivr|fonts\.google" static
+```
+
+```text
+static/app.js:726:      showError("当前页面不是安全上下文，请通过 http://127.0.0.1:8000 或 localhost 访问。");
+```
+
+该 URL 只是错误提示文案，不是资源请求。
+
+资源引用：
+
+```bash
+grep -nE "<script|<link" static/index.html
+```
+
+```text
+11:    <link rel="stylesheet" href="/static/styles.css" />
+226:    <script src="/static/app.js" defer></script>
+```
+
+均为本地 `/static/`，无 CDN、外部字体或远程脚本。
+
+前端网络调用：
+
+```bash
+grep -nE "fetch\(" static/app.js
+```
+
+```text
+536:      const response = await fetch("/api/transcribe", {
+```
+
+只请求同源后端接口。
+
+## 3. 后端云端 ASR/SDK
+
+```bash
+grep -RInE "openai|azure|google[_-]?cloud|boto3|anthropic|cohere|speech_recognition|speechrecognition" \
+  app scripts requirements.txt requirements-e2e.txt --exclude-dir=__pycache__
+```
+
+```text
+(no output)
+```
+
+运行时依赖中也没有这些包：
+
+```bash
+grep -Ei "openai|azure|google|boto|anthropic|cohere|speech|torch|transformers" requirements.txt
+```
+
+```text
+(no output)
+```
+
+## 4. 运行时网络调用
+
+```bash
+grep -RInE "requests\.|httpx\.|urllib|urlopen|socket\.|aiohttp" app --exclude-dir=__pycache__
+```
+
+```text
+(no output)
+```
+
+`app/` 内没有 HTTP 客户端、URL 打开或 socket 调用。
+
+网络只出现在模型准备脚本：
+
+```bash
+grep -nE "urllib|snapshot_download|huggingface_hub|modelscope" scripts/download_model.py
+```
+
+```text
+scripts/download_model.py:22:from huggingface_hub import snapshot_download
+...
+```
+
+该脚本不在应用启动/识别路径中，属于一次性模型准备；运行时不下载。
+
+## 5. 本地模型加载
+
+```bash
+grep -RInE "WhisperModel|asr_model_path|from_pretrained" app/services app/config.py
+```
+
+```text
+app/config.py:66:    asr_model_path: Path
+app/config.py:106:            asr_model_path=model_path.resolve(),
+app/services/transcriber.py:96:    from faster_whisper import WhisperModel
+app/services/transcriber.py:98:    return WhisperModel(
+app/services/transcriber.py:128:        return self._settings.asr_model_path
+app/services/transcriber.py:135:        path = self._settings.asr_model_path
+```
+
+`WhisperModel` 接收 `ASR_MODEL_PATH` 指向的本地目录，不使用模型名触发下载。
+
+## 6. 结论
+
+| 检查项 | 结果 |
+| --- | --- |
+| 前端 Web Speech API | 未使用 |
+| 前端 CDN/外部字体/远程脚本 | 未使用 |
+| 后端 OpenAI/Azure/Google 等云端 ASR SDK | 未使用 |
+| 运行时 HTTP/socket 调用 | `app/` 内无 |
+| 运行时模型下载 | 无；仅 `scripts/download_model.py` |
+| 识别模型 | `faster-whisper` + CTranslate2，本地 CPU |
+
+允许的例外：`scripts/download_model.py` 在模型准备阶段访问 HuggingFace/ModelScope；这是题目允许的“提前下载模型”，应用运行和识别过程离线。

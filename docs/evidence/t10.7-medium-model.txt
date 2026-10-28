@@ -83,3 +83,8 @@ ASR_MODEL_SIZE=medium python -m uvicorn app.main:app --host 127.0.0.1 --port 800
 - CPU 耗时受负载影响，表中给的是本机区间。
 - medium 仍有近音字错误；要进一步提升需要更大模型或领域微调。
 - 未修改默认配置、未把 medium 权重提交 Git。
+
+## 版本
+
+- `v1.0.2-accuracy`：包含 medium 可选模式、基准脚本与本次证据。
+- 默认仍为 small；回滚可用 `v1.0.1-optimizations`。

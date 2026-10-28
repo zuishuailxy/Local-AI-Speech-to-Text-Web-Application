@@ -5,7 +5,7 @@
 - 仓库：`https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application`
 - 分支：`main`
 - 必做回滚 tag：`v1.0-must-have`
-- 最终 tag：`v1.0-submission`（必做/F6 基线）、`v1.0.1-optimizations`（T10 优化版）
+- 最终 tag：`v1.0-submission`（必做/F6 基线）、`v1.0.1-optimizations`（T10 优化版）、`v1.0.2-accuracy`（medium 可选）
 
 ## 交付内容
 
@@ -36,7 +36,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 Windows CI：
 
 ```text
-Run 40684188857
+Run 40687099376
 Windows / Python 3.12: success
 Windows / real model: success
 Edge E2E: 5 passed

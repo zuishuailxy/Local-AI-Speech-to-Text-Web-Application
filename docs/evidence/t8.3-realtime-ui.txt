@@ -1,0 +1,71 @@
+# T8.3 实时识别前端
+
+- 日期：2026-10-28
+- 分支：`feature/f6-realtime`
+- 文件：`static/index.html`、`static/styles.css`、`static/app.js`、`tests/e2e/test_browser.py`、`tests/test_frontend_recording.py`
+- 后端：T8.2 WebSocket `/ws/transcribe?language=zh|en`
+
+## 交互
+
+- 麦克风面板新增“实时识别（实验）”复选框 `#realtime-toggle`。
+- 勾选后点击 Start Recording 走实时路径；不勾选保持原 MediaRecorder + HTTP 上传主流程。
+- 实时路径：
+  1. `getUserMedia`
+  2. 建立 WebSocket
+  3. AudioContext + ScriptProcessor（4096 frame）
+  4. 重采样到 16 kHz mono、Float32 → PCM16LE
+  5. 二进制分片发送
+  6. partial 到达时更新结果文本区
+  7. Stop 发送 `{"type":"stop"}`，等待 final
+  8. final 用现有 `showResult` 展示语言/时长/处理耗时
+- 60 秒计时复用现有状态机；到点自动 Stop 并发送结束帧。
+- 断线/错误/超时（30 s 等待 final）显示错误并清理。
+
+## 兼容/降级
+
+- 检查 `WebSocket`、`AudioContext`、`createScriptProcessor`。
+- `AudioContext({sampleRate:16000})` 不支持时退回默认采样率，再用 `resampleTo16k` 处理。
+- 不使用 AudioWorklet；ScriptProcessor 是题目允许的方案。
+- 不改变未勾选时的原有录音/上传路径。
+
+## 测试
+
+新增静态契约测试：
+
+```text
+tests/test_frontend_recording.py::test_realtime_contract
+```
+
+新增 Playwright E2E：
+
+```text
+tests/e2e/test_browser.py::test_realtime_websocket_streaming
+```
+
+本机 Chrome：
+
+```text
+4 passed
+```
+
+E2E 流程：
+
+- 勾选实时识别
+- 选择 English
+- 假麦克风 Start
+- 等待 partial 文本出现在 `#result-text`
+- Stop
+- 等待 final，文本/语言正确
+
+全量：
+
+```text
+212 passed, 9 deselected
+```
+
+## 边界
+
+- 本次 E2E 使用 FakeTranscriber + 假麦克风，不证明真实模型延迟/准确率。
+- 真实模型实时说中文/英文、partial 更新和 final 完整文本在 T8.4 手动验证。
+- partial 只显示最近约 8 s 窗口；final 才是完整文本。
+- 实时模式不生成音频预览 Blob；最终结果仍显示文本/语言/时长/耗时。

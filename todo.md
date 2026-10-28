@@ -695,12 +695,14 @@
   - 结果：已完成（2026-10-28）；分支 `feature/f6-realtime`；HTTP 路径未改动。
   - 备注：真实模型滚动演示和前端在 T8.3/T8.4。
 
-- [ ] **T8.3 实时识别前端**
+- [x] **T8.3 实时识别前端**
   - 目标：录音过程中持续显示文本。
-  - 文件：`static/app.js`、`static/index.html`、`static/styles.css`。
+  - 文件：`static/app.js`、`static/index.html`、`static/styles.css`、`tests/e2e/test_browser.py`、`docs/evidence/t8.3-realtime-ui.txt`。
   - 前置：T8.2。
   - 完成标准：AudioWorklet 或 ScriptProcessor 采集 16 kHz 单声道 PCM；分片发送；中间结果更新；停止发送结束帧并展示最终文本；麦克风权限/断线错误可处理。
-  - 验证：Chrome 实时说中文/英文；观察文本更新；停止后最终结果与上传识别接近。
+  - 验证：实时复选框；ScriptProcessor 4096；重采样/PCM16；/ws/transcribe partial/final；Stop/60s/断线/30s 超时；Chrome E2E 4 passed；全量 212 passed、9 deselected。
+  - 结果：已完成（2026-10-28）；未勾选保持原 HTTP 主流程；真实模型手动演示在 T8.4。
+  - 备注：E2E 使用 FakeTranscriber + 假麦克风，不冒充真实模型结果。
 
 - [ ] **T8.4 实时识别测试与回归**
   - 目标：证明 F6 不破坏必做。

@@ -62,9 +62,15 @@ def test_audio_preview_is_labelled() -> None:
     assert audio.get("aria-label")
 
 
-def test_microphone_is_requested_only_inside_start_handler() -> None:
+def test_microphone_is_requested_only_inside_start_handlers() -> None:
     start = JS.index("async function startRecording")
-    call = JS.index("await navigator.mediaDevices.getUserMedia")
+    realtime = JS.index("async function startRealtime")
 
-    assert start < call
-    assert JS.count("await navigator.mediaDevices.getUserMedia") == 1
+    start_call = JS.index("await navigator.mediaDevices.getUserMedia", start)
+    realtime_call = JS.index(
+        "await navigator.mediaDevices.getUserMedia", realtime
+    )
+
+    assert start < start_call
+    assert realtime < realtime_call
+    assert JS.count("await navigator.mediaDevices.getUserMedia") == 2

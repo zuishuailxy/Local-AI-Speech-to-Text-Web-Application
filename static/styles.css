@@ -271,6 +271,26 @@ h2 {
   gap: 10px;
 }
 
+.realtime-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.realtime-toggle input {
+  accent-color: var(--accent, #0f766e);
+  margin-top: 2px;
+}
+
+.realtime-toggle input:focus-visible {
+  outline: 2px solid var(--focus, #0f766e);
+  outline-offset: 2px;
+}
+
 .button {
   display: inline-flex;
   align-items: center;

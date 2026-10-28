@@ -214,3 +214,24 @@ def test_fake_microphone_recording(page: Any, base_url: str) -> None:
     assert page.locator("#start-button").is_enabled()
 
     _screenshot(page, "t5.4-e2e-microphone.png")
+
+
+def test_realtime_websocket_streaming(page: Any, base_url: str) -> None:
+    page.goto(base_url)
+    page.check("#realtime-toggle")
+    page.select_option("#language-select", "en")
+
+    page.click("#start-button")
+    _wait_phase(page, "recording")
+
+    page.wait_for_function(
+        "(expected) => document.getElementById('result-text').textContent === expected",
+        arg=E2E_TEXT,
+        timeout=20_000,
+    )
+    assert page.locator("#result-text").is_visible()
+
+    page.click("#stop-button")
+    _wait_phase(page, "success")
+    assert page.locator("#result-text").inner_text() == E2E_TEXT
+    assert "English" in page.locator("#result-language").inner_text()

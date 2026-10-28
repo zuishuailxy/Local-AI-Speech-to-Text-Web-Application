@@ -12,6 +12,9 @@
   const MAX_RECORDING_MS = 60_000;
   const TIMER_INTERVAL_MS = 200;
   const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+  const REALTIME_SAMPLE_RATE = 16_000;
+  const REALTIME_PROCESSOR_SIZE = 4096;
+  const REALTIME_FINAL_TIMEOUT_MS = 30_000;
   const ALLOWED_UPLOAD_EXTENSIONS = new Set([
     ".wav",
     ".webm",
@@ -37,6 +40,7 @@
     uploadButton: document.getElementById("upload-button"),
     fileName: document.getElementById("file-name"),
     languageSelect: document.getElementById("language-select"),
+    realtimeToggle: document.getElementById("realtime-toggle"),
     processingTimer: document.getElementById("processing-timer"),
     permissionNote: document.getElementById("permission-note"),
     errorPanel: document.getElementById("error-panel"),
@@ -78,6 +82,14 @@
     lastResult: null,
     previewUrl: null,
     copyFeedbackTimer: null,
+    mode: "media",
+    realtimeSocket: null,
+    realtimeContext: null,
+    realtimeSource: null,
+    realtimeProcessor: null,
+    realtimeMute: null,
+    realtimeFinalizing: false,
+    realtimeFinalTimer: null,
   };
 
   function chooseMimeType() {
@@ -161,6 +173,9 @@
     }
     if (elements.languageSelect) {
       elements.languageSelect.disabled = busy;
+    }
+    if (elements.realtimeToggle) {
+      elements.realtimeToggle.disabled = busy;
     }
     if (elements.pipelineState) {
       elements.pipelineState.textContent =
@@ -718,6 +733,411 @@
     void submitAudio(blob, filename, note);
   }
 
+  function resampleTo16k(input, inputRate) {
+    if (inputRate === REALTIME_SAMPLE_RATE) {
+      return input;
+    }
+    const ratio = inputRate / REALTIME_SAMPLE_RATE;
+    const length = Math.max(1, Math.floor(input.length / ratio));
+    const output = new Float32Array(length);
+    for (let index = 0; index < length; index += 1) {
+      const start = Math.floor(index * ratio);
+      const end = Math.min(
+        input.length,
+        Math.max(start + 1, Math.floor((index + 1) * ratio))
+      );
+      let sum = 0;
+      for (let sample = start; sample < end; sample += 1) {
+        sum += input[sample];
+      }
+      output[index] = sum / Math.max(1, end - start);
+    }
+    return output;
+  }
+
+  function floatToPcm16(input) {
+    const output = new Int16Array(input.length);
+    for (let index = 0; index < input.length; index += 1) {
+      const value = Math.max(-1, Math.min(1, input[index]));
+      output[index] = value < 0 ? value * 0x8000 : value * 0x7fff;
+    }
+    return output;
+  }
+
+  function stopRealtimeCapture() {
+    if (state.realtimeProcessor) {
+      state.realtimeProcessor.onaudioprocess = null;
+      try {
+        state.realtimeProcessor.disconnect();
+      } catch (_) {
+        // best effort
+      }
+      state.realtimeProcessor = null;
+    }
+    if (state.realtimeSource) {
+      try {
+        state.realtimeSource.disconnect();
+      } catch (_) {
+        // best effort
+      }
+      state.realtimeSource = null;
+    }
+    if (state.realtimeMute) {
+      try {
+        state.realtimeMute.disconnect();
+      } catch (_) {
+        // best effort
+      }
+      state.realtimeMute = null;
+    }
+    if (state.realtimeContext) {
+      const context = state.realtimeContext;
+      state.realtimeContext = null;
+      if (context.state !== "closed") {
+        void context.close().catch(() => {});
+      }
+    }
+    releaseStream();
+  }
+
+  function closeRealtimeSocket() {
+    const socket = state.realtimeSocket;
+    state.realtimeSocket = null;
+    if (!socket) {
+      return;
+    }
+    socket.onopen = null;
+    socket.onmessage = null;
+    socket.onerror = null;
+    socket.onclose = null;
+    try {
+      if (
+        socket.readyState === WebSocket.OPEN ||
+        socket.readyState === WebSocket.CONNECTING
+      ) {
+        socket.close();
+      }
+    } catch (_) {
+      // best effort
+    }
+  }
+
+  function cleanupRealtime() {
+    if (state.realtimeFinalTimer !== null) {
+      clearTimeout(state.realtimeFinalTimer);
+      state.realtimeFinalTimer = null;
+    }
+    stopRealtimeCapture();
+    closeRealtimeSocket();
+    state.realtimeFinalizing = false;
+    state.mode = "media";
+  }
+
+  function failRealtime(message) {
+    if (state.phase === "error") {
+      return;
+    }
+    cleanupRealtime();
+    stopTimer();
+    setStatus("实时识别失败", "error");
+    showError(message);
+  }
+
+  function handleRealtimeAudio(event) {
+    if (
+      state.phase !== "recording" ||
+      state.realtimeFinalizing ||
+      !state.realtimeContext ||
+      !state.realtimeSocket
+    ) {
+      return;
+    }
+    const socket = state.realtimeSocket;
+    if (socket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    const input = event.inputBuffer.getChannelData(0);
+    const resampled = resampleTo16k(input, state.realtimeContext.sampleRate);
+    if (!resampled.length) {
+      return;
+    }
+    try {
+      socket.send(floatToPcm16(resampled).buffer);
+    } catch (_) {
+      failRealtime("实时音频发送失败，请重试。");
+    }
+  }
+
+  function showRealtimePartial(payload) {
+    const text = typeof payload.text === "string" ? payload.text : "";
+    if (!text) {
+      return;
+    }
+    if (elements.resultPanel) {
+      elements.resultPanel.dataset.resultState = "success";
+    }
+    if (elements.resultPlaceholder) {
+      elements.resultPlaceholder.hidden = true;
+    }
+    if (elements.resultText) {
+      elements.resultText.hidden = false;
+      elements.resultText.textContent = text;
+    }
+    if (elements.resultLanguage) {
+      elements.resultLanguage.textContent = languageLabel(
+        elements.languageSelect ? elements.languageSelect.value : "zh"
+      );
+    }
+    if (
+      typeof payload.duration_seconds === "number" &&
+      elements.resultDuration
+    ) {
+      elements.resultDuration.textContent = `${payload.duration_seconds.toFixed(1)} s`;
+    }
+    if (
+      typeof payload.processing_seconds === "number" &&
+      elements.resultProcessing
+    ) {
+      elements.resultProcessing.textContent = `${payload.processing_seconds.toFixed(2)} s`;
+    }
+    if (elements.copyButton) {
+      elements.copyButton.disabled = true;
+    }
+    setPipelineStep(elements.stepCapture, "done");
+    setPipelineStep(elements.stepInfer, "active");
+    setStatus("实时识别中…点击 Stop Recording 结束。", "recording");
+  }
+
+  function finishRealtime(payload) {
+    if (state.realtimeFinalTimer !== null) {
+      clearTimeout(state.realtimeFinalTimer);
+      state.realtimeFinalTimer = null;
+    }
+    state.realtimeFinalizing = false;
+    cleanupRealtime();
+    stopTimer();
+    try {
+      showResult(payload);
+      setStatus("实时识别完成。", "success");
+    } catch (error) {
+      failRealtime(error.message || "实时识别返回了无法识别的响应。");
+    }
+  }
+
+  function handleRealtimeMessage(event) {
+    let payload = null;
+    try {
+      payload = JSON.parse(event.data);
+    } catch (_) {
+      failRealtime("实时识别返回了无法识别的消息。");
+      return;
+    }
+    if (payload.type === "partial") {
+      showRealtimePartial(payload);
+      return;
+    }
+    if (payload.type === "final") {
+      finishRealtime(payload);
+      return;
+    }
+    if (payload.type === "error") {
+      const code = payload.code ? ` (${payload.code})` : "";
+      failRealtime(`${payload.detail || "实时识别失败，请重试。"}${code}`);
+      return;
+    }
+    failRealtime("实时识别返回了未知消息类型。");
+  }
+
+  function stopRealtime(reason) {
+    if (!state.realtimeSocket || state.realtimeFinalizing) {
+      return;
+    }
+    if (reason !== "limit") {
+      updateRecordingTimer();
+    }
+    if (reason === "limit") {
+      state.stoppedByLimit = true;
+      state.recordedMs = MAX_RECORDING_MS;
+      if (elements.recordingTimer) {
+        elements.recordingTimer.textContent = formatElapsed(MAX_RECORDING_MS);
+      }
+      setStatus("已达到 60 秒上限，正在结束实时识别…", "working");
+    } else {
+      setStatus("正在结束实时识别…", "working");
+    }
+    stopTimer();
+    stopRealtimeCapture();
+    state.realtimeFinalizing = true;
+    setPhase("transcribing");
+    const socket = state.realtimeSocket;
+    try {
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        throw new Error("实时连接已关闭");
+      }
+      socket.send(JSON.stringify({ type: "stop" }));
+      state.realtimeFinalTimer = setTimeout(() => {
+        failRealtime("实时识别超时，请重试。");
+      }, REALTIME_FINAL_TIMEOUT_MS);
+    } catch (error) {
+      failRealtime(`无法结束实时识别：${error.message || "连接已关闭"}`);
+    }
+  }
+
+  function openRealtimeSocket(language) {
+    return new Promise((resolve, reject) => {
+      const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+      const socket = new WebSocket(
+        `${protocol}://${window.location.host}/ws/transcribe?language=${encodeURIComponent(language)}`
+      );
+      socket.binaryType = "arraybuffer";
+      const timer = setTimeout(() => {
+        try {
+          socket.close();
+        } catch (_) {
+          // best effort
+        }
+        reject(new Error("实时识别连接超时，请重试。"));
+      }, 8000);
+      socket.onopen = () => {
+        clearTimeout(timer);
+        resolve(socket);
+      };
+      socket.onerror = () => {
+        clearTimeout(timer);
+        reject(new Error("无法连接实时识别服务，请检查后端是否运行。"));
+      };
+    });
+  }
+
+  async function startRealtime() {
+    if (ACTIVE_PHASES.has(state.phase)) {
+      return;
+    }
+    if (typeof window.isSecureContext === "boolean" && !window.isSecureContext) {
+      showError("当前页面不是安全上下文，请通过 http://127.0.0.1:8000 或 localhost 访问。");
+      setStatus("非安全上下文，无法实时识别", "error");
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showError("当前浏览器不支持麦克风录音，请使用最新 Chrome 或 Edge。");
+      setStatus("浏览器不支持录音", "error");
+      return;
+    }
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (typeof WebSocket === "undefined" || typeof AudioCtor === "undefined") {
+      showError("当前浏览器不支持实时识别，请使用最新 Chrome 或 Edge。");
+      setStatus("浏览器不支持实时识别", "error");
+      return;
+    }
+
+    clearError();
+    state.mode = "realtime";
+    state.lastSubmission = null;
+    state.selectedFile = null;
+    if (elements.fileInput) {
+      elements.fileInput.value = "";
+    }
+    if (elements.uploadButton) {
+      elements.uploadButton.disabled = true;
+    }
+    if (elements.fileName) {
+      elements.fileName.textContent = "尚未选择文件。";
+    }
+    state.stoppedByLimit = false;
+    state.recordedMs = 0;
+    state.startTimeMs = 0;
+    state.realtimeFinalizing = false;
+    if (elements.recordingTimer) {
+      elements.recordingTimer.textContent = formatElapsed(0);
+    }
+    setPhase("requesting");
+    setStatus("正在请求麦克风权限…", "working");
+    resetResult();
+    resetPipeline();
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      state.stream = stream;
+      const language = elements.languageSelect
+        ? elements.languageSelect.value
+        : "zh";
+      const socket = await openRealtimeSocket(language);
+      state.realtimeSocket = socket;
+
+      let context;
+      try {
+        context = new AudioCtor({ sampleRate: REALTIME_SAMPLE_RATE });
+      } catch (_) {
+        context = new AudioCtor();
+      }
+      await context.resume();
+      const source = context.createMediaStreamSource(stream);
+      if (typeof context.createScriptProcessor !== "function") {
+        throw new Error("当前浏览器不支持实时音频处理。");
+      }
+      const processor = context.createScriptProcessor(
+        REALTIME_PROCESSOR_SIZE,
+        1,
+        1
+      );
+      const mute = context.createGain();
+      mute.gain.value = 0;
+      source.connect(processor);
+      processor.connect(mute);
+      mute.connect(context.destination);
+
+      state.realtimeContext = context;
+      state.realtimeSource = source;
+      state.realtimeProcessor = processor;
+      state.realtimeMute = mute;
+      processor.onaudioprocess = handleRealtimeAudio;
+
+      socket.onmessage = handleRealtimeMessage;
+      socket.onerror = () => {
+        failRealtime("实时识别连接失败，请重试。");
+      };
+      socket.onclose = () => {
+        if (
+          state.mode === "realtime" &&
+          !state.realtimeFinalizing &&
+          state.phase === "recording"
+        ) {
+          failRealtime("实时识别连接已断开，请重试。");
+        }
+      };
+
+      setPhase("recording");
+      startTimer();
+      setStatus("实时识别中…点击 Stop Recording 结束。", "recording");
+    } catch (error) {
+      cleanupRealtime();
+      stopTimer();
+      setStatus("实时识别启动失败", "error");
+      if (
+        error &&
+        (error.name === "NotAllowedError" ||
+          error.name === "PermissionDeniedError") &&
+        elements.permissionNote
+      ) {
+        elements.permissionNote.hidden = false;
+      }
+      const message =
+        error && error.name
+          ? describeMediaError(error)
+          : error && error.message
+            ? error.message
+            : "实时识别启动失败，请重试。";
+      showError(message);
+    }
+  }
+
   async function startRecording() {
     if (ACTIVE_PHASES.has(state.phase)) {
       return;
@@ -732,6 +1152,10 @@
       setStatus("浏览器不支持录音", "error");
       return;
     }
+    if (elements.realtimeToggle && elements.realtimeToggle.checked) {
+      await startRealtime();
+      return;
+    }
     if (typeof MediaRecorder === "undefined") {
       showError("当前浏览器不支持 MediaRecorder，请使用最新 Chrome 或 Edge。");
       setStatus("浏览器不支持录音", "error");
@@ -739,6 +1163,7 @@
     }
 
     clearError();
+    state.mode = "media";
     state.lastSubmission = null;
     state.selectedFile = null;
     if (elements.fileInput) {
@@ -824,6 +1249,10 @@
   }
 
   function stopRecording(reason) {
+    if (state.mode === "realtime") {
+      stopRealtime(reason);
+      return;
+    }
     if (!state.recorder || state.recorder.state === "inactive") {
       return;
     }
@@ -867,7 +1296,12 @@
     }
   });
 
-  window.addEventListener("pagehide", stopTimer);
+  window.addEventListener("pagehide", () => {
+    stopTimer();
+    if (state.mode === "realtime") {
+      cleanupRealtime();
+    }
+  });
 
   function dismissError() {
     clearError();

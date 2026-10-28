@@ -115,3 +115,16 @@ def test_request_error_and_retry_contract() -> None:
     assert "state.lastSubmission" in JS
     assert "dismissError" in JS
     assert "识别失败：" in JS
+
+
+def test_realtime_contract() -> None:
+    assert 'getElementById("realtime-toggle")' in JS
+    assert "async function startRealtime" in JS
+    assert "function stopRealtime" in JS
+    assert "createScriptProcessor(" in JS
+    assert "/ws/transcribe" in JS
+    assert 'type: "stop"' in JS
+    assert "resampleTo16k" in JS
+    assert "floatToPcm16" in JS
+    assert 'payload.type === "partial"' in JS
+    assert 'payload.type === "final"' in JS

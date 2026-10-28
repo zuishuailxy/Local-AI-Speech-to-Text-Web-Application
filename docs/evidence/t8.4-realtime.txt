@@ -4,6 +4,7 @@
 - 分支：`feature/f6-realtime`
 - 服务：`127.0.0.1:8001`，真实 faster-whisper small
 - 浏览器：Chrome 156，真实麦克风
+- 截图：`docs/evidence/realtime-zh.png`（用户提供）
 
 ## 真实麦克风验证
 
@@ -35,6 +36,15 @@ final 文本：
 - “语音”误识别为“预音”，属于 small 模型近音字错误
 - partial 处理耗时约 1.2–3.7 s；首次 partial 较慢（模型/窗口刚启动）
 - 控制台无 error
+
+## 截图
+
+`realtime-zh.png` 显示：
+
+- 实时识别复选框已勾选
+- 录音 14.2 s / 识别 1.7 s
+- final 文本
+- DevTools Network 中 WebSocket 帧：二进制分片、partial、stop、final
 
 ## ScriptProcessor warning
 

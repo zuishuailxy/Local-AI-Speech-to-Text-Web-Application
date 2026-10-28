@@ -44,6 +44,10 @@ E2E: auto 上传
 E2E: 5 passed
 ```
 
+## Windows CI
+
+- Run `40667909367`：success；默认 217、真实 7、Edge E2E 5。
+
 ## 契约
 
 - `zh`/`en` 请求行为不变。

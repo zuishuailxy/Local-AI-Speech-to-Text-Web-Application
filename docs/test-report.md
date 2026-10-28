@@ -91,7 +91,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 5 passed
 ```
 
-覆盖页面加载、WAV 上传 + 复制、假麦克风 WebM 录音。Windows CI 另用 Chromium 与 Edge 155 跑通同一套 3 项。
+覆盖页面加载、WAV 上传 + 复制、自动语言上传、假麦克风 WebM 录音、实时 WebSocket。Windows CI 另用 Chromium 与 Edge 155 跑通同一套 5 项。
 
 ### 命令输出归档
 
@@ -131,7 +131,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 | 60 秒自动停止 | 计时 01:00.0，自动提交；服务端音频 57.18 s | `auto-stop-60s.png` |
 | 复制、停后端重试、WebM 上传 | 通过；剪贴板哈希一致；重试复用同一文件 | `upload-webm.txt`、`upload-webm.png` |
 | Windows CI | 真实模型 5 项、Chromium/Edge E2E 通过 | `windows-ci.txt` |
-| Edge | Windows CI headless Edge 155，4 passed（含复制/F6） | `edge.txt` |
+| Edge | Windows CI headless Edge 155，5 passed（含复制/F6/auto） | `edge.txt` |
 
 ## 5. Windows CI
 
@@ -157,7 +157,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - WebSocket `/ws/transcribe?language=zh|en`，PCM16LE 16 kHz 分片。
 - partial 每约 2 s、最近 8 s 窗口；stop 后 final 全量。
 - 前端“实时识别（实验）”复选框，ScriptProcessor + 重采样 + PCM16。
-- Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI 自动检测后待重跑）。
+- Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40667909367` Edge 5 项通过）。
 - T8.1 自动语言：HTTP/WS/页面支持 `auto`；中英文真实样本自动检测通过；原有 zh/en 契约不变。
 - 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；控制台有 ScriptProcessor deprecation **warning**，无 error。
 - 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40665695751` 成功。

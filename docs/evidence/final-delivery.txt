@@ -24,29 +24,29 @@
 
 ```text
 python -m pytest -q
-212 passed, 9 deselected
+217 passed, 12 deselected
 
 python -m pytest -q -m real_model
-5 passed, 216 deselected
+7 passed, 222 deselected
 
 PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
-4 passed
+5 passed
 ```
 
 Windows CI：
 
 ```text
-Run 40665695751
+Run 40667909367
 Windows / Python 3.12: success
 Windows / real model: success
-Edge E2E: 4 passed
-真实模型: 5 passed
+Edge E2E: 5 passed
+真实模型: 7 passed
 ```
 
 干净复现：
 
 ```text
-新 clone + 新 venv 212 passed
+新 clone + 新 venv 217 passed
 /health 200
 中文/英文上传成功
 F6 WebSocket 6 partials + final 成功
@@ -61,7 +61,7 @@ F6 WebSocket 6 partials + final 成功
 - 中文 small 近音字错误；CER 0.18–0.23。
 - 语言选择不强制目标脚本。
 - ScriptProcessor deprecation warning（非 error，后续可迁 AudioWorklet）。
-- 自动语言检测未实现。
+- 自动语言检测已实现；短音频/噪声误判仍需评估。
 
 ## 后续优先级
 

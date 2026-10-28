@@ -43,6 +43,10 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 
 Chrome ScriptProcessor deprecation warning；功能正常，非 error。题目允许 ScriptProcessor，后续可迁 AudioWorklet。
 
+## T8.1 后续（auto）
+
+- 自动语言检测合并后 Windows CI run `40667909367`：success；Edge E2E 5。
+
 ## Tag
 
 - `v1.0-must-have` 保留为必做回滚点

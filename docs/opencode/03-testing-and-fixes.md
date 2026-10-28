@@ -31,7 +31,7 @@
 ```
 
 ```text
-212 passed, 9 deselected
+217 passed, 12 deselected
 ```
 
 默认测试不加载真实模型、不下载权重、不访问麦克风。
@@ -187,13 +187,13 @@
 - T8.2：WebSocket/PCM 后端，8 个 WS 单测。
 - T8.3：ScriptProcessor + 重采样 + partial/final 前端，E2E 4 passed。
 - T8.4：真实麦克风 14.08 s、6 个 partials、final 1.742 s、CER 0.0455；HTTP 回归 200。
-- T8.1：auto 语言检测（HTTP/WS/页面），中英文真实样本检测通过；全量 217/12，真实 7，E2E 5。
+- T8.1：auto 语言检测（HTTP/WS/页面），中英文真实样本检测通过；全量 217/12，真实 7，E2E 5；Windows CI run `40667909367` 通过，Edge 5。
 - ScriptProcessor deprecation warning 记录为 warning，非 error。
 - 分支：`feature/f6-realtime` 已合并；Windows CI run `40665695751` 通过。
 
 
 ## 12. P9 终验
 
-- T9.1：新 clone `/tmp/stt-t91` + 新 venv；42 包安装；212 passed、9 deselected；`/health`/页面/中英文上传/F6 WebSocket 均通过。
+- T9.1：新 clone `/tmp/stt-t91` + 新 venv；42 包安装；当时 212 passed、9 deselected；`/health`/页面/中英文上传/F6 WebSocket 均通过。T8.1 后为 217/12。
 - T9.2：F1–F5/接口/环境/F6 逐项核对，未验证项单列；证据 `docs/evidence/requirements-checklist.md`。
 - 证据：`docs/evidence/final-repro.txt`、`requirements-checklist.md`。

@@ -27,7 +27,7 @@ cd /tmp/stt-t91
 ```
 
 ```text
-212 passed, 9 deselected in 2.76s
+212 passed, 9 deselected in 2.76s（T9.1 当时；T8.1 后为 217/12）
 ```
 
 启动：

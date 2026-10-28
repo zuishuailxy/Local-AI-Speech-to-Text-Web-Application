@@ -189,7 +189,7 @@
 | 安全 | 默认本机 | 绑定 `127.0.0.1`，无认证/多用户 |
 | 性能 | CPU 可接受 | 12 s 音频约 3–5 s；9 s 约 1.4–2.6 s |
 | 可观测性 | 可定位请求 | request_id、状态码、耗时、语言、text_chars |
-| 测试 | pytest 默认无模型/麦克风/外网 | 212 passed, 9 deselected（F6 分支） |
+| 测试 | pytest 默认无模型/麦克风/外网 | 217 passed, 12 deselected |
 | 交付 | 文档/证据/OpenCode | README、design、test-report、ai-development、三阶段记录 |
 
 ## 6. 假设与边界

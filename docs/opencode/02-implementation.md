@@ -360,7 +360,7 @@ httpx 0.28.1
 python -m pytest -q
 ```
 
-结果：`203 passed`（P7 必做版）。F6 分支新增 8 个 WS 测试与 1 个实时前端静态测试，当前为 `212 passed, 9 deselected`。
+结果：`203 passed`（P7 必做版）。F6 分支新增 8 个 WS 测试与 1 个实时前端静态测试，当前为 `217 passed, 12 deselected`（含 auto 检测）。
 
 另有 5 个 `real_model` 与 3 个 `e2e` 用例默认排除。浏览器 E2E 使用 Playwright + 假麦克风 + FakeTranscriber：
 

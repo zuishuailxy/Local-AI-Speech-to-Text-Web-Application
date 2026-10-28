@@ -59,7 +59,7 @@
 默认隔离与合规：
 
 - 干净 `.venv-t55`（仅 41 个运行依赖）+ 移走 `models/` + 离线/代理阻塞
-- `196 passed, 8 deselected in 2.73s`，未创建 `models/`，无下载日志
+- `203 passed, 8 deselected in 2.53s`（最终 42 依赖），未创建 `models/`，无下载日志
 - 前端仅 MediaRecorder/getUserMedia，fetch 仅 `/api/transcribe`，无 CDN
 - `app/` 内无云端 ASR SDK、urllib/httpx/socket；模型从本地路径加载
 
@@ -146,12 +146,12 @@
 - 真实模型：5 passed（中文 CER 0.2308、英文 WER 0、WebM WER 0）。
 - 浏览器 E2E：本地 3 passed，Windows CI 3 passed。
 - T6.1 真实麦克风中文：8.16 s，processing 1.712 s，简体，CER 0.0，控制台无报错。
-- 隔离：干净 venv + 模型移走 + 离线/代理阻塞，196 passed、8 deselected、2.73s（当时 41 个依赖；后续增加本地 `zhconv`）。
+- 隔离：干净 venv + 模型移走 + 离线/代理阻塞，203 passed、8 deselected、2.53s（42 个依赖，含 `zhconv`）。
 - 语言/日志：`language` 已贯通；日志不记录文本原文；错配可告警。
 - 详细清单：`docs/evidence/p5-summary.txt`。
 
 
-## 9. P6 手动验证（进行中）
+## 9. P6 手动验证（已完成）
 
 - T6.1 中文真实麦克风：8.16 s，processing 1.712 s，简体，CER 0.0，控制台无报错。
 - T6.2 英文真实麦克风：7.14 s，processing 2.592 s，WER 0.0，输出英文。
@@ -168,3 +168,13 @@
 - T6.12 P6 收尾：测试报告 `docs/test-report.md` 完成；6 项手动验证通过；G4 通过（Windows 11 实机/桌面 Edge 未验证，已披露）。
 - T6.13 Windows 11 实机补验：阻塞，无环境，不计为通过。
 - 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`、`upload-webm.png`、`offline.txt`、`offline-zh.png`、`offline-en.png`、`windows-ci.txt`、`edge.txt`、`docs/test-report.md`。
+
+
+## 10. P7 文档收尾
+
+- T7.1 README：安装/模型/启动/API/测试/离线/排障/限制/结构。
+- T7.2 requirements：F1–F6、接口、非功能、假设/边界、验收、D1–D7。
+- T7.3 design：架构、模块、音频/模型/错误/并发/安全/限制、官方资料。
+- T7.4 test-report：最终环境、Mock 分布、真实模型、6 项手动、离线、CI、Edge、F6 未实现、证据路径。
+- T7.5 ai-development：OpenCode 任务、人工决策、问题修复、验证方法、优化优先级、三阶段索引。
+- T7.6：三阶段记录复核与脱敏，索引见 `docs/opencode/README.md`。

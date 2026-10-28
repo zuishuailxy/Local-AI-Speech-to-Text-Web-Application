@@ -399,11 +399,12 @@ P2/P3/P4 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc958
 
 ## 9. 待补充
 
-- 交付文档（README 完整版、requirements/design/ai-development）；
+- 交付文档已完成 T7.1–T7.6；剩余 T7.7 issue log、T7.8 tag/终验；
 - 条件项 F6 实时识别（受 G5 门禁）。
 
 ## 10. 备注
 
 - P3 已下载并验证 small 模型；模型权重保留本地，`models/` 未进入 Git。
 - 生产 `app.main:app` 已接入真实引擎；默认 `create_app()` 仍不注入引擎，测试不加载模型。
-- P5/P6 已完成：真实模型 5 项、浏览器 E2E 3 项、默认隔离/合规、全链路日志、6 项手动验证、离线、Windows CI、Edge；下一步 P7 文档收尾。
+- P5/P6 已完成：真实模型 5 项、浏览器 E2E 3 项、默认隔离/合规、全链路日志、6 项手动验证、离线、Windows CI、Edge。
+- P7：T7.1–T7.6 已完成；T7.7 issue log、T7.8 tag/终验待完成。

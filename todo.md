@@ -733,12 +733,13 @@
   - 验证：`/tmp/stt-t91` + 新 venv/42 包；212 passed、9 deselected；port 8010 /health 200、/ 200；zh 12.0 s / 6.268 s；en 9.0 s / 1.706 s；WS 6 partials / final 3.028 s。
   - 结果：已完成（2026-10-28）；模型通过 `ASR_MODEL_PATH` 复用本地权重，未在 clone 内下载。
 
-- [ ] **T9.2 必做需求逐项核对**
+- [x] **T9.2 必做需求逐项核对**
   - 目标：确保 F1–F5、接口、环境、测试、文档无遗漏。
-  - 文件：`docs/test-report.md`、`plan.md` 第 3 节。
+  - 文件：`docs/test-report.md`、`plan.md` 第 3 节、`docs/evidence/requirements-checklist.md`。
   - 前置：T9.1。
   - 完成标准：每条需求有“实现位置 + 验证证据”；F6 必须写明“已完成并演示”或“未完成及原因”，不能空泛带过；Windows 实机未验证单独标注。
-  - 验证：双人/自查逐行核对；无“计划即通过”的表述。
+  - 验证：F1/F2/F3/F4/F5 逐条实现+证据；三接口；环境/非功能；F6 本地完成并演示、Windows CI 待合并；未验证项单列（Win11/桌面 Edge/无设备模拟/60s/AudioWorklet）。
+  - 结果：已完成（2026-10-28）；未把计划/CI/模拟写成实机通过。
 
 - [ ] **T9.3 文档/代码/任务一致性检查**
   - 目标：避免计划、实现、测试报告互相矛盾。

@@ -194,4 +194,5 @@
 ## 12. P9 终验
 
 - T9.1：新 clone `/tmp/stt-t91` + 新 venv；42 包安装；212 passed、9 deselected；`/health`/页面/中英文上传/F6 WebSocket 均通过。
-- 证据：`docs/evidence/final-repro.txt`。
+- T9.2：F1–F5/接口/环境/F6 逐项核对，未验证项单列；证据 `docs/evidence/requirements-checklist.md`。
+- 证据：`docs/evidence/final-repro.txt`、`requirements-checklist.md`。

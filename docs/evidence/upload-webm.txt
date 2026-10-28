@@ -1,0 +1,93 @@
+# T6.8 复制、失败重试、连续识别与 WebM 上传
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Chrome 156.0.8078.49
+- 服务：`uvicorn app.main:app`，`127.0.0.1:8001`，真实 faster-whisper small
+- 文件：`tests/fixtures/speech-en.webm`
+- 截图：`docs/evidence/upload-webm.png`（用户自行截图）
+
+## 1. WebM 上传
+
+- 语言：English（en）
+- 文件：`speech-en.webm`，55.2 KB
+- 页面：9.0 s / 1.44 s
+- 服务端：8.999 s，processing 1.438 s，WER 0.0
+
+```text
+request_id=273e4f7d7f03
+extension=.webm
+size=56489
+duration_seconds=8.999
+processing_seconds=1.438
+inference_seconds=1.385
+status=200
+```
+
+文本：
+
+```text
+Never give up. Never lose hope. Always have faith. It allows you to cope.
+```
+
+## 2. 复制
+
+点击“复制文本”后，直接读取系统剪贴板：
+
+```text
+Never give up. Never lose hope. Always have faith. It allows you to cope.
+```
+
+剪贴板与页面文本 SHA-256 完全一致：
+
+```text
+5914fab3d41456dd049cfc127e8fa0214a699be03c5f0f7019a3bdb99b5af0fb
+```
+
+## 3. 停后端 → 重试
+
+1. 保持页面与已选 `speech-en.webm` 不动
+2. 停止 8001 后端
+3. 点击 Upload & Transcribe
+4. 页面提示：
+   ```text
+   识别失败：无法连接后端，请确认服务仍在运行后重试。
+   ```
+5. 重启后端，点击错误面板“重试”
+6. 未重新选文件，同一 WebM 自动重试成功
+
+重试日志：
+
+```text
+request_id=43797e7edeaa
+extension=.webm
+size=56489
+duration_seconds=8.999
+processing_seconds=2.446
+model_load_seconds=1.030
+inference_seconds=1.366
+status=200
+```
+
+重试结果文本与首次一致，错误面板消失。
+
+## 4. 连续录音/上传
+
+- 连续两次真实录音：T6.1 中文 8.16 s、T6.2 英文 7.14 s，均成功。
+- 连续两次页面文件上传：T6.3 中文 WAV、T6.4 英文 WAV，均成功。
+- 本次又完成 WebM 上传、复制、网络失败后重试。
+
+## 检查项
+
+- [x] WebM/Opus 上传成功
+- [x] 复制文本与页面一致（剪贴板校验）
+- [x] 停后端显示网络错误
+- [x] 重启后“重试”复用同一文件成功
+- [x] 错误面板关闭
+- [x] 连续录音/上传均有成功记录
+- [x] 用户自行截图
+
+## 备注
+
+- 重试请求包含模型重新加载，processing 2.446 s。
+- 网络错误由真实停止 uvicorn 制造，不是 Mock。
+- WebM 文件为用户本人录音派生的测试 fixture。

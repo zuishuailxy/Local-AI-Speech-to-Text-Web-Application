@@ -158,4 +158,5 @@
 - T6.5 权限拒绝：提示与错误状态正确；恢复权限后 3 s 静音录音提交 200。
 - T6.6 无设备/占用：DevTools 注入 NotFoundError/NotReadableError，提示与失败状态正确；明确标注为模拟。
 - T6.7 异常上传/空语音/503：6 个上传分支页面提示与状态码正确；60 s 自动停止实测通过（页面 60.0 s，服务端音频 57.18 s，差异已记录）。
-- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`。
+- T6.8 WebM 上传、复制、停后端重试：8.999 s、WER 0；剪贴板哈希一致；重试复用同一文件成功。
+- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`、`upload-webm.png`。

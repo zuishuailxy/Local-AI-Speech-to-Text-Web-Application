@@ -27,6 +27,7 @@ def test_defaults_are_stable(tmp_path: Path) -> None:
     assert settings.log_format == "text"
     assert settings.log_max_bytes == 5 * 1024 * 1024
     assert settings.log_backup_count == 3
+    assert settings.asr_initial_prompt == ""
     assert settings.supported_languages == SUPPORTED_LANGUAGES
 
 
@@ -48,6 +49,7 @@ def test_environment_overrides_and_relative_model_path(tmp_path: Path) -> None:
             "LOG_FORMAT": "json",
             "LOG_MAX_BYTES": "1024",
             "LOG_BACKUP_COUNT": "2",
+            "ASR_INITIAL_PROMPT": "  以下是普通话的句子。  ",
         },
         project_root=tmp_path,
     )
@@ -67,6 +69,7 @@ def test_environment_overrides_and_relative_model_path(tmp_path: Path) -> None:
     assert settings.log_format == "json"
     assert settings.log_max_bytes == 1024
     assert settings.log_backup_count == 2
+    assert settings.asr_initial_prompt == "以下是普通话的句子。"
 
 
 def test_absolute_model_path_is_preserved(tmp_path: Path) -> None:
@@ -156,3 +159,11 @@ def test_settings_are_immutable(tmp_path: Path) -> None:
 
     with pytest.raises((AttributeError, TypeError)):
         settings.max_upload_mb = 99  # type: ignore[misc]
+
+
+def test_too_long_initial_prompt_is_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="ASR_INITIAL_PROMPT"):
+        Settings.from_env(
+            environ={"ASR_INITIAL_PROMPT": "x" * 501},
+            project_root=tmp_path,
+        )

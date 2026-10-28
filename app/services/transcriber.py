@@ -28,6 +28,9 @@ from app.services.text import to_simplified
 logger = logging.getLogger(__name__)
 AUTO_LANGUAGE = "auto"
 AUTO_MIN_PROBABILITY = 0.55
+# Short clips are where an initial prompt most often leaks prompt words into
+# the output, so the opt-in prompt is only used for clips of this length.
+PROMPT_MIN_AUDIO_SECONDS = 3.0
 
 
 def _output_language_hint(text: str) -> str:
@@ -180,10 +183,22 @@ class WhisperTranscriber:
             if self._model is None:
                 self._load_model()
 
+    def _initial_prompt(self, language: str, sample_count: int) -> str | None:
+        prompt = self._settings.asr_initial_prompt
+        if not prompt or language != "zh":
+            return None
+        if sample_count < int(PROMPT_MIN_AUDIO_SECONDS * 16000):
+            return None
+        return prompt
+
     def transcribe(self, samples: np.ndarray, language: str) -> TranscriptionResult:
         sample_count = int(samples.size)
+        initial_prompt = self._initial_prompt(language, sample_count)
         logger.info(
-            "asr_start requested_language=%s samples=%d", language, sample_count
+            "asr_start requested_language=%s samples=%d initial_prompt=%s",
+            language,
+            sample_count,
+            "on" if initial_prompt else "off",
         )
         with self._lock:
             model = self._model
@@ -193,12 +208,14 @@ class WhisperTranscriber:
             started = time.perf_counter()
             try:
                 model_language = None if language == AUTO_LANGUAGE else language
-                segments, info = model.transcribe(
-                    samples,
-                    language=model_language,
-                    beam_size=self._settings.asr_beam_size,
-                    vad_filter=self._settings.asr_vad_filter,
-                )
+                transcribe_kwargs: dict[str, Any] = {
+                    "language": model_language,
+                    "beam_size": self._settings.asr_beam_size,
+                    "vad_filter": self._settings.asr_vad_filter,
+                }
+                if initial_prompt:
+                    transcribe_kwargs["initial_prompt"] = initial_prompt
+                segments, info = model.transcribe(samples, **transcribe_kwargs)
                 text = "".join(segment.text for segment in segments).strip()
                 detected_language = getattr(info, "language", None)
                 result_language = language
@@ -240,7 +257,7 @@ class WhisperTranscriber:
             "asr_complete requested_language=%s detected_language=%s "
             "language_probability=%s output_language=%s output_cjk_ratio=%.3f "
             "output_latin_ratio=%.3f normalization=%s samples=%d "
-            "inference_seconds=%.3f text_chars=%d",
+            "inference_seconds=%.3f text_chars=%d initial_prompt=%s",
             language,
             detected_language,
             language_probability,
@@ -251,6 +268,7 @@ class WhisperTranscriber:
             sample_count,
             inference_seconds,
             len(text),
+            "on" if initial_prompt else "off",
         )
         if output_language != "unknown" and output_language != result_language:
             logger.warning(

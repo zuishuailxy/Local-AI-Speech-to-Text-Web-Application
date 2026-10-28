@@ -795,7 +795,7 @@
   - 前置：T10.2。
   - 完成标准：对比 baseline / 可选 initial_prompt 或热词；记录 CER、耗时、幻觉风险；无明显收益则不启用。
   - 验证：baseline CER 0.2308；领域 prompt CER 0.2051、耗时 3.317 s，仍有近音字；默认不启用 prompt，未改参考文本。
-  - 结果：已完成（2026-10-28）；prompt 收益有限，保持无 prompt 默认。
+  - 结果：已完成（2026-10-28）；prompt 收益有限，保持无 prompt 默认；新增 opt-in `ASR_INITIAL_PROMPT`（仅 zh、≥3 s），默认空；默认启用的弊端见 `docs/evidence/t10.4-prompt-default-analysis.md`。
 
 - [x] **T10.5 日志工程化**
   - 目标：可选文件保存、结构化 JSON、基础轮转；保持隐私边界。

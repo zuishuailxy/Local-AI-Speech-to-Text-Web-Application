@@ -24,7 +24,7 @@ python -m pytest -q
 ```
 
 ```text
-224 passed, 12 deselected in 1.60s
+227 passed, 12 deselected in 1.76s
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -35,7 +35,7 @@ python -m pytest -q
 | --- | ---: | --- |
 | `test_app_factory.py` | 5 | 应用工厂、注入、静态页 |
 | `test_audio.py` | 42 | 校验、流式 10 MB、解码、时长、清理 |
-| `test_config.py` | 23 | 默认值、环境变量、非法值、日志级别/文件 |
+| `test_config.py` | 24 | 默认值、环境变量、非法值、日志级别/文件、prompt |
 | `test_download_model.py` | 10 | 模型下载/校验/回退 |
 | `test_errors.py` | 10 | 错误码、异常处理 |
 | `test_fixtures.py` | 8 | fixture/隔离 |
@@ -50,15 +50,15 @@ python -m pytest -q
 | `test_samples.py` | 5 | WAV 参数、参考文本、无模型权重 |
 | `test_transcribe_api.py` | 21 | 200/4xx/5xx、空文本、重试、auto |
 | `test_transcriber.py` | 7 | 协议/Fake |
-| `test_transcriber_unit.py` | 15 | 惰性加载、锁、推理、日志、繁转简、auto/低置信度 |
+| `test_transcriber_unit.py` | 17 | 惰性加载、锁、推理、日志、繁转简、auto/低置信度、prompt 门控 |
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
 | `test_ws.py` | 9 | WebSocket/PCM/partial/final/错误/auto |
-| **合计** | **224** | 默认执行 |
+| **合计** | **227** | 默认执行 |
 
 真实模型 5 项、E2E 4 项默认排除，分别需要模型/浏览器。
 
-当前全量为 224 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前全量为 227 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s

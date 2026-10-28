@@ -58,6 +58,15 @@ def _parse_log_level(env: Mapping[str, str], name: str, default: str) -> str:
     return raw
 
 
+def _parse_prompt(env: Mapping[str, str], name: str, max_chars: int) -> str:
+    value = _read_env(env, name, "").strip()
+    if len(value) > max_chars:
+        raise ValueError(
+            f"{name} must be at most {max_chars} characters; got {len(value)}"
+        )
+    return value
+
+
 def _parse_log_format(env: Mapping[str, str], name: str, default: str) -> str:
     raw = _read_env(env, name, default).lower()
     if raw not in {"text", "json"}:
@@ -80,6 +89,7 @@ class Settings:
     asr_warmup: bool
     max_upload_mb: int
     max_audio_seconds: int
+    asr_initial_prompt: str = ""
     log_level: str = "INFO"
     log_file: Path | None = None
     log_format: str = "text"
@@ -130,6 +140,7 @@ class Settings:
             asr_beam_size=_parse_positive_int(env, "ASR_BEAM_SIZE", 5),
             asr_vad_filter=_parse_bool(env, "ASR_VAD_FILTER", True),
             asr_warmup=_parse_bool(env, "ASR_WARMUP", True),
+            asr_initial_prompt=_parse_prompt(env, "ASR_INITIAL_PROMPT", 500),
             max_upload_mb=_parse_positive_int(env, "MAX_UPLOAD_MB", 10),
             max_audio_seconds=_parse_positive_int(env, "MAX_AUDIO_SECONDS", 120),
             log_level=_parse_log_level(env, "LOG_LEVEL", "INFO"),

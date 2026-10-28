@@ -18,7 +18,7 @@
 ## 回归
 
 ```text
-默认：224 passed, 12 deselected
+默认：227 passed, 12 deselected
 真实模型：7 passed, 229 deselected
 E2E：5 passed
 ```
@@ -29,7 +29,7 @@ Windows CI run `40680120089`：默认测试、真实模型、Chromium/Edge E2E �
 
 - CI 是 Windows Server + headless Edge + 假麦克风；不是 Windows 11 实机。
 - T10.3 真实麦克风复测：12.032 s、7 partials、首个非空文本 3.0 s、后续推理 ≤1.38 s、final 1.970 s；首个非空文本未完全达到 2.5 s 目标，已记录。
-- T10.4 只做样本实验，未启用 prompt。
+- T10.4 只做样本实验，未默认启用 prompt；提供 opt-in `ASR_INITIAL_PROMPT`（默认空，仅 zh 且 ≥3 s）。
 
 ## Tag
 

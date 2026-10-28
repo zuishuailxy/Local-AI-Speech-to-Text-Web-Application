@@ -38,8 +38,8 @@ class FakeWhisperModel:
         )
 
 
-def make_settings(tmp_path, *, model_exists: bool = True) -> Settings:
-    settings = Settings.from_env(environ={}, project_root=tmp_path)
+def make_settings(tmp_path, *, model_exists: bool = True, **env: str) -> Settings:
+    settings = Settings.from_env(environ=env, project_root=tmp_path)
     if model_exists:
         settings.asr_model_path.mkdir(parents=True)
     return settings
@@ -306,3 +306,32 @@ def test_auto_low_confidence_falls_back_to_script(tmp_path, caplog) -> None:
     assert result.text == "你好"
     assert "asr_auto_low_confidence" in caplog.text
     assert "fallback_language=zh" in caplog.text
+
+
+PROMPT = "以下是普通话语音识别测试，包含：语音识别、实时语音识别、本地语音识别。"
+
+
+def test_prompt_is_sent_only_for_long_explicit_chinese(tmp_path) -> None:
+    settings = make_settings(tmp_path, ASR_INITIAL_PROMPT=PROMPT)
+    model = FakeWhisperModel()
+    engine = WhisperTranscriber(settings, model_factory=lambda *a, **k: model)
+
+    engine.transcribe(np.zeros(5 * 16_000, dtype=np.float32), "zh")
+    engine.transcribe(np.zeros(2 * 16_000, dtype=np.float32), "zh")
+    engine.transcribe(np.zeros(5 * 16_000, dtype=np.float32), "en")
+    engine.transcribe(np.zeros(5 * 16_000, dtype=np.float32), "auto")
+
+    prompts = [kwargs.get("initial_prompt") for _, kwargs in model.calls]
+    assert prompts == [PROMPT, None, None, None]
+
+
+def test_prompt_text_is_not_logged(tmp_path, caplog) -> None:
+    settings = make_settings(tmp_path, ASR_INITIAL_PROMPT=PROMPT)
+    model = FakeWhisperModel()
+    engine = WhisperTranscriber(settings, model_factory=lambda *a, **k: model)
+
+    with caplog.at_level(logging.INFO, logger="app.services.transcriber"):
+        engine.transcribe(np.zeros(5 * 16_000, dtype=np.float32), "zh")
+
+    assert "initial_prompt=on" in caplog.text
+    assert "本地语音识别" not in caplog.text

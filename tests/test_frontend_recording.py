@@ -92,3 +92,15 @@ def test_transcribe_request_and_result_contract() -> None:
     assert "duration_seconds" in JS
     assert "lastSubmission" in JS
     assert "submitAudio(blob, filename" in JS
+
+
+def test_copy_contract() -> None:
+    assert 'getElementById("copy-button")' in JS
+    assert 'addEventListener("click", copyResult)' in JS
+    assert "navigator.clipboard" in JS
+    assert "writeText(text)" in JS
+    assert 'document.execCommand("copy")' in JS
+    assert "fallbackCopy" in JS
+    assert "已复制" in JS
+    assert "复制失败" in JS
+    assert 'elements.copyButton.disabled = true' in JS

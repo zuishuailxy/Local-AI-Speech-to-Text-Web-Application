@@ -373,12 +373,13 @@
   - 结果：已完成（2026-10-28）；统一 submitAudio、processing timer、pipeline 状态、音频预览、空文本提示；错误保留最近提交供重试。
   - 备注：真实麦克风录音仍待 T6.1/T6.2；Edge 待 T6.11；Copy 与错误联调分别在 T4.7/T4.8。
 
-- [ ] **T4.7 实现复制功能**
+- [x] **T4.7 实现复制功能**
   - 目标：一键复制识别文本。
-  - 文件：`static/app.js`。
+  - 文件：`static/app.js`、`tests/test_frontend_recording.py`、`docs/evidence/t4.7-copy.txt`。
   - 前置：T4.6。
   - 完成标准：Clipboard API 成功提示；权限失败回退 textarea；空文本禁用。
-  - 验证：复制后粘贴到编辑器比对。
+  - 验证：真实浏览器上传后点击复制，捕获文本与结果一致；强制 Clipboard 失败后 execCommand 回退成功；10 前端测试/全量 167 passed。
+  - 结果：已完成（2026-10-28）；按钮已复制反馈 1.6s；“复制失败”提示；空文本/重置时 disabled。
 
 - [ ] **T4.8 实现错误展示、重试与重置**
   - 目标：4xx/5xx 可读展示，失败后可重试/重新录音。

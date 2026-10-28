@@ -77,6 +77,7 @@
     processingStartMs: 0,
     lastResult: null,
     previewUrl: null,
+    copyFeedbackTimer: null,
   };
 
   function chooseMimeType() {
@@ -393,6 +394,7 @@
     }
     if (elements.copyButton) {
       elements.copyButton.disabled = true;
+      elements.copyButton.textContent = "复制文本";
     }
     state.lastResult = null;
   }
@@ -439,6 +441,10 @@
         elements.resultText.hidden = false;
         elements.resultText.textContent = payload.text;
       }
+      if (elements.copyButton) {
+        elements.copyButton.disabled = false;
+        elements.copyButton.textContent = "复制文本";
+      }
     } else {
       if (elements.resultText) {
         elements.resultText.hidden = true;
@@ -448,6 +454,10 @@
         elements.resultPlaceholder.hidden = false;
         elements.resultPlaceholder.textContent =
           "未检测到可识别语音，请换一段更清晰、包含说话的音频。";
+      }
+      if (elements.copyButton) {
+        elements.copyButton.disabled = true;
+        elements.copyButton.textContent = "复制文本";
       }
     }
 
@@ -545,6 +555,79 @@
         // Re-enable the actions that were disabled for the request.
         setAppState(state.phase);
       }
+    }
+  }
+
+  function setCopyFeedback(text, resetAfterMs = 1600) {
+    if (!elements.copyButton) {
+      return;
+    }
+    if (state.copyFeedbackTimer !== null) {
+      clearTimeout(state.copyFeedbackTimer);
+      state.copyFeedbackTimer = null;
+    }
+    elements.copyButton.textContent = text;
+    if (resetAfterMs > 0) {
+      state.copyFeedbackTimer = setTimeout(() => {
+        elements.copyButton.textContent = "复制文本";
+        state.copyFeedbackTimer = null;
+      }, resetAfterMs);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } finally {
+      textarea.remove();
+    }
+    if (!copied) {
+      throw new Error("execCommand copy failed");
+    }
+  }
+
+  async function copyResult() {
+    const text = state.lastResult && state.lastResult.text;
+    if (!text) {
+      return;
+    }
+    let copied = false;
+    try {
+      if (
+        navigator.clipboard &&
+        typeof navigator.clipboard.writeText === "function"
+      ) {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
+    } catch (_) {
+      copied = false;
+    }
+
+    if (!copied) {
+      try {
+        fallbackCopy(text);
+        copied = true;
+      } catch (_) {
+        copied = false;
+      }
+    }
+
+    if (copied) {
+      setCopyFeedback("已复制");
+    } else {
+      setCopyFeedback("复制失败");
+      setStatus("复制失败，请手动选择文本。", "error");
     }
   }
 
@@ -818,6 +901,9 @@
       }
     });
   }
+  if (elements.copyButton) {
+    elements.copyButton.addEventListener("click", copyResult);
+  }
   if (elements.dismissErrorButton) {
     elements.dismissErrorButton.addEventListener("click", dismissError);
   }
@@ -853,5 +939,6 @@
     }),
     getSelectedFile: () => state.selectedFile,
     selectFile,
+    copyResult,
   };
 })();

@@ -1,0 +1,63 @@
+# T6.4 页面上传英文 WAV
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Chrome 156.0.8078.49
+- 服务：`uvicorn app.main:app`，`127.0.0.1:8001`，真实 faster-whisper small
+- 文件：`samples/english.wav`
+- 截图：`docs/evidence/upload-en.png`（用户自行截图）
+
+## 操作
+
+1. Chrome 打开 `http://127.0.0.1:8001`
+2. 语言选择 English（en）
+3. 选择 `samples/english.wav`
+4. 点击 Upload & Transcribe
+5. 等待结果
+
+## 结果
+
+页面显示：
+
+```text
+Never give up. Never lose hope. Always have faith. It allows you to cope.
+```
+
+- 语言：English（en）
+- 音频时长：9.0 s
+- 处理耗时：1.45 s（服务端 1.447 s）
+- 推理耗时：1.426 s
+- 文件：`english.wav`，281.3 KB
+- 文本与参考完全一致，WER 0.0
+- 输出英文，未被繁转简步骤影响
+
+服务端日志：
+
+```text
+request_id=ec4f557b3939
+language=en
+extension=.wav
+size=288044
+duration_seconds=9.000
+processing_seconds=1.447
+inference_seconds=1.426
+text_chars=73
+status=200
+```
+
+## 检查项
+
+- [x] 页面选择 `english.wav`
+- [x] 文件名校验通过
+- [x] 上传成功（200）
+- [x] 真实模型识别
+- [x] 音频时长 9.0 s
+- [x] 处理耗时展示
+- [x] 英文结果展示
+- [x] WER 0.0
+- [x] 用户自行截图（第一次误存中文截图，已重新截图）
+
+## 备注
+
+- 本次模型已加载，processing 1.447 s，接近纯推理耗时 1.426 s。
+- 截图显示 `english.wav`、English（en）、9.0 s、1.45 s 和完整英文文本。
+- favicon 正常，无 404。

@@ -502,12 +502,13 @@
   - 验证：Chrome 156 上传 `chinese.wav`（375 KB）；12.0 s；页面 3.98 s（服务端 3.978 s）；CER 0.2308；文本含占如/抓手/做别/金牛/西洋近音错误；截图 `upload-zh.png`。
   - 结果：已完成（2026-10-28）；真实模型上传链路正常，输出简体，无空文本/幻觉；favicon 404 已消失。
 
-- [ ] **T6.4 手动：上传英文 WAV**
+- [x] **T6.4 手动：上传英文 WAV**
   - 目标：验证英文上传。
-  - 文件：`docs/test-report.md`、`docs/evidence/upload-en.png`。
+  - 文件：`docs/test-report.md`（后续汇总）、`docs/evidence/upload-en.png`、`docs/evidence/t6.4-upload-en.txt`。
   - 前置：T6.3。
   - 完成标准：`samples/english.wav` 上传成功；输出英文。
-  - 验证：对比参考文本。
+  - 验证：Chrome 156 上传 `english.wav`（281.3 KB）；9.0 s；页面 1.45 s（服务端 1.447 s）；输出与参考完全一致；WER 0.0；截图 `upload-en.png`。
+  - 结果：已完成（2026-10-28）；首次截图误存中文结果，已重新截图确认。
 
 - [ ] **T6.5 手动：麦克风权限被拒绝**
   - 目标：验证 F5 权限异常。

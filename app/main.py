@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
+from app.api.ws import router as ws_router
 from app.config import PROJECT_ROOT, Settings
 from app.errors import FileTooLargeError, register_exception_handlers
 from app.services.audio import validate_content_length
@@ -113,6 +114,7 @@ def create_app(
         return response
 
     app.include_router(router)
+    app.include_router(ws_router)
 
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:

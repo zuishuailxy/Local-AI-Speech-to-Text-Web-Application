@@ -686,12 +686,14 @@
   - 验证：中英文样本自动识别；zh/en 回归；文档标注为扩展。
   - 备注：如实现成本超 45 分钟或影响契约，放弃并记录。
 
-- [ ] **T8.2 实时识别后端（WebSocket + PCM 分片）**
+- [x] **T8.2 实时识别后端（WebSocket + PCM 分片）**
   - 目标：接收 PCM 分片并用本地模型滚动转写。
-  - 文件：`app/api/ws.py`、`app/services/streaming.py`、`app/main.py`、`tests/test_ws.py`。
+  - 文件：`app/api/ws.py`、`app/services/streaming.py`、`app/main.py`、`tests/test_ws.py`、`docs/evidence/t8.2-ws.txt`。
   - 前置：T8.0。
   - 完成标准：WebSocket 协议定义清晰（采样率/格式/分片/结束）；复用当前主引擎；滚动窗口策略与最终全文策略明确；错误可关闭连接并提示；不影响 `/api/transcribe`。
-  - 验证：Mock 单测；真实模型手动说话看到中间文本；停止后最终文本完整。
+  - 验证：8 个 WS 单测通过；partial 每 2 s、窗口 8 s、final 全量；空音频/非法语言/无模型/超长/奇数字节均覆盖；全量 211 passed、8 deselected。
+  - 结果：已完成（2026-10-28）；分支 `feature/f6-realtime`；HTTP 路径未改动。
+  - 备注：真实模型滚动演示和前端在 T8.3/T8.4。
 
 - [ ] **T8.3 实时识别前端**
   - 目标：录音过程中持续显示文本。

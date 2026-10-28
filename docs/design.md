@@ -310,3 +310,42 @@ docs/test-report.md        测试结果
 - zhconv：https://github.com/gumblex/zhconv
 - Playwright for Python：https://playwright.dev/python/
 - ModelScope：https://www.modelscope.cn/
+
+## 14. F6 实时识别（开发分支）
+
+> 状态：T8.2 后端已实现；前端 T8.3 / 手动验证 T8.4 待完成。F6 在独立分支 `feature/f6-realtime`，不影响必做 tag `v1.0-must-have`。
+
+### 14.1 WebSocket 协议
+
+```text
+ws://127.0.0.1:8000/ws/transcribe?language=zh
+```
+
+客户端：
+
+- 二进制帧：16 kHz mono PCM16 little-endian 分片
+- 文本帧：`{"type":"stop"}` 或 `stop`
+
+服务端：
+
+```json
+{"type":"partial","text":"...","duration_seconds":2.0,"partial_index":1,"processing_seconds":0.8}
+{"type":"final","text":"...","language":"zh","duration_seconds":8.0,"processing_seconds":1.2}
+{"type":"error","detail":"...","code":"..."}
+```
+
+规则：
+
+- 每累计约 2 s 音频触发一次 partial；partial 只转写最近 8 s 窗口，用于近实时展示。
+- stop 时对完整缓冲做 final；空音频返回空文本。
+- 单次实时录音上限 60 s；超限返回 `audio_too_long` 并关闭。
+- 非法语言/消息/PCM 返回 error 后关闭。
+- 复用现有 `Transcriber`；Mock 测试不加载模型。
+- 不改变 `/api/transcribe` 和现有页面录音/上传路径。
+
+### 14.2 模块
+
+- `app/services/streaming.py`：PCM16→float32、滚动缓冲、窗口/间隔、上限。
+- `app/api/ws.py`：WebSocket 协议、partial/final/error、线程池调用。
+- `app/main.py`：注册 WebSocket 路由。
+- `tests/test_ws.py`：协议、partial/final、空音频、非法语言/消息、无模型、超长/PCM 校验。

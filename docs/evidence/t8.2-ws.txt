@@ -1,0 +1,60 @@
+# T8.2 实时识别后端（WebSocket + PCM）
+
+- 日期：2026-10-28
+- 分支：`feature/f6-realtime`
+- 文件：`app/api/ws.py`、`app/services/streaming.py`、`app/main.py`、`tests/test_ws.py`
+- 目标：16 kHz mono PCM16 分片 → 滚动 partial → stop 后 final；复用现有 Transcriber，不影响 `/api/transcribe`
+
+## 协议
+
+```text
+ws://127.0.0.1:8000/ws/transcribe?language=zh
+```
+
+- 客户端二进制帧：16 kHz mono PCM16LE
+- 客户端文本帧：`{"type":"stop"}` 或 `stop`
+- partial：每累计约 2 s 音频，转写最近 8 s 窗口
+- final：stop 时转写完整缓冲
+- 上限：60 s；超限 error `audio_too_long`
+- 错误：`{"type":"error","detail":"...","code":"..."}` 后关闭
+
+## 实现
+
+- `StreamingBuffer`：PCM 校验、60 s 上限、2 s partial 间隔、8 s 窗口、完整 PCM。
+- `pcm16le_to_float32`：`<i2` → float32 / 32768。
+- `transcribe_pcm`：复用 `Transcriber.transcribe`。
+- `app/api/ws.py`：接受连接、校验语言/引擎、接收分片、partial/final/error、日志。
+- `app/main.py` 注册 ws router。
+- HTTP `/api/transcribe` 未改动。
+
+## 测试
+
+```bash
+.venv/bin/python -m pytest -q tests/test_ws.py
+```
+
+```text
+8 passed in 0.07s
+```
+
+覆盖：
+
+- PCM 转换
+- partial 间隔/窗口/上限/奇数字节
+- partial + final 文本/时长/耗时
+- 空音频 final（不调用模型）
+- 非法语言
+- 无 transcriber
+- 非法消息
+
+全量：
+
+```text
+211 passed, 8 deselected
+```
+
+## 边界
+
+- partial 仅最近 8 s，不等同于完整转写；final 才是完整文本。
+- T8.2 只用 FakeTranscriber 单测；真实模型实时演示在 T8.4。
+- 前端 PCM 采集/分片/中间文本在 T8.3。

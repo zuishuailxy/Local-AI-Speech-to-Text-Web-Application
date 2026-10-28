@@ -31,7 +31,7 @@
 ```
 
 ```text
-203 passed, 8 deselected
+212 passed, 9 deselected
 ```
 
 默认测试不加载真实模型、不下载权重、不访问麦克风。
@@ -175,7 +175,7 @@
 - T7.1 README：安装/模型/启动/API/测试/离线/排障/限制/结构。
 - T7.2 requirements：F1–F6、接口、非功能、假设/边界、验收、D1–D7。
 - T7.3 design：架构、模块、音频/模型/错误/并发/安全/限制、官方资料。
-- T7.4 test-report：最终环境、Mock 分布、真实模型、6 项手动、离线、CI、Edge、F6 未实现、证据路径。
+- T7.4 test-report：最终环境、Mock 分布、真实模型、6 项手动、离线、CI、Edge、F6 分支状态、证据路径。
 - T7.5 ai-development：OpenCode 任务、人工决策、问题修复、验证方法、优化优先级、三阶段索引。
 - T7.6：三阶段记录复核与脱敏，索引见 `docs/opencode/README.md`。
 - T7.7：问题修复记录 `docs/issue-log.md`，含 17 个已修复问题与 8 个未关闭项。

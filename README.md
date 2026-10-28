@@ -151,6 +151,17 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 中文结果会经过本地 `zhconv` 繁转简；英文结果不转换。繁转简不修复同音字错误。
 
+### 实时识别（F6，实验）
+
+麦克风面板勾选 **实时识别（实验）** 后，Start 会通过 WebSocket 持续发送 16 kHz PCM 分片：
+
+- 每约 2 秒更新一次 partial 文本（最近 8 秒窗口）
+- Stop 后返回完整 final 文本
+- 单次仍限制 60 秒
+- 不勾选时保持原 MediaRecorder + HTTP 上传流程
+
+Chrome 会对 ScriptProcessor 显示 deprecation warning，这是兼容方案的提示，不是错误。
+
 ## 6. API
 
 ### 健康检查
@@ -242,7 +253,7 @@ python -m pytest -q
 ```
 
 ```text
-203 passed, 8 deselected
+212 passed, 9 deselected
 ```
 
 8 个默认排除项：5 个 `real_model` + 3 个 `e2e`。
@@ -256,7 +267,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-5 passed, 199 deselected
+5 passed, 216 deselected
 ```
 
 `-s` 会显示真实文本、参考文本、时长、推理耗时、RTF、CER/WER。使用：
@@ -284,20 +295,20 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 ```
 
 ```text
-3 passed
+4 passed
 ```
 
 覆盖页面加载、WAV 上传 + 复制、假麦克风录音。Windows CI 另使用 Edge channel 跑同一套测试。
 
 ### 干净环境隔离
 
-已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + `HF_HUB_OFFLINE=1` + 黑洞代理：
+P7 必做版已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + `HF_HUB_OFFLINE=1` + 黑洞代理：
 
 ```text
 203 passed, 8 deselected in 2.53s
 ```
 
-测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`。
+F6 分支在新 clone / 新 venv 中为 `212 passed, 9 deselected`（T9.1）。测试期间未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
 
 ## 9. 离线验证
 
@@ -378,7 +389,7 @@ netstat -ano | findstr :8000       # Windows
 - 样本只覆盖单人、安静环境、正常语速；噪声、远场、中英混合未覆盖。
 - 语言选择不强制输出目标语言；音频与所选语言不一致时可能输出源语言，日志会记录 `asr_language_mismatch`。
 - 单用户、无登录、无并发控制、无历史记录；只绑定本机。
-- 实时识别（F6）尚未实现。
+- 实时识别（F6）在 `feature/f6-realtime` 分支完成；ScriptProcessor 有 deprecation warning，功能正常。
 
 ## 12. 项目结构
 
@@ -427,9 +438,9 @@ netstat -ano | findstr :8000       # Windows
 自动化结果：
 
 ```text
-默认：203 passed, 8 deselected
+默认：212 passed, 9 deselected
 真实模型：5 passed
-浏览器 E2E：3 passed
+浏览器 E2E：4 passed
 Windows CI：Chromium + Edge + 真实模型通过
 ```
 

@@ -1,0 +1,66 @@
+# T9.3 文档/代码/任务一致性检查
+
+- 日期：2026-10-28
+- 分支：`feature/f6-realtime`（待合并）
+- 范围：启动命令、接口字段、错误码、限制值、模型名、测试命令、任务状态
+
+## 关键值
+
+| 项 | 文档 | 代码 | 结果 |
+| --- | --- | --- | --- |
+| Python | 3.12 | `.venv` 3.12.13；CI 3.12.10 | 一致 |
+| 模型 | faster-whisper small | `ASR_MODEL_SIZE=small`；目录 `faster-whisper-small` | 一致 |
+| 设备/类型 | CPU / int8 | `device=cpu`、`compute_type=int8` | 一致 |
+| 录音上限 | 60 s | `MAX_RECORDING_MS=60_000`；F6 缓冲 60 s | 一致 |
+| 上传上限 | 10 MB | `MAX_UPLOAD_BYTES=10*1024*1024`；Content-Length + 流式 | 一致 |
+| 解码上限 | 120 s | `MAX_AUDIO_SECONDS=120` | 一致 |
+| 接口 | `/health`、`/api/transcribe`、`/` | `app/api/routes.py`、`app/main.py` | 一致 |
+| 四字段 | text/language/duration_seconds/processing_seconds | `TranscriptionResponse` | 一致 |
+| 错误格式 | `detail` + `code` | `ApiError.to_payload` | 一致 |
+| 语言 | zh/en | `validate_language` | 一致 |
+| F6 端点 | `/ws/transcribe?language=zh/en` | `app/api/ws.py` | 一致 |
+| 实时上限 | 60 s | `StreamingConfig.max_seconds=60` | 一致 |
+
+## 测试命令/计数
+
+```text
+python -m pytest -q                 212 passed, 9 deselected (F6 分支)
+python -m pytest -q -m real_model   5 passed, 216 deselected
+PLAYWRIGHT_CHANNEL=chrome ... -m e2e 4 passed
+```
+
+- P7 必做版干净隔离为 203 passed、8 deselected；README/test-report 已明确标注为 P7 基线。
+- F6 分支新增 `test_ws.py` 8 项和前端实时契约 1 项，当前 212/9。
+- Windows CI 已通过必做版（真实模型 + Chromium + Edge 3 项）；F6 合并后需重跑 Edge 4 项，文档已标注“待合并”。
+
+## 命令
+
+```bash
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+python scripts/download_model.py --model small --source modelscope
+python -m pytest -q
+python -m pytest -q -m real_model -s
+python -m pytest -q -m e2e
+```
+
+README、design、test-report、requirements 中的命令一致。
+
+## F6 状态
+
+- 代码/测试/手动演示：完成（分支）
+- Windows CI：待合并后验证
+- 主分支/tag：`v1.0-must-have` 未改变
+- 文档没有把 F6 写成“已合并/Windows CI 已通过”
+
+## 历史数字
+
+以下为阶段历史，已标注上下文，不是当前分支计数：
+
+- `docs/opencode/03` P5 收尾的 203（P7 基线）；P8 已补 212。
+- `docs/evidence/pytest-default.txt` 203/8（P7 干净隔离）。
+- `docs/evidence/e2e.txt` 196（T5.4 快照，已注明）。
+- `edge.txt` 3 passed（F6 前的 Edge 3 项；F6 合并后 4）。
+
+## 结论
+
+未发现启动命令、接口字段、限制值、模型名或当前测试命令的矛盾。F6 分支状态在所有文档中一致；Windows 11 实机/桌面 Edge/无设备模拟均未冒充通过。

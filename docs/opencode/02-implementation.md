@@ -1,6 +1,6 @@
 # 阶段二：功能开发与集成
 
-> 状态：P1–P7 已完成（F6/P8 未启动）。
+> 状态：P1–P8 已完成（F6 分支，待合并/终验）。
 > 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；P7 细节见阶段三记录。
 > 会话：`ses_e838f4101ffet1mEwSYEGuuSMK`（OpenCode Desktop，`deepseek-flash` high）
 > 日期：2026-10-27
@@ -360,7 +360,7 @@ httpx 0.28.1
 python -m pytest -q
 ```
 
-结果：`203 passed`。
+结果：`203 passed`（P7 必做版）。F6 分支新增 8 个 WS 测试与 1 个实时前端静态测试，当前为 `212 passed, 9 deselected`。
 
 另有 5 个 `real_model` 与 3 个 `e2e` 用例默认排除。浏览器 E2E 使用 Playwright + 假麦克风 + FakeTranscriber：
 

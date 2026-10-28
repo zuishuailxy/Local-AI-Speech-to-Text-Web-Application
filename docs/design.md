@@ -282,7 +282,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 5. 无设备/占用为 DevTools 模拟，不是真实拔设备。
 6. 样本单人、安静、正常语速；噪声/远场/混合语言未覆盖。
 7. 单用户、无认证、无历史；不能直接公网部署。
-8. F6 实时识别未实现，需 G5 门禁后另做。
+8. F6 实时识别已在分支完成，待合并/Windows CI；ScriptProcessor 有 deprecation warning。
 
 ## 12. 关键文件
 
@@ -313,7 +313,7 @@ docs/test-report.md        测试结果
 
 ## 14. F6 实时识别（开发分支）
 
-> 状态：T8.2 后端已实现；前端 T8.3 / 手动验证 T8.4 待完成。F6 在独立分支 `feature/f6-realtime`，不影响必做 tag `v1.0-must-have`。
+> 状态：T8.2/T8.3/T8.4 已实现并验证；F6 在独立分支 `feature/f6-realtime`，待合并/Windows CI，不影响必做 tag `v1.0-must-have`。
 
 ### 14.1 WebSocket 协议
 

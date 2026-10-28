@@ -131,7 +131,7 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 | 60 秒自动停止 | 计时 01:00.0，自动提交；服务端音频 57.18 s | `auto-stop-60s.png` |
 | 复制、停后端重试、WebM 上传 | 通过；剪贴板哈希一致；重试复用同一文件 | `upload-webm.txt`、`upload-webm.png` |
 | Windows CI | 真实模型 5 项、Chromium/Edge E2E 通过 | `windows-ci.txt` |
-| Edge | Windows CI headless Edge 155，3 passed（含复制） | `edge.txt` |
+| Edge | Windows CI headless Edge 155，3 passed（含复制）；F6 合并后待跑 4 项 | `edge.txt` |
 
 ## 5. Windows CI
 

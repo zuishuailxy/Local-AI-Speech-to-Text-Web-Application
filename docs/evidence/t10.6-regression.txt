@@ -13,13 +13,15 @@
 - T10.3 实时 partial：2.0/8.0 → 1.5/3.0；热模型首包 1.221 s，后续 1.47–2.01 s
 - T10.4 中文 prompt 评估：CER 0.2308 → 0.2051，收益有限，默认不启用
 - T10.5 日志：`LOG_FILE`/JSON/RotatingFileHandler；默认 stderr；不记录文本原文
+- T10.7 medium 评估：CER 0.2308 → 0.0769；默认仍 small，medium 仅批量可选
 - T10.6 回归/标记
+- T10.7 medium 模型评估（默认不切换）
 
 ## 回归
 
 ```text
-默认：229 passed, 12 deselected
-真实模型：7 passed, 234 deselected
+默认：230 passed, 12 deselected
+真实模型：7 passed, 235 deselected
 E2E：5 passed
 ```
 

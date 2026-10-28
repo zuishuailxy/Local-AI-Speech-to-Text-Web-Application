@@ -1,0 +1,85 @@
+# T10.7 中文准确率：medium 模型评估
+
+- 日期：2026-10-28
+- 机器：macOS arm64 M1，16 GB
+- 模型：faster-whisper small / medium，CPU int8，4 线程，beam 5，VAD
+- 样本：`samples/chinese.wav`（12.0 s）、`samples/english.wav`（9.0 s）
+- 原始结果：`docs/evidence/t10.7-medium-benchmark.json`
+
+## 结论
+
+- **默认保持 small**：medium 中文 CER 0.2308 → 0.0769，但 12 s 音频需 7.3–8.9 s、内存约 1.9 GB，3 s 实时窗口需 3.7–3.9 s，不适合 F6 实时识别。
+- **medium 作为批量上传的可选模式**：`ASR_MODEL_SIZE=medium`，模型路径自动变为 `models/faster-whisper-medium`。
+- 领域 prompt 在 medium 上反而变差（CER 0.1538），继续默认关闭。
+- 不做领域微调：没有领域标注数据，超出本次交付范围；medium 已能明显降低近音字错误。
+
+## 基准（`scripts/benchmark_models.py --models small medium --runs 2`）
+
+| 模型 | 加载 | 中文 CER | 中文 12 s | 英文 WER | 英文 9 s | 峰值 RSS | 3 s 窗口 | 6 s 窗口 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| small | 0.68 s | 0.2308 | 3.37 / 3.79 s | 0.0000 | 2.21 / 2.73 s | 941 MB | 1.56 s | 1.99 s |
+| medium | 2.95 s | **0.0769** | 7.57 / 7.29 s | 0.0000 | 4.64 / 4.69 s | 1877 MB | 3.94 s | 5.21 s |
+
+另一轮独立测量（CPU 负载不同）：
+
+```text
+small : zh 3.06 / 2.88 s, en 1.55 / 1.65 s, RSS 932 MB
+medium: zh 8.89 / 7.31 s, en 4.88 / 4.48 s, RSS 1909 MB
+```
+
+## 中文输出对比
+
+```text
+参考：轻轻的我走了，正如我轻轻的来；我轻轻的招手，作别西天的云彩。那河畔的金柳，是夕阳中的新娘。
+
+small ：轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。
+medium：轻轻的我走了正如我轻轻的来我轻轻的招手作别西天的云彩那河畔的金牛是西洋中的新娘
+```
+
+- 修正：招手、作别。
+- 仍错：金柳 → 金牛，夕阳 → 西洋。
+- 标点：medium 在该样本上未输出标点，CER 计算已忽略标点。
+
+## API 验证
+
+```bash
+python scripts/download_model.py --model medium --source modelscope
+ASR_MODEL_SIZE=medium python -m uvicorn app.main:app --host 127.0.0.1 --port 8002
+```
+
+```json
+{"text":"轻轻的我走了正如我轻轻的来我轻轻的招手作别西天的云彩那河畔的金牛是西洋中的新娘","language":"zh","duration_seconds":12.0,"processing_seconds":13.357}
+{"text":"Never give up. Never lose hope. Always have faith. It allows you to cope.","language":"en","duration_seconds":9.0,"processing_seconds":6.26}
+```
+
+- 第一次请求含模型加载 2.95 s；后续请求约 7–8 s。
+- 只设置 `ASR_MODEL_SIZE=medium` 即可，不需要手工写 `ASR_MODEL_PATH`。
+- 日志确认加载的是 `models/faster-whisper-medium`。
+
+## 领域 prompt 对 medium 的影响
+
+| 配置 | CER | 耗时 | 输出 |
+| --- | ---: | ---: | --- |
+| 无 prompt | 0.0769 | 8.03 s | 招手/作别正确，金牛/西洋仍错 |
+| 领域 prompt | 0.1538 | 12.96 s | 增加“轻轻地”、逗号，CER 变差 |
+| hotwords | 0.0769 | 8.72 s | 与无 prompt 相同 |
+
+结论：medium 下继续默认关闭 prompt；hotwords 没有额外收益。
+
+## 取舍
+
+| 项 | small | medium |
+| --- | --- | --- |
+| 中文 CER | 0.2308 | 0.0769 |
+| 12 s 批量延迟 | 3–4 s | 7–9 s |
+| 内存 | 约 0.9 GB | 约 1.9 GB |
+| 模型目录 | 464 MB | 约 1.4 GB |
+| 3 s 实时窗口 | 1.4–2.1 s | 3.7–3.9 s |
+| F6 实时 | 可用 | 不建议 |
+
+## 边界
+
+- 只用一个 12 s 样本，CER 差异不能代表所有场景。
+- CPU 耗时受负载影响，表中给的是本机区间。
+- medium 仍有近音字错误；要进一步提升需要更大模型或领域微调。
+- 未修改默认配置、未把 medium 权重提交 Git。

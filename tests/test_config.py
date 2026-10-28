@@ -82,6 +82,18 @@ def test_absolute_model_path_is_preserved(tmp_path: Path) -> None:
     assert settings.asr_model_path == model_path.resolve()
 
 
+def test_model_size_selects_default_path(tmp_path: Path) -> None:
+    settings = Settings.from_env(
+        environ={"ASR_MODEL_SIZE": "medium"},
+        project_root=tmp_path,
+    )
+
+    assert settings.asr_model_size == "medium"
+    assert settings.asr_model_path == (
+        tmp_path / "models" / "faster-whisper-medium"
+    ).resolve()
+
+
 def test_blank_model_path_falls_back_to_default(tmp_path: Path) -> None:
     settings = Settings.from_env(
         environ={"ASR_MODEL_PATH": "   "},

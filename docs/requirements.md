@@ -187,9 +187,9 @@
 | 浏览器 | Chrome/Edge 最新稳定版 | Chrome 156 手动；Edge 155 CI |
 | 隐私 | 音频/文本不写日志 | 只记录长度/时长/语言；测试断言文本不入日志 |
 | 安全 | 默认本机 | 绑定 `127.0.0.1`，无认证/多用户 |
-| 性能 | CPU 可接受 | 12 s 音频约 3–5 s；9 s 约 1.4–2.6 s |
+| 性能 | CPU 可接受 | small：12 s 约 3–5 s；medium 可选：约 7–9 s |
 | 可观测性 | 可定位请求 | request_id、状态码、耗时、语言、text_chars |
-| 测试 | pytest 默认无模型/麦克风/外网 | 229 passed, 12 deselected |
+| 测试 | pytest 默认无模型/麦克风/外网 | 230 passed, 12 deselected |
 | 交付 | 文档/证据/OpenCode | README、design、test-report、ai-development、三阶段记录 |
 
 ## 6. 假设与边界

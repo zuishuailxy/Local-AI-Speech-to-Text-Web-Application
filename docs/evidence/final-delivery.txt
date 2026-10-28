@@ -15,7 +15,7 @@
 | 前端 | `static/`（录音、上传、结果、复制、实时） |
 | 脚本 | `scripts/download_model.py`、`scripts/verify_asr.py` |
 | 样本 | `samples/chinese.wav`、`english.wav`、`reference.txt` |
-| 测试 | `tests/`（默认 229、真实 7、E2E 5） |
+| 测试 | `tests/`（默认 230、真实 7、E2E 5） |
 | 文档 | `README.md`、`docs/requirements.md`、`docs/design.md`、`docs/test-report.md`、`docs/ai-development.md`、`docs/issue-log.md` |
 | 证据 | `docs/evidence/` |
 | OpenCode | `docs/opencode/01–03`、README |
@@ -24,10 +24,10 @@
 
 ```text
 python -m pytest -q
-229 passed, 12 deselected
+230 passed, 12 deselected
 
 python -m pytest -q -m real_model
-7 passed, 234 deselected
+7 passed, 235 deselected
 
 PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 5 passed
@@ -46,7 +46,7 @@ Edge E2E: 5 passed
 干净复现：
 
 ```text
-新 clone + 新 venv 复现（T9.1 当时为 217 passed；T10 后当前 229 passed）
+新 clone + 新 venv 复现（T9.1 当时为 217 passed；T10 后当前 230 passed）
 /health 200
 中文/英文上传成功
 F6 WebSocket 6 partials + final 成功
@@ -66,7 +66,7 @@ F6 WebSocket 6 partials + final 成功
 ## 后续优先级
 
 1. 真实 Windows 11 / 桌面 Edge / 真实麦克风补验（唯一环境阻塞项）。
-2. 更大模型或领域数据微调，继续降低中文近音字错误。
+2. medium 已作为批量可选模式（CER 0.0769）；进一步可做领域数据微调。
 3. 噪声/远场/中英混合样本覆盖；AudioWorklet 回退路径实机验证。
 4. 可选：`ASR_INITIAL_PROMPT` 领域词按场景开启（默认关闭）。
 4. 中文准确率（更大模型/热词）与 CPU 权衡。

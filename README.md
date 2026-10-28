@@ -95,6 +95,28 @@ python scripts/download_model.py --model small
 
 模型准备完成后，应用的识别路径不再访问网络；下载脚本是唯一会联网的入口。
 
+### 可选：medium 模型（批量准确率）
+
+默认使用 `small`，CPU 上兼顾上传、麦克风和实时识别。若只做**批量上传**、更看重中文准确率，可切换到 `medium`：
+
+```bash
+python scripts/download_model.py --model medium --source modelscope
+ASR_MODEL_SIZE=medium python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+本机实测（M1 / 16 GB / CPU int8 / beam 5 / VAD）：
+
+| 模型 | 中文 CER | 12 s 推理 | 9 s 英文推理 | 峰值内存 | 3 s 实时窗口 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| small（默认） | 0.2308 | 2.9–3.1 s | 1.5–1.7 s | 约 0.9 GB | 1.4–2.1 s |
+| medium | **0.0769** | 7.3–8.9 s | 4.5–4.9 s | 约 1.9 GB | 3.7–3.9 s |
+
+- medium 把“招手/作别”修正了，但“金柳/夕阳”仍会错成“金牛/西洋”。
+- 首次加载约 2.5 s，模型目录约 1.4 GB。
+- 3 s 实时窗口超过 2 s 预算，**F6 实时识别不建议用 medium**；批量上传可用。
+- 领域 prompt 在 medium 上反而把 CER 从 0.0769 拉高到 0.1538，默认仍关闭。
+- 复现：`python scripts/benchmark_models.py --models small medium`。
+
 ## 4. 启动
 
 ```bash
@@ -255,7 +277,8 @@ curl -X POST http://127.0.0.1:8000/api/transcribe \
 
 | 变量 | 默认 | 说明 |
 | --- | --- | --- |
-| `ASR_MODEL_PATH` | `models/faster-whisper-small` | 本地模型目录 |
+| `ASR_MODEL_SIZE` | `small` | 未显式设置 `ASR_MODEL_PATH` 时，按该值选择 `models/faster-whisper-<size>` |
+| `ASR_MODEL_PATH` | `models/faster-whisper-small` | 本地模型目录；显式设置后覆盖 size 推导 |
 | `ASR_DEVICE` | `cpu` | 推理设备 |
 | `ASR_COMPUTE_TYPE` | `int8` | CTranslate2 计算类型 |
 | `ASR_CPU_THREADS` | `4` | CPU 线程数 |
@@ -288,7 +311,7 @@ python -m pytest -q
 ```
 
 ```text
-229 passed, 12 deselected
+230 passed, 12 deselected
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -302,7 +325,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-7 passed, 234 deselected
+7 passed, 235 deselected
 ```
 
 `-s` 会显示真实文本、参考文本、时长、推理耗时、RTF、CER/WER。使用：
@@ -343,7 +366,7 @@ P7 必做版已验证：独立 venv（42 个依赖）+ 临时移走 `models/` + 
 203 passed, 8 deselected in 2.53s
 ```
 
-T9.1 在新 clone / 新 venv 中复现时为 `217 passed, 12 deselected`；T10 后当前为 `229 passed, 12 deselected`。两次复现期间均未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
+T9.1 在新 clone / 新 venv 中复现时为 `217 passed, 12 deselected`；T10 后当前为 `230 passed, 12 deselected`。两次复现期间均未创建 `models/`，无下载输出。详见 `docs/evidence/pytest-default.txt`、`docs/evidence/final-repro.txt`。
 
 ## 9. 离线验证
 
@@ -473,7 +496,7 @@ netstat -ano | findstr :8000       # Windows
 自动化结果：
 
 ```text
-默认：229 passed, 12 deselected
+默认：230 passed, 12 deselected
 真实模型：7 passed
 浏览器 E2E：5 passed
 Windows CI：Chromium + Edge + 真实模型通过（最新 run `40684188857`，Edge 5 项 E2E）

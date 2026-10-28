@@ -24,7 +24,7 @@ python -m pytest -q
 ```
 
 ```text
-229 passed, 12 deselected in 1.96s
+230 passed, 12 deselected in 1.96s
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -35,7 +35,7 @@ python -m pytest -q
 | --- | ---: | --- |
 | `test_app_factory.py` | 5 | 应用工厂、注入、静态页 |
 | `test_audio.py` | 42 | 校验、流式 10 MB、解码、时长、清理 |
-| `test_config.py` | 24 | 默认值、环境变量、非法值、日志级别/文件、prompt |
+| `test_config.py` | 25 | 默认值、环境变量、非法值、日志级别/文件、prompt |
 | `test_download_model.py` | 10 | 模型下载/校验/回退 |
 | `test_errors.py` | 10 | 错误码、异常处理 |
 | `test_fixtures.py` | 8 | fixture/隔离 |
@@ -58,7 +58,7 @@ python -m pytest -q
 
 真实模型 7 项、E2E 5 项默认排除，分别需要模型/浏览器。
 
-当前全量为 229 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前全量为 230 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -71,7 +71,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-7 passed, 234 deselected
+7 passed, 235 deselected
 ```
 
 | 测试 | 时长 | 处理/推理 | 质量 |
@@ -167,6 +167,20 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40684188857` 成功。
 - 自动语言检测（`language=auto`）已实现：HTTP/WS/页面；中英文真实样本检测通过。
 
+### medium 模型评估（T10.7）
+
+默认仍是 small；medium 作为批量可选模式，通过 `ASR_MODEL_SIZE=medium` 启用。
+
+| 模型 | 中文 CER | 12 s 推理 | 9 s 英文 | 峰值内存 | 3 s 实时窗口 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| small | 0.2308 | 3.4–3.8 s | 2.2–2.7 s | 941 MB | 1.6 s |
+| medium | **0.0769** | 7.3–8.9 s | 4.6–4.9 s | 1877 MB | 3.9 s |
+
+- medium 修正“招手/作别”，仍有“金柳→金牛、夕阳→西洋”。
+- 3 s 窗口超过实时预算，F6 不建议使用 medium。
+- 领域 prompt 在 medium 上 CER 反而升到 0.1538，默认关闭。
+- 复现：`scripts/benchmark_models.py`。
+
 ## 7. 已知问题与风险
 
 | 级别 | 问题 | 说明 |
@@ -213,6 +227,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - 手动：`t6.1-mic-zh.txt` … `t6.11` 对应文件
 - 错误/边界：`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`
 - CI：`windows-ci.txt`、`edge.txt`
+- 准确率：`t10.7-medium-model.txt`、`t10.7-medium-benchmark.json`
 - 优化：`t10.1-60s-alignment.txt`、`t10.2-auto-robustness.txt`、`t10.3-realtime-latency.txt`、`t10.4-prompt-default-analysis.md`、`t10.5-logging.txt`、`t10.6-regression.txt`
 - 问题记录：`docs/issue-log.md`
 - 需求逐项核对：`docs/evidence/requirements-checklist.md`

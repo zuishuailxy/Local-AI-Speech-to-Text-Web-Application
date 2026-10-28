@@ -2,14 +2,14 @@
 
 - 日期：2026-10-28
 - 范围：`todo.md`、`plan.md`、README、docs、Git/tag、CI
-- 当前：默认 229 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40684188857` success
+- 当前：默认 230 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40684188857` success
 - Tag：`v1.0-submission`（F1–F6 基线）、`v1.0.1-optimizations`（T10 优化版）、`v1.0-must-have`（回滚）
 
 ## 已完成
 
 - T0–T9 必做任务、F6、自动语言检测、AudioWorklet 主路径、日志 `outcome` 标记
 - 6 项指定手动验证、离线识别、Windows CI（Server）、Chromium/Edge E2E
-- T10.1–T10.6：计时对齐、auto 低置信度回退、实时 partial 调优、中文 prompt 评估、日志工程化、回归与 tag
+- T10.1–T10.7：计时对齐、auto 低置信度回退、实时 partial 调优、中文 prompt 评估、日志工程化、回归与 tag、medium 模型评估
 - 文档一致性：README/requirements/design/test-report/issue-log/final-delivery/checklist 的 60 s 与 CI 记录已更新
 
 ## 仍开放/未验证
@@ -34,7 +34,7 @@
 ## 后续可选优化（非交付阻塞）
 
 1. **Windows 11/桌面 Edge/真实麦克风补验**：唯一环境阻塞项。
-2. **中文准确率**：medium 模型/领域微调；prompt 已 opt-in，默认关闭。
+2. **中文准确率**：medium 已评估并作为批量可选（CER 0.0769）；进一步可做领域微调。
 3. **实时体验**：重叠窗口/增量拼接，争取首个非空文本 ≤2.5 s。
 4. **样本覆盖**：噪声、远场、中英混合、数字/专有名词。
 5. **测试补充**：AudioWorklet 回退、auto 混合语句、真实 60 s 音频。

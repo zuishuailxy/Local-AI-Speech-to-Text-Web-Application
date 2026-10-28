@@ -813,6 +813,14 @@
   - 验证：默认 223/12、真实 7/222、E2E 5；Windows CI `40677386222` success；T10.1 手动 5/10/60；F6/auto 回归。
   - 结果：已完成（2026-10-28）；tag `v1.0.1-optimizations`；T10.3 真实麦克风已复测（首个非空文本 3.0 s，未完全达到 2.5 s），T10.4 prompt 默认不启用。
 
+- [x] **T10.7 中文准确率：medium 模型评估**
+  - 目标：评估更大模型能否在可接受 CPU 成本下降低中文近音字错误。
+  - 文件：`scripts/benchmark_models.py`、`app/config.py`、`tests/test_config.py`、`docs/evidence/t10.7-medium-model.txt`、`docs/evidence/t10.7-medium-benchmark.json`、README。
+  - 前置：T10.4。
+  - 完成标准：同一批样本对比 CER/WER、延迟、内存；给出默认是否切换的结论；不提交模型权重。
+  - 验证：small CER 0.2308 / 3.4–3.8 s / 941 MB；medium CER 0.0769 / 7.3–8.9 s / 1.9 GB；3 s 实时窗口 medium 3.9 s；API `ASR_MODEL_SIZE=medium` 生效；默认测试 230 passed、12 deselected。
+  - 结果：已完成（2026-10-28）；默认保持 small，medium 作为批量可选模式；未做领域微调（无标注数据）。
+
 ---
 
 ## 交付前总检查（Definition of Done）

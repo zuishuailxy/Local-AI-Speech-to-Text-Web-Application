@@ -117,7 +117,9 @@ class Settings:
         env = os.environ if environ is None else environ
         root = (project_root or PROJECT_ROOT).expanduser().resolve()
 
-        raw_model_path = _read_env(env, "ASR_MODEL_PATH", str(DEFAULT_MODEL_PATH))
+        model_size = _read_env(env, "ASR_MODEL_SIZE", "small")
+        default_model_path = Path("models") / f"faster-whisper-{model_size}"
+        raw_model_path = _read_env(env, "ASR_MODEL_PATH", str(default_model_path))
         model_path = Path(raw_model_path).expanduser()
         if not model_path.is_absolute():
             model_path = root / model_path
@@ -133,7 +135,7 @@ class Settings:
         return cls(
             project_root=root,
             asr_model_path=model_path.resolve(),
-            asr_model_size=_read_env(env, "ASR_MODEL_SIZE", "small"),
+            asr_model_size=model_size,
             asr_device=_read_env(env, "ASR_DEVICE", "cpu"),
             asr_compute_type=_read_env(env, "ASR_COMPUTE_TYPE", "int8"),
             asr_cpu_threads=_parse_positive_int(env, "ASR_CPU_THREADS", 4),

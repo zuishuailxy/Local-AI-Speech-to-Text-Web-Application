@@ -1,0 +1,68 @@
+[
+  {
+    "model": "faster-whisper-small",
+    "load_seconds": 0.682,
+    "zh": {
+      "language": "zh",
+      "seconds": [
+        3.372,
+        3.785
+      ],
+      "metric": 0.2308,
+      "text": "轻轻地我走了,占如我轻轻地来。我轻轻地抓手,做别西天的云彩。那河畔的金牛是西洋中的新娘。"
+    },
+    "en": {
+      "language": "en",
+      "seconds": [
+        2.209,
+        2.73
+      ],
+      "metric": 0.0,
+      "text": "Never give up. Never lose hope. Always have faith. It allows you to cope."
+    },
+    "zh_windows": {
+      "3s": {
+        "seconds": 1.564,
+        "text": "轻轻的我走了站楼"
+      },
+      "6s": {
+        "seconds": 1.989,
+        "text": "轻轻的我走了正如我轻轻的来我轻轻的抓手"
+      }
+    },
+    "max_rss_mb": 940.6
+  },
+  {
+    "model": "faster-whisper-medium",
+    "load_seconds": 2.948,
+    "zh": {
+      "language": "zh",
+      "seconds": [
+        7.573,
+        7.29
+      ],
+      "metric": 0.0769,
+      "text": "轻轻的我走了正如我轻轻的来我轻轻的招手作别西天的云彩那河畔的金牛是西洋中的新娘"
+    },
+    "en": {
+      "language": "en",
+      "seconds": [
+        4.644,
+        4.691
+      ],
+      "metric": 0.0,
+      "text": "Never give up. Never lose hope. Always have faith. It allows you to cope."
+    },
+    "zh_windows": {
+      "3s": {
+        "seconds": 3.942,
+        "text": "轻轻的我走了正如"
+      },
+      "6s": {
+        "seconds": 5.21,
+        "text": "轻轻的我走了正如我轻轻的来我轻轻的招手"
+      }
+    },
+    "max_rss_mb": 1876.9
+  }
+]

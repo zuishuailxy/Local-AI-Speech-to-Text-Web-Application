@@ -179,7 +179,8 @@ audio/webm;codecs=opus
 | 方案 | 结论 | 原因 |
 | --- | --- | --- |
 | Whisper base | 未采用 | 更小更快，但中文准确率预期更低；small 已在 CPU 可接受 |
-| Whisper medium/large | 未采用 | 内存/CPU 开销明显增加，普通开发机不划算 |
+| Whisper medium | 可选，不默认 | 中文 CER 0.2308 → 0.0769，但 12 s 音频 7.3–8.9 s、内存约 1.9 GB、3 s 实时窗口 3.7–3.9 s；仅适合批量上传 |
+| Whisper large | 未采用 | 体积/内存/CPU 开销更大，实时和普通开发机都不划算 |
 | SenseVoiceSmall | 条件评估未触发 | small 已满足中英文阈值（G2），不引入第二套模型 |
 | 云端 ASR | 禁止 | 题目明确不允许 |
 | Web Speech API | 禁止 | 题目明确不允许替代本地模型 |

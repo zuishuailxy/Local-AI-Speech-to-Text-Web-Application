@@ -87,11 +87,43 @@ first_partial_seconds=1.030 first_text_seconds=3.593
 
 调整：空 partial 后改为 0.5 s 重试，并记录每个 partial 的 `duration_seconds/text_chars`，避免再等满 1.5 s。
 
-## 真实麦克风二次复测
+## 真实麦克风二次复测（2026-10-28 21:22）
 
-- 待用户按“点击后立即说话”复测；服务端日志会给出新的 `first_text_seconds` 和逐 partial 记录。
+用户按“点击后立即说话”录制，页面计时 12.7 s。日志：
+
+```text
+ws_final duration_seconds=12.800 partials=8
+first_partial_seconds=2.343 first_text_seconds=2.343
+processing_seconds=1.647
+```
+
+逐条 partial：
+
+```text
+1.28 s 音频   1.324 s  '...'（6 字）
+2.82 s        1.062 s  （8 字）
+4.35 s        1.051 s  （8 字）
+5.89 s        1.054 s  （11 字）
+7.42 s        1.013 s  （8 字）
+8.96 s        0.997 s  （8 字）
+10.50 s       1.134 s  （8 字）
+12.03 s       1.220 s  （7 字）
+```
+
+- 首个 partial 在 1.28 s 音频触发，且直接带文本；首字 2.343 s。
+- 后续 partial 处理约 1.0–1.3 s，更新节奏约 1.5 s。
+- final 12.8 s 音频、1.647 s 处理。
+
+同一次复测中的另一条 6.4 s 录音：
+
+```text
+首个 partial 1.28 s 为空；0.5 s 后重试，首个非空文本 2.984 s
+```
+
+- 首窗口是否包含语音决定首字是 2.3 s 还是约 3.0 s。
+- 另有一条会话处理耗时 4–8 s，属于同时运行基准脚本造成的 CPU 争用，不作为正常值。
 
 ## 待补
 
-- 真实麦克风复测：需要用户录 10–12 s，确认页面首条 partial 和 `ws_final` 日志的 `first_text_seconds`。
+- 真实麦克风已复测：12.8 s 录音首字 2.343 s；6.4 s 录音因首窗口为空，重试后 2.984 s。
 - 旧浏览器 ScriptProcessor 回退未实机验证。

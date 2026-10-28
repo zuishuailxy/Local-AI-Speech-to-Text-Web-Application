@@ -1,0 +1,65 @@
+# T8.0 F6 门禁检查
+
+- 日期：2026-10-28 17:04 CST
+- 决策：**G5 通过，进入 F6 实时识别**
+- 时间盒：2026-10-28 17:04 – 20:04（3 小时）
+- 回滚基线：Git tag `v1.0-must-have`（commit `4db4ed6`）
+
+## 1. G5 检查
+
+| 条件 | 结果 | 证据 |
+| --- | --- | --- |
+| G4 必做验收通过 | 通过 | `docs/test-report.md` G4 表 |
+| 默认 `pytest -q` | 203 passed, 8 deselected | 本次运行 |
+| 真实模型测试 | 5 passed | 本次运行 |
+| Windows CI | 通过（真实模型 + Chromium + Edge） | `windows-ci.txt`、`edge.txt` |
+| 离线验证 | 通过（真实关闭 Wi-Fi） | `offline.txt` |
+| 文档基线 | README/requirements/design/test-report/ai-development/issue-log/OpenCode 三阶段 | `docs/` |
+| 剩余时间 ≥3.5 h | 用户确认“还有 ≥3.5 小时” | 2026-10-28 17:04 |
+| 独立回滚 | tag `v1.0-must-have` | `git show-ref --tags` |
+
+**结论：G5 通过，启动 F6。**
+
+## 2. F6 范围
+
+只做近实时识别，不追求毫秒级：
+
+- 浏览器持续采集 PCM（目标 16 kHz mono）
+- WebSocket 分片发送到后端
+- 后端复用现有 `WhisperTranscriber`，滚动/窗口识别
+- 页面持续更新中间文本
+- 停止后发送结束帧，返回最终文本
+- 不改变 `/api/transcribe` 四字段契约
+- 不做自动语言检测（T8.1 继续后置）
+
+## 3. 3 小时时间盒
+
+| 时间 | 任务 |
+| --- | --- |
+| 17:04–17:20 | 协议、模块骨架、测试骨架 |
+| 17:20–18:30 | WebSocket 后端 + 滚动识别 + Mock 单测 |
+| 18:30–19:30 | 前端 PCM/分片/中间文本 |
+| 19:30–20:00 | 真实模型手动演示 + 回归 |
+| 20:00–20:04 | 通过/回滚判定 |
+
+若 20:04 仍未达到可演示状态，停止并回滚。
+
+## 4. 回滚方案
+
+1. F6 代码在独立分支/提交，不混入必做路径。
+2. 失败时删除/回滚 F6 提交，保留 `v1.0-must-have`。
+3. 确认 `/api/transcribe`、页面录音/上传、真实模型测试不受影响。
+4. 在测试报告/issue log 写“F6 未完成（时间盒/技术原因）”，不冒充通过。
+
+## 5. 风险
+
+- WebSocket + 音频分片比 HTTP 上传复杂，可能超出 3 小时。
+- CPU 上滚动推理可能延迟；允许近实时，不承诺低延迟。
+- 浏览器 AudioWorklet/ScriptProcessor 兼容性与权限。
+- 不能因 F6 改动破坏必做回归；每次提交跑默认测试。
+
+## 6. 当前状态
+
+- F6：未实现（本次门禁通过后开始）
+- 必做版 tag：`v1.0-must-have`
+- 最终提交 tag：若 F6 成功，P9 打 `v1.0-submission`；失败则保留 must-have

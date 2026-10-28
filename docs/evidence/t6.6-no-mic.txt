@@ -1,0 +1,94 @@
+# T6.6 无可用麦克风 / 设备不可用（DevTools 模拟）
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Chrome 156.0.8078.49
+- 服务：`uvicorn app.main:app`，`127.0.0.1:8001`
+- 方式：**浏览器控制台注入异常，模拟设备缺失/占用**，不是真实拔掉麦克风
+- 截图：
+  - `docs/evidence/device-not-found.png`
+  - `docs/evidence/device-in-use.png`
+
+## 为什么模拟
+
+这台 MacBook Air 只有内置麦克风，macOS 声音设置不提供“禁用输入设备”；安全地停掉 CoreAudio 需要 sudo 且会影响系统音频。因此按用户确认，使用 DevTools 注入 `getUserMedia` 异常，验证前端错误分支与恢复流程。证据中明确标注为模拟。
+
+## NotFoundError
+
+控制台执行：
+
+```js
+navigator.mediaDevices.getUserMedia = async () => {
+  throw new DOMException("Requested device not found", "NotFoundError");
+};
+document.getElementById("start-button").click();
+```
+
+页面显示：
+
+```text
+本次处理失败
+未检测到可用麦克风，请连接麦克风后重试。
+```
+
+- 状态：Error / 麦克风启动失败
+- Pipeline：第 1 步“采集音频”失败
+- 结果区空
+- Start 仍可点击，提供“重试/关闭提示”
+- 未产生后端请求
+
+## NotReadableError
+
+刷新页面后执行：
+
+```js
+navigator.mediaDevices.getUserMedia = async () => {
+  throw new DOMException("Device in use", "NotReadableError");
+};
+document.getElementById("start-button").click();
+```
+
+页面显示：
+
+```text
+本次处理失败
+麦克风无法读取，可能被其他程序占用。
+```
+
+- 状态：Error / 麦克风启动失败
+- Pipeline：第 1 步失败
+- 结果区空
+- 未产生后端请求
+
+## 恢复
+
+刷新页面，恢复真实 `getUserMedia`，点击 Start/Stop：
+
+```text
+request_id=5e9a986191f9
+language=zh
+duration_seconds=4.080
+processing_seconds=1.446
+status=200
+```
+
+恢复后录音与上传链路正常。
+
+## 与上传的关系
+
+上传识别不受麦克风异常影响，已分别由 T6.3（中文 WAV）和 T6.4（英文 WAV）验证。
+
+## 检查项
+
+- [x] NotFoundError 提示文案
+- [x] NotReadableError 提示文案
+- [x] Error 状态与 Pipeline 失败
+- [x] Start 可重试 / 关闭提示
+- [x] 未发起无效后端请求
+- [x] 恢复真实麦克风后可录音
+- [x] 明确标注为模拟，不冒充真实设备移除
+
+## 备注
+
+- 真实 `NotFoundError`/`NotReadableError` 仍需在可禁用/拔掉麦克风的设备上补验；本机无法安全复现。
+- 截图中的控制台脚本是注入证据，不是应用自身报错。
+- 页面错误详情分别来自 `describeMediaError` 的 NotFoundError/NotReadableError 分支。

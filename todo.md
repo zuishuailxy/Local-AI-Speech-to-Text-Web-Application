@@ -518,12 +518,14 @@
   - 验证：Chrome 156 禁止麦克风后提示“麦克风权限被拒绝时，请检查浏览器地址栏的站点权限后重试。”；Error 状态、Pipeline 失败、Start 可重试；未发起无效请求；恢复后 3 s 录音提交 200（静音空文本）。
   - 结果：已完成（2026-10-28）；截图 `permission-denied.png`。
 
-- [ ] **T6.6 手动：无可用麦克风/设备不可用**
+- [x] **T6.6 手动：无可用麦克风/设备不可用**
   - 目标：验证 `NotFoundError`/`NotReadableError` 分支。
-  - 文件：`docs/test-report.md`、`docs/evidence/no-mic.txt`。
+  - 文件：`docs/test-report.md`（后续汇总）、`docs/evidence/t6.6-no-mic.txt`、`docs/evidence/device-not-found.png`、`docs/evidence/device-in-use.png`。
   - 前置：T4.4。
   - 完成标准：禁用系统输入设备或占用麦克风；页面提示“未检测到麦克风/设备被占用”；上传识别仍可用。
-  - 验证：系统设置禁用设备；记录实际异常名与提示。
+  - 验证：Chrome DevTools 注入 NotFoundError → “未检测到可用麦克风，请连接麦克风后重试。”；注入 NotReadableError → “麦克风无法读取，可能被其他程序占用。”；两种均 Error/Pipeline 失败、Start 可重试、无后端请求；刷新恢复后可录音（4.08 s，200）。
+  - 结果：已完成（2026-10-28，模拟）；本机只有内置麦克风且无法安全禁用，证据明确标注为 DevTools 注入，不冒充真实拔设备。
+  - 备注：真实 NotFound/NotReadable 仍需在可禁用/拔掉麦克风的设备补验；上传不受影响已由 T6.3/T6.4 验证。
 
 - [ ] **T6.7 手动：异常上传与空语音**
   - 目标：覆盖空文件、损坏、格式、超 10 MB、静音、超时长、模型不可用。

@@ -155,4 +155,5 @@
 - T6.3 页面上传中文 WAV：12.0 s，processing 3.978 s，CER 0.2308；近音字错误如实记录。
 - T6.4 页面上传英文 WAV：9.0 s，processing 1.447 s，WER 0.0；截图误存后已重新确认。
 - T6.5 权限拒绝：提示与错误状态正确；恢复权限后 3 s 静音录音提交 200。
-- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`。
+- T6.6 无设备/占用：DevTools 注入 NotFoundError/NotReadableError，提示与失败状态正确；明确标注为模拟。
+- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`。

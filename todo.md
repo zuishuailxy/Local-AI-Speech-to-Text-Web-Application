@@ -553,13 +553,14 @@
   - 结果：已完成（2026-10-28）；截图显示 Wi-Fi 关闭；用户消息的 2.14 s 与截图/日志 4.36 s 不一致，以截图/日志为准。
   - 备注：日志另有一次 en+chinese.wav 误选请求，不计入本项结果。
 
-- [ ] **T6.10 Windows 兼容性验证（GitHub Actions 替代，最高风险）**
+- [x] **T6.10 Windows 兼容性验证（GitHub Actions 替代，最高风险）**
   - 目标：在没有 Windows 11 实机的情况下，尽可能验证 Windows x64 + Python 3.12 的安装、启动与识别链路。
-  - 文件：`.github/workflows/windows.yml`、`docs/test-report.md`、`docs/evidence/windows-ci.txt`。
+  - 文件：`.github/workflows/windows.yml`、`docs/test-report.md`（后续汇总）、`docs/evidence/windows-ci.txt`。
   - 前置：T0.7/T1.8（GitHub Actions 可用）；T1.2、T5.1、T5.4、T6.1–T6.9。
   - 完成标准：`windows-latest` 上全新 venv 执行 `pip install -r requirements.txt`；启动 uvicorn；`/health` 200；运行默认 pytest；下载真实模型并上传中英文样本成功；Playwright 使用 Chromium/Edge 假麦克风完成页面加载 + 上传 + 录音流程；记录 Python/浏览器版本、安装耗时、模型加载/推理耗时；无缺失 DLL/编译错误。
-  - 验证：GitHub Actions 日志归档；截图或 Playwright trace；失败则修复后重跑。
-  - 备注：CI 是 Windows Server，不是 Windows 11 桌面；CI 通过**不能**写成“Windows 11 实机通过”。真实桌面/麦克风未验证要写入测试报告和 README。
+  - 验证：Run `40651179705`（首次真实模型）与 `40651812439`（缓存命中）均 success；Python 3.12.10、Edge 155.0.4283.62；模型下载 136 s；中文 12.0 s / 5.503 s / load 1.295 s；英文 9.0 s / 4.354 s / load 1.289 s；默认测试 + Chromium E2E + real_model 5 项 + Edge E2E 3 项全绿。
+  - 结果：已完成（2026-10-28）；首次失败为 Windows cp1252 打印中文导致 UnicodeEncodeError，已设 PYTHONUTF8/PYTHONIOENCODING 并加 HF/hf-mirror 回退。
+  - 备注：CI 是 Windows Server，不是 Windows 11 桌面；假麦克风/headless Edge 不等于真实桌面/麦克风，报告中必须披露。
 
 - [ ] **T6.11 Edge 兼容性验证（本地/CI）**
   - 目标：覆盖题目要求的 Chrome/Edge 最新稳定版。

@@ -92,6 +92,7 @@
 | 15 | 默认 Windows CI 因 e2e 模块导入 playwright 失败 | run `40633226986` 的 Run tests；模块导入早于 marker 过滤 | 将 Playwright 导入移到 e2e fixture 内延迟执行 | run `40633358118` 默认测试、Chromium 安装、浏览器 E2E 全部 success |
 | 16 | 真实麦克风中文输出繁体 | T6.1 实测 `今天天氣...`；Whisper `zh` 不区分字形 | 中文结果经本地 `zhconv` 转简体 | 单测 5 项；T6.1 复测 8.16 s，简体且 CER 0.0 |
 | 17 | DevTools 显示 1 个问题 | 服务端日志为 `/favicon.ico` 404 | 新增本地 `static/favicon.svg` 并在页面声明 | 静态资源测试 + E2E 0 console error |
+| 18 | Windows 真实模型下载步骤 exit 1 | annotation: cp1252 `UnicodeEncodeError` 打印中文 | real-model job 设置 `PYTHONUTF8=1` / `PYTHONIOENCODING=utf-8`，并加 HF/hf-mirror 回退 | Run `40651179705` / `40651812439` success |
 
 ## 4. 测试证据索引
 
@@ -121,6 +122,7 @@
 - 测试样本仅覆盖单人、安静环境、正常语速；噪声、远场、混合语言未覆盖。
 - 真实麦克风尚未在自动化环境完成授权；T6 手动验证。
 - 真实 Windows 11 桌面/麦克风未验证；CI 是 Windows Server，需在报告中披露。
+- Windows CI 的 Edge 为 headless 假麦克风，不是桌面 Edge 手动操作。
 - Edge 尚未手动验证。
 - 断网验证已完成（T6.9，Wi-Fi 关闭 + HF_HUB_OFFLINE=1）。
 - Playwright E2E 默认不执行，但已在 Windows CI 单独运行；假麦克风/FakeTranscriber 不代表真实设备/模型。
@@ -160,4 +162,5 @@
 - T6.7 异常上传/空语音/503：6 个上传分支页面提示与状态码正确；60 s 自动停止实测通过（页面 60.0 s，服务端音频 57.18 s，差异已记录）。
 - T6.8 WebM 上传、复制、停后端重试：8.999 s、WER 0；剪贴板哈希一致；重试复用同一文件成功。
 - T6.9 真实断网：Wi-Fi 关闭，HF_HUB_OFFLINE=1；中文 4.357 s / CER 0.1795，英文 1.359 s / WER 0；无外网请求。
-- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`、`upload-webm.png`、`offline.txt`、`offline-zh.png`、`offline-en.png`。
+- T6.10 Windows CI：Python 3.12.10、Edge 155；真实模型 5 项、Chromium/Edge E2E 3 项均通过；模型下载 136 s，缓存命中 6 s。
+- 证据：`t6.1-mic-zh.txt`、`t6.2-mic-en.txt`、`t6.3-upload-zh.txt`、`t6.4-upload-en.txt`、`t6.5-permission-denied.txt`、`t6.6-no-mic.txt`、`mic-zh.png`、`mic-en.png`、`upload-zh.png`、`upload-en.png`、`permission-denied.png`、`device-not-found.png`、`device-in-use.png`、`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`、`upload-webm.png`、`offline.txt`、`offline-zh.png`、`offline-en.png`、`windows-ci.txt`。

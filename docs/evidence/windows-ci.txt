@@ -1,0 +1,114 @@
+# T6.10 Windows 兼容性验证（GitHub Actions）
+
+- 日期：2026-10-28
+- 运行器：`windows-latest`（Windows Server，不是 Windows 11 桌面）
+- Python：3.12.10（`actions/setup-python@v5`）
+- Edge：155.0.4283.62
+- 仓库：`zuishuailxy/Local-AI-Speech-to-Text-Web-Application`
+- 工作流：`.github/workflows/windows.yml`
+
+## 结论
+
+`windows-latest` 上完成：
+
+- Python 3.12 依赖安装、`pip check`
+- 默认测试 + Playwright Chromium E2E
+- 真实模型下载（ModelScope，失败回退 HF/hf-mirror）
+- 启动 uvicorn、`/health` 200
+- 真实模型中英文识别
+- Playwright Microsoft Edge 假麦克风 E2E
+
+两个 job 均 success。
+
+## 首次真实模型运行
+
+- Run：`40651179705`
+- Commit：`bc82522`
+- 结果：success
+
+| Step | 结果 | 耗时（约） |
+| --- | --- | --- |
+| Install dependencies | success | 56 s |
+| Restore model cache | success | <1 s |
+| Download real model | success | 136 s |
+| Verify model files | success | <1 s |
+| Start uvicorn + `/health` | success | 6 s |
+| Run real-model tests | success | 23 s |
+| Run browser E2E on Microsoft Edge | success | 10 s |
+
+首次模型下载耗时 2 分 16 秒；后续命中缓存。
+
+## 缓存命中运行（记录运行时细节）
+
+- Run：`40651812439`
+- Commit：`dd5d4c6`
+- 结果：success
+
+| Step | 结果 | 耗时（约） |
+| --- | --- | --- |
+| Install dependencies | success | 41 s |
+| Restore model cache | success | 6 s |
+| Download real model | skipped | 缓存命中 |
+| Verify model files | success | 1 s |
+| Start uvicorn + `/health` | success | 5 s |
+| Record Windows runtime details | success | 16 s |
+| Run real-model tests | success | 22 s |
+| Run browser E2E on Microsoft Edge | success | 9 s |
+
+Job 总耗时约 1 分 54 秒；默认测试 job 约 1 分 16 秒。
+
+### 真实模型耗时
+
+```text
+中文 chinese.wav
+duration_seconds: 12.000
+processing_seconds: 5.503
+inference_seconds: 4.182
+model_load_seconds: 1.295
+
+英文 english.wav
+duration_seconds: 9.000
+processing_seconds: 4.354
+inference_seconds: 3.049
+model_load_seconds: 1.289
+```
+
+- 中文 `pytest -m real_model` 通过 CER 阈值 0.30。
+- 英文 WER 阈值 0.30 通过（本地真实输出 WER 0.0）。
+- 真实模型测试 5 项全部通过。
+
+### 浏览器
+
+- Chromium E2E：默认 job，3 passed。
+- Microsoft Edge E2E：real-model job，3 passed；Edge 155.0.4283.62。
+- 两者均使用假麦克风 + FakeTranscriber，不是真实麦克风。
+
+## 失败与修复
+
+### 1. 首次 real-model job 下载失败
+
+- Run `40650671555`，Download real model 失败。
+- Check annotation 的最后错误为：
+  ```text
+  UnicodeEncodeError: 'charmap' codec can't encode characters ...
+  ```
+- 原因：Windows PowerShell 使用 cp1252，脚本下载成功/失败后打印中文错误时再次抛异常。
+- 修复：给 real-model job 设置：
+  ```yaml
+  env:
+    PYTHONUTF8: "1"
+    PYTHONIOENCODING: "utf-8"
+  ```
+- 同时为 ModelScope 失败增加 HuggingFace、hf-mirror 回退与 `::error::` 诊断。
+
+### 2. 修复后
+
+- Run `40651179705` 首次真实模型 + Edge E2E 成功。
+- Run `40651812439` 缓存命中并输出运行时细节，成功。
+
+## 限制
+
+- GitHub Actions 是 Windows Server，不是 Windows 11 桌面；真实 Windows 11 麦克风/Edge UI 仍未验证。
+- CI 的麦克风是 Playwright 假设备，不是真实麦克风。
+- Edge E2E 是 headless，不等于桌面 Edge 手动操作。
+- 不能把 CI 成功写成“Windows 11 实机通过”。

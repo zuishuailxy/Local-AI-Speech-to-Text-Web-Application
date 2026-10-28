@@ -111,3 +111,5 @@ Run browser E2E                success
 - 页面加载只忽略 favicon 404，其他 console error / pageerror 均视为失败。
 - 截图由 `E2E_SCREENSHOT_DIR` 控制，默认不写文件。
 - 未覆盖 60 秒自动停止、权限拒绝、Edge；分别由 T4.3/T4.4 单测、T6.5、T6.11 覆盖。
+
+> 注：本文件是 T5.4 当时的快照（196 passed）。T6.1 增加 `zhconv` 与 7 个测试后，最终默认套件为 **203 passed, 8 deselected**；以 `docs/evidence/pytest-default.txt` 和 `docs/test-report.md` 为准。

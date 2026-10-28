@@ -1,23 +1,23 @@
-# T5.5 默认测试隔离性
+# T5.5 / T7.4 默认测试隔离性（最终复验）
 
 - 日期：2026-10-28
 - 环境：macOS arm64 / Apple M1 / Python 3.12.13
-- 干净环境：`.venv-t55`（uv 创建，仅安装 `requirements.txt` 的 41 个包）
+- 干净环境：`/tmp/stt-venv-final`（uv 创建，仅安装 `requirements.txt` 的 42 个包）
 - 模型目录：测试期间临时移走，测试结束后恢复（464 MB）
 - 禁用下载/网络：`HF_HUB_OFFLINE=1`、`TRANSFORMERS_OFFLINE=1`，并把 HTTP/HTTPS/ALL 代理指向不可用地址
+- 说明：T5.5 首次验证为 196 passed（当时 41 个依赖）；T6.1 增加 `zhconv` 与 7 个测试后，本文件更新为最终 203 passed 复验。
 
 ## 干净环境
 
 ```bash
-uv venv .venv-t55 --python 3.12
-uv pip install --python .venv-t55/bin/python -r requirements.txt
-uv pip check --python .venv-t55/bin/python
+uv venv /tmp/stt-venv-final --python 3.12
+uv pip install --python /tmp/stt-venv-final/bin/python -r requirements.txt
+uv pip check --python /tmp/stt-venv-final/bin/python
 ```
 
 ```text
-Using CPython 3.12.13
-Creating virtual environment at: .venv-t55
-Checked 41 packages in 4ms
+Using Python 3.12.13 environment at: /tmp/stt-venv-final
+Checked 42 packages in 0.91ms
 All installed packages are compatible
 ```
 
@@ -26,12 +26,12 @@ All installed packages are compatible
 ## 执行
 
 ```bash
-mv models /tmp/local-stt-models-t55
+mv models /tmp/local-stt-models-final
 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1 \
 HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 \
 ALL_PROXY=http://127.0.0.1:9 NO_PROXY=127.0.0.1,localhost,::1 \
-.venv-t55/bin/python -m pytest -q
-mv /tmp/local-stt-models-t55 models
+/tmp/stt-venv-final/bin/python -m pytest -q
+mv /tmp/local-stt-models-final models
 ```
 
 执行前确认：
@@ -46,7 +46,7 @@ models-absent
 ........................................................................ [ 36%]
 ........................................................................ [ 73%]
 ....................................................                     [100%]
-196 passed, 8 deselected in 2.73s
+203 passed, 8 deselected in 2.53s
 ```
 
 测试后确认模型目录仍未生成：
@@ -64,9 +64,9 @@ models/faster-whisper-small
 
 ## 结果解释
 
-- **196 passed**：默认测试全部通过。
+- **203 passed**：默认测试全部通过。
 - **8 deselected**：5 个 `real_model` + 3 个 `e2e`，默认不执行。
-- 干净环境没有安装 Playwright，但 e2e 模块已改为在 fixture 内延迟导入，因此默认收集不会失败。
+- 干净环境没有安装 Playwright；e2e 模块在 fixture 内延迟导入，默认收集不会失败。
 - 没有 `download`、`modelscope`、`huggingface`、`http://`、`https://` 输出；没有创建 `models/`。
 - 测试仅走 ASGI `TestClient`、静态文件、纯函数和假引擎，没有启动浏览器，也没有访问麦克风。
 
@@ -77,7 +77,7 @@ models/faster-whisper-small
 - 不需要模型权重
 - 不需要麦克风
 - 不需要下载或外网
-- 4–5 秒完成
+- 2–3 秒完成
 - 不产生 `models/` 目录或下载缓存
 
 真实模型测试仍需显式 `-m real_model`，浏览器 E2E 仍需显式 `-m e2e` 并安装 Playwright。

@@ -617,12 +617,13 @@
   - 验证：Mermaid 架构、模块表、录音/上传/识别流程、PyAV 音频细节、Whisper small 选型/备选、错误码表、锁/单进程、安全/隐私、官方资料链接齐全；与代码/README 一致。
   - 结果：已完成（2026-10-28）；明确单进程单模型锁、10 MB/120 s 双限制、zhconv 只处理 zh、Windows/Edge/60 s 差异等限制。
 
-- [ ] **T7.4 编写 docs/test-report.md（最终版）**
+- [x] **T7.4 编写 docs/test-report.md（最终版）**
   - 目标：记录实际执行的测试与结果。
   - 文件：`docs/test-report.md`。
   - 前置：T5.6、T6.12。
   - 完成标准：环境信息；Mock 用例表；真实模型用例（文本、CER/WER、耗时）；6 项手动验证；异常/离线/Windows CI/Edge；真实 Windows 11 未验证项；F6 结果；已知问题与限制；命令输出路径。
-  - 验证：所有“通过”均有证据；未执行项明确标注，不冒充通过。
+  - 验证：203 个默认用例分布表；真实模型 5 项；6 项手动；Windows CI/Edge；F6 明确未实现；未验证项表；证据路径；所有“通过”有对应文件。
+  - 结果：已完成（2026-10-28）；修正 `pytest-default.txt` 为最终 42 依赖/203 passed，并在 e2e 证据注明历史 196 快照。
 
 - [ ] **T7.5 编写 docs/ai-development.md**
   - 目标：回答题目 5 个问题并展示 AI Programming 能力。

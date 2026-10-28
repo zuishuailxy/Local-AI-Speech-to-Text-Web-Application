@@ -1,4 +1,4 @@
-# 测试报告（P6 初稿）
+# 测试报告（最终版）
 
 - 日期：2026-10-28
 - 项目：Local AI Speech-to-Text Web Application
@@ -28,6 +28,33 @@ python -m pytest -q
 ```
 
 8 个默认排除项：5 个 `real_model` + 3 个 `e2e`。
+
+### Mock/接口用例分布
+
+| 文件 | 用例数 | 覆盖 |
+| --- | ---: | --- |
+| `test_app_factory.py` | 5 | 应用工厂、注入、静态页 |
+| `test_audio.py` | 42 | 校验、流式 10 MB、解码、时长、清理 |
+| `test_config.py` | 22 | 默认值、环境变量、非法值、日志级别 |
+| `test_download_model.py` | 10 | 模型下载/校验/回退 |
+| `test_errors.py` | 10 | 错误码、异常处理 |
+| `test_fixtures.py` | 8 | fixture/隔离 |
+| `test_frontend_accessibility.py` | 5 | label、aria、键盘 |
+| `test_frontend_recording.py` | 11 | MediaRecorder、计时、上传、请求、复制 |
+| `test_frontend_structure.py` | 5 | 页面结构、静态资源、favicon |
+| `test_health.py` | 4 | `/health`、首页 |
+| `test_language.py` | 10 | zh/en/非法语言 |
+| `test_logging.py` | 5 | request_id、日志字段、文本不入日志 |
+| `test_metrics.py` | 10 | CER/WER/脚本占比 |
+| `test_samples.py` | 5 | WAV 参数、参考文本、无模型权重 |
+| `test_transcribe_api.py` | 20 | 200/4xx/5xx、空文本、重试 |
+| `test_transcriber.py` | 7 | 协议/Fake |
+| `test_transcriber_unit.py` | 13 | 惰性加载、锁、推理、日志、繁转简 |
+| `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
+| `test_verify_asr.py` | 6 | CLI 冒烟 |
+| **合计** | **203** | 默认执行 |
+
+真实模型 5 项、E2E 3 项默认排除，分别需要模型/浏览器。
 
 干净环境复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）：
 
@@ -64,6 +91,20 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 ```
 
 覆盖页面加载、WAV 上传 + 复制、假麦克风 WebM 录音。Windows CI 另用 Chromium 与 Edge 155 跑通同一套 3 项。
+
+### 命令输出归档
+
+| 内容 | 证据文件 |
+| --- | --- |
+| 默认/干净隔离 | `docs/evidence/pytest-default.txt` |
+| 真实模型 | `docs/evidence/pytest-real-model.txt` |
+| 浏览器 E2E | `docs/evidence/e2e.txt` |
+| Windows CI | `docs/evidence/windows-ci.txt` |
+| 手动 6 项 | `docs/evidence/t6.1-*.txt` … `t6.9-*`、对应 PNG |
+| 异常/边界 | `docs/evidence/error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt` |
+| Edge | `docs/evidence/edge.txt` |
+
+本机终端日志（如 `/tmp/t6.*-uvicorn.log`）仅作现场排查，不提交；上表为可复核的归档证据。
 
 ## 3. 六项指定手动验证
 
@@ -108,7 +149,16 @@ Windows 真实模型耗时：
 
 CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 headless + 假麦克风 + FakeTranscriber。
 
-## 6. 已知问题与风险
+## 6. F6 实时识别
+
+**未实现。**
+
+- 题目列为加分项；D5 已确认“要做”，但必须通过 G5 门禁后启动。
+- 当前 P7 交付基线只包含必做 F1–F5；F6 未编写代码、未测试、未演示。
+- 若后续进入 P8，需重新更新本报告；未完成时不得写成“通过”。
+- 自动语言检测（`language=auto`）同样未实现，当前仅接受 `zh`/`en`。
+
+## 7. 已知问题与风险
 
 | 级别 | 问题 | 说明 |
 | --- | --- | --- |
@@ -120,7 +170,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 低 | 无设备验证为模拟 | macOS 内置麦克风无法安全禁用；真实 NotFound/NotReadable 待其他设备 |
 | 低 | 样本覆盖有限 | 单人、安静、正常语速；噪声/远场/混合语言未覆盖 |
 
-## 7. G4 检查
+## 8. G4 检查
 
 | 门禁项 | 结果 |
 | --- | --- |
@@ -130,11 +180,23 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 真实模型测试 | 通过（本机 + Windows CI） |
 | 测试报告基线 | 本文件 |
 | 所有必做项 | F1–F5 通过 |
+| F6 实时识别 | 未实现（加分项，G5 未启动） |
 | Windows 11 实机/麦克风 | 未验证，已披露 |
 
 **G4：通过（带已披露限制）**。不把 Windows CI 写成 Windows 11 实机通过；F6 仍需 G5 门禁与文档基线。
 
-## 8. 证据索引
+### 未执行/未验证项
+
+| 项 | 状态 | 原因 |
+| --- | --- | --- |
+| 真实 Windows 11 桌面/麦克风 | 未验证 | 无实机；CI 是 Windows Server |
+| 桌面 Edge 手动操作 | 未验证 | 本机无 Edge；仅 CI headless Edge |
+| 真实无设备/设备占用 | 未验证 | 内置麦克风无法安全禁用；T6.6 为 DevTools 模拟 |
+| F6 实时识别 | 未实现 | G5 未启动，优先必做 |
+| 噪声/远场/中英混合 | 未覆盖 | 样本为单人安静环境 |
+| 60 s 计时与音频时长一致 | 已知差异 | 60.0 s vs 57.18 s，待排查 |
+
+## 9. 证据索引
 
 - 测试隔离/合规：`pytest-default.txt`、`compliance-check.txt`
 - 真实模型：`asr-baseline.md`、`t5.2-real-model.txt`、`t5.3-real-api.txt`、`pytest-real-model.txt`

@@ -2,7 +2,7 @@
 
 - 日期：2026-10-28
 - 范围：`todo.md`、`plan.md`、README、docs、Git/tag、CI
-- 当前：默认 233 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40694704464` success
+- 当前：默认 233 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40697700916` success
 - Tag：`v1.0-submission`、`v1.0.1-optimizations`、`v1.0.2-accuracy`、`v1.0.3-realtime`、`v1.0-must-have`（回滚）
 
 ## 已完成

@@ -73,6 +73,9 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
 
     buffer = StreamingBuffer(StreamingConfig())
     partial_count = 0
+    first_audio_at: float | None = None
+    first_partial_seconds: float | None = None
+    first_text_seconds: float | None = None
     logger.info(
         "ws_open connection_id=%s language=%s", connection_id, normalized_language
     )
@@ -85,6 +88,8 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
             if message.get("bytes") is not None:
                 try:
                     buffer.append(message["bytes"])
+                    if first_audio_at is None:
+                        first_audio_at = time.perf_counter()
                 except ValueError as exc:
                     await _send_error(
                         websocket,
@@ -103,7 +108,13 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
                         buffer.partial_pcm(),
                         normalized_language,
                         use_prompt=False,
+                        beam_size=1,
                     )
+                    now = time.perf_counter()
+                    if partial_count == 0 and first_audio_at is not None:
+                        first_partial_seconds = now - first_audio_at
+                    if result.text and first_text_seconds is None and first_audio_at is not None:
+                        first_text_seconds = now - first_audio_at
                     buffer.mark_partial()
                     partial_count += 1
                     await websocket.send_json(
@@ -174,13 +185,15 @@ async def transcribe_stream(websocket: WebSocket, language: str | None = None) -
         logger.info(
             "ws_final outcome=success connection_id=%s language=%s "
             "duration_seconds=%.3f processing_seconds=%.3f text_chars=%d "
-            "partials=%d",
+            "partials=%d first_partial_seconds=%s first_text_seconds=%s",
             connection_id,
             normalized_language,
             buffer.duration_seconds,
             processing_seconds,
             len(text),
             partial_count,
+            "n/a" if first_partial_seconds is None else f"{first_partial_seconds:.3f}",
+            "n/a" if first_text_seconds is None else f"{first_text_seconds:.3f}",
         )
         await websocket.send_json(
             {

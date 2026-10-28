@@ -20,6 +20,7 @@ BYTES_PER_SAMPLE = 2
 F6_MAX_SECONDS = 60.0
 F6_WINDOW_SECONDS = 3.0
 F6_PARTIAL_INTERVAL_SECONDS = 1.5
+F6_FIRST_PARTIAL_SECONDS = 1.2
 
 
 def pcm16le_to_float32(pcm: bytes) -> np.ndarray:
@@ -38,6 +39,7 @@ class StreamingConfig:
     max_seconds: float = F6_MAX_SECONDS
     window_seconds: float = F6_WINDOW_SECONDS
     partial_interval_seconds: float = F6_PARTIAL_INTERVAL_SECONDS
+    first_partial_seconds: float = F6_FIRST_PARTIAL_SECONDS
 
 
 class StreamingBuffer:
@@ -47,6 +49,7 @@ class StreamingBuffer:
         self.config = config or StreamingConfig()
         self._pcm = bytearray()
         self._last_partial_samples = 0
+        self._partial_count = 0
 
     @property
     def duration_seconds(self) -> float:
@@ -67,13 +70,17 @@ class StreamingBuffer:
             raise AudioTooLongError(int(self.config.max_seconds))
 
     def should_emit_partial(self) -> bool:
-        interval_samples = int(
-            self.config.partial_interval_seconds * self.config.sample_rate
+        seconds = (
+            self.config.first_partial_seconds
+            if self._partial_count == 0
+            else self.config.partial_interval_seconds
         )
+        interval_samples = int(seconds * self.config.sample_rate)
         return self.samples - self._last_partial_samples >= interval_samples
 
     def mark_partial(self) -> None:
         self._last_partial_samples = self.samples
+        self._partial_count += 1
 
     def partial_pcm(self) -> bytes:
         window_bytes = int(self.config.window_seconds * self.config.sample_rate) * BYTES_PER_SAMPLE
@@ -89,16 +96,19 @@ def transcribe_pcm(
     language: str,
     *,
     use_prompt: bool = True,
+    beam_size: int | None = None,
 ) -> TranscriptionResult:
     return transcriber.transcribe(
         pcm16le_to_float32(pcm),
         language,
         use_prompt=use_prompt,
+        beam_size=beam_size,
     )
 
 
 __all__ = [
     "BYTES_PER_SAMPLE",
+    "F6_FIRST_PARTIAL_SECONDS",
     "F6_MAX_SECONDS",
     "F6_PARTIAL_INTERVAL_SECONDS",
     "F6_WINDOW_SECONDS",

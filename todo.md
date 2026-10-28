@@ -821,6 +821,14 @@
   - 验证：small CER 0.2308 / 3.4–3.8 s / 941 MB；medium CER 0.0769 / 7.3–8.9 s / 1.9 GB；3 s 实时窗口 medium 3.9 s；API `ASR_MODEL_SIZE=medium` 生效；默认测试 230 passed、12 deselected。
   - 结果：已完成（2026-10-28）；默认保持 small，medium 作为批量可选模式；未做领域微调（无标注数据）。
 
+- [x] **T10.8 实时体验：首个非空文本 ≤2.5 s**
+  - 目标：降低首字延迟，保持更新间隔 ≤2 s，final 完整。
+  - 文件：`app/services/streaming.py`、`app/services/transcriber.py`、`app/api/ws.py`、`tests/test_ws.py`、`tests/test_transcriber_unit.py`、`docs/evidence/t10.8-realtime-first-text.txt`。
+  - 前置：T10.3。
+  - 完成标准：首个非空 partial ≤2.5 s；更新间隔 ≤2 s；不并发推理；final 不受影响；新增测试。
+  - 验证：首个 partial 1.2 s 触发、partial beam 1；样本 WS 首个非空 2.24–2.27 s，后续 1.2–1.7 s，final 3.0 s；默认 232 passed、12 deselected。
+  - 结果：已完成（2026-10-28）；真实麦克风复测待用户录制 10–12 s 后补日志。
+
 ---
 
 ## 交付前总检查（Definition of Done）

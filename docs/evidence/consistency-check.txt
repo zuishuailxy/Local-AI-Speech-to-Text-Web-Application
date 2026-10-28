@@ -24,13 +24,13 @@
 ## 测试命令/计数
 
 ```text
-python -m pytest -q                 230 passed, 12 deselected (F6 + auto + T10 optimizations)
-python -m pytest -q -m real_model   7 passed, 235 deselected
+python -m pytest -q                 232 passed, 12 deselected (F6 + auto + T10 optimizations)
+python -m pytest -q -m real_model   7 passed, 237 deselected
 PLAYWRIGHT_CHANNEL=chrome ... -m e2e 5 passed
 ```
 
 - P7 必做版干净隔离为 203 passed、8 deselected；README/test-report 已明确标注为 P7 基线。
-- 当前默认 230/12；真实模型 7/235；E2E 5。
+- 当前默认 232/12；真实模型 7/237；E2E 5。
 - Windows CI 已通过必做版（真实模型 + Chromium + Edge）；最新 run `40687099376` success，Edge 5 项。
 
 ## 命令

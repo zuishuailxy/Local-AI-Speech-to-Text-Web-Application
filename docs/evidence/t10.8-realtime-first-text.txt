@@ -1,0 +1,72 @@
+# T10.8 实时体验：首个非空文本 ≤2.5 s
+
+- 日期：2026-10-28
+- 分支：`main`
+- 环境：macOS arm64 M1，16 GB；Whisper small CPU int8
+- 目标：首个非空 partial ≤2.5 s；更新间隔 ≤2 s；不并发推理；final 完整
+
+## 变更
+
+| 项 | 旧 | 新 |
+| --- | --- | --- |
+| 首个 partial 触发 | 1.5 s | 1.2 s |
+| 后续 partial 间隔 | 1.5 s | 1.5 s |
+| partial 窗口 | 3 s | 3 s |
+| partial beam | 5 | 1 |
+| final | beam 5、完整音频 | 不变 |
+| prompt | partial 不传 | 不变（`use_prompt=False`） |
+
+- partial 使用 beam 1，只影响中间文本；final 仍用 beam 5。
+- 新增 `ws_final` 日志字段：`first_partial_seconds`、`first_text_seconds`。
+- 首包阈值来自短音频实测：1.0 s 无文本；1.2 s 开始出现“真心/真心”等短文本。
+
+## 测量方法
+
+- 用 `samples/chinese.wav`（12.0 s）按 0.25 s 分片发送到 `/ws/transcribe?language=zh`。
+- 客户端并发读取消息，记录相对首个音频分片的时间；服务端同时记录 `first_text_seconds`。
+- 模型已预热（先跑一次 HTTP 请求），排除首次加载。
+
+## 结果（两次）
+
+```text
+第一次：首个非空 2.268 s；partial 窗口 1.25 s；8 个 partial；final 3.027 s
+第二次：首个非空 2.237 s（服务端 first_text_seconds=2.237）；8 个 partial
+```
+
+逐条 partial（第二次）：
+
+```text
+2.268 s  1.25 s 音频  '真心'
+3.877 s  2.75 s      '轻轻的我走了'
+5.671 s  4.25 s      '真的我走了正如我轻轻的来'
+7.377 s  5.75 s      '我轻轻的来'
+8.742 s  7.25 s      '我轻轻的抓手做别西天的'
+10.011 s 8.75 s      '做别西天的云彩那'
+11.499 s 10.25 s     '那何判的金牛是'
+13.044 s 11.75 s     '口耳畔的金牛是西洋中的新娘'
+```
+
+- 首个非空文本：2.24–2.27 s，满足 ≤2.5 s。
+- partial 间隔：约 1.2–1.7 s（含推理时间），满足 ≤2 s 的目标。
+- 推理串行：WebSocket 循环 await 每次推理，没有并发调用。
+- final：12 s 音频、3.0 s 处理，文本完整。
+
+## 取舍
+
+- 1.2 s 音频信息量少，首条 partial 只能给出“真心”这类短文本，且不稳定；这是为了首字延迟做的 tradeoff。
+- partial beam 1 比 beam 5 略快，但短窗口本身质量有限；final 不受影响。
+- 仍可能出现“何判/口耳畔”等中间错误，最终以 final 为准。
+- 页面文案已提示：中间文本仅供预览。
+
+## 验证
+
+```text
+默认：232 passed, 12 deselected
+真实模型：7 passed
+E2E：5 passed
+```
+
+## 待补
+
+- 真实麦克风复测：需要用户录 10–12 s，确认页面首条 partial 和 `ws_final` 日志的 `first_text_seconds`。
+- 旧浏览器 ScriptProcessor 回退未实机验证。

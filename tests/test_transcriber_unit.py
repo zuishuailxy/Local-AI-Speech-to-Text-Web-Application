@@ -345,3 +345,15 @@ def test_use_prompt_false_disables_prompt(tmp_path) -> None:
     engine.transcribe(np.zeros(5 * 16_000, dtype=np.float32), "zh", use_prompt=False)
 
     assert "initial_prompt" not in model.calls[0][1]
+
+
+def test_beam_size_override_is_forwarded(tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    model = FakeWhisperModel()
+    engine = WhisperTranscriber(settings, model_factory=lambda *a, **k: model)
+
+    engine.transcribe(np.zeros(2 * 16_000, dtype=np.float32), "zh")
+    engine.transcribe(np.zeros(2 * 16_000, dtype=np.float32), "zh", beam_size=1)
+
+    assert model.calls[0][1]["beam_size"] == 5
+    assert model.calls[1][1]["beam_size"] == 1

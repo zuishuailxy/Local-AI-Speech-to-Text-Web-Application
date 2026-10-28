@@ -24,7 +24,7 @@ python -m pytest -q
 ```
 
 ```text
-230 passed, 12 deselected in 1.96s
+232 passed, 12 deselected in 1.96s
 ```
 
 12 个默认排除项：7 个 `real_model` + 5 个 `e2e`。
@@ -50,15 +50,15 @@ python -m pytest -q
 | `test_samples.py` | 5 | WAV 参数、参考文本、无模型权重 |
 | `test_transcribe_api.py` | 21 | 200/4xx/5xx、空文本、重试、auto |
 | `test_transcriber.py` | 7 | 协议/Fake |
-| `test_transcriber_unit.py` | 18 | 惰性加载、锁、推理、日志、繁转简、auto/低置信度、prompt 门控 |
+| `test_transcriber_unit.py` | 19 | 惰性加载、锁、推理、日志、繁转简、auto/低置信度、prompt 门控 |
 | `test_text.py` | 5 | zhconv 繁转简、英文/空文本不变 |
 | `test_verify_asr.py` | 6 | CLI 冒烟 |
-| `test_ws.py` | 10 | WebSocket/PCM/partial/final/错误/auto |
-| **合计** | **227** | 默认执行 |
+| `test_ws.py` | 11 | WebSocket/PCM/partial/final/错误/auto |
+| **合计** | **232** | 默认执行 |
 
 真实模型 7 项、E2E 5 项默认排除，分别需要模型/浏览器。
 
-当前全量为 230 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
+当前全量为 232 passed、12 deselected；P7 必做版干净复验（`/tmp/stt-venv-final`，42 个依赖，模型移走，离线/代理阻塞）为 203 passed、8 deselected：
 
 ```text
 203 passed, 8 deselected in 2.53s
@@ -71,7 +71,7 @@ python -m pytest -q -m real_model -s
 ```
 
 ```text
-7 passed, 235 deselected
+7 passed, 237 deselected
 ```
 
 | 测试 | 时长 | 处理/推理 | 质量 |
@@ -158,7 +158,8 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 **已完成并合并到 `main`；Windows CI 通过。**
 
 - WebSocket `/ws/transcribe?language=zh|en`，PCM16LE 16 kHz 分片。
-- partial 每约 1.5 s、最近 3 s 窗口；stop 后 final 全量。
+- 首个 partial 约 1.2 s 触发，之后每约 1.5 s；最近 3 s 窗口，partial 用 beam 1；stop 后 final 全量、beam 5。
+- 真实样本 WebSocket：首个非空文本 2.22–2.27 s（旧 3.0 s），后续 partial 1.2–1.7 s，final 3.0 s。
 - 前端“实时识别（实验）”复选框，AudioWorklet 主路径 + 重采样 + PCM16；旧浏览器回退 ScriptProcessor。
 - Mock WS：9 passed；E2E：5 passed（Chrome 本地；Windows CI run `40687099376` Edge 5 项通过）。
 - T8.1 自动语言：HTTP/WS/页面支持 `auto`；中英文真实样本自动检测通过；用户手动中文/英文/实时 auto 截图；原有 zh/en 契约不变。

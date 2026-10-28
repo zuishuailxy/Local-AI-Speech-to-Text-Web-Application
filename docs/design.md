@@ -337,7 +337,7 @@ ws://127.0.0.1:8000/ws/transcribe?language=zh|en|auto
 
 规则：
 
-- 每累计约 2 s 音频触发一次 partial；partial 只转写最近 8 s 窗口，用于近实时展示。
+- 首个 partial 在累计约 1.2 s 音频时触发，之后每约 1.5 s 一次；partial 只转写最近 3 s 窗口，并使用 beam 1 降低首字延迟；final 仍用完整音频和 beam 5。
 - stop 时对完整缓冲做 final；空音频返回空文本。
 - 单次实时录音上限 60 s；超限返回 `audio_too_long` 并关闭。
 - 非法语言/消息/PCM 返回 error 后关闭。

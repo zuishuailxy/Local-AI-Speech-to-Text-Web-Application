@@ -41,6 +41,7 @@ def test_streaming_buffer_partial_and_window() -> None:
             max_seconds=4,
             window_seconds=1,
             partial_interval_seconds=1,
+            first_partial_seconds=1,
         )
     )
 
@@ -158,14 +159,28 @@ def test_partial_transcription_disables_prompt() -> None:
     from app.services.streaming import transcribe_pcm
     from app.services.transcriber import TranscriptionResult
 
-    calls: list[bool] = []
+    calls: list[tuple[bool, int | None]] = []
 
     class Spy:
-        def transcribe(self, samples, language, *, use_prompt=True):
-            calls.append(use_prompt)
+        def transcribe(self, samples, language, *, use_prompt=True, beam_size=None):
+            calls.append((use_prompt, beam_size))
             return TranscriptionResult(text="x", language="zh")
 
     pcm = b"\x00\x00" * 1600
-    transcribe_pcm(Spy(), pcm, "zh", use_prompt=False)
+    transcribe_pcm(Spy(), pcm, "zh", use_prompt=False, beam_size=1)
     transcribe_pcm(Spy(), pcm, "zh")
-    assert calls == [False, True]
+    assert calls == [(False, 1), (True, None)]
+
+
+def test_first_partial_uses_shorter_initial_threshold() -> None:
+    buffer = StreamingBuffer(StreamingConfig())
+    buffer.append(pcm(1.1))
+    assert buffer.should_emit_partial() is False
+    buffer.append(pcm(0.2))
+    assert buffer.should_emit_partial() is True
+
+    buffer.mark_partial()
+    buffer.append(pcm(1.0))
+    assert buffer.should_emit_partial() is False
+    buffer.append(pcm(0.5))
+    assert buffer.should_emit_partial() is True

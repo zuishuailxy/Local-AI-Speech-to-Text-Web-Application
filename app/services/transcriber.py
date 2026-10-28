@@ -59,11 +59,14 @@ class Transcriber(Protocol):
         language: str,
         *,
         use_prompt: bool = True,
+        beam_size: int | None = None,
     ) -> TranscriptionResult:
         """Transcribe mono 16 kHz float32 samples for the requested language.
 
-        ``use_prompt=False`` is used by realtime partials: their 3 s windows are
-        the most likely place for an initial prompt to rewrite the output.
+        ``use_prompt=False`` is used by realtime partials: their short windows
+        are the most likely place for an initial prompt to rewrite the output.
+        ``beam_size`` overrides the configured value (partials use a smaller
+        beam to keep the first text under the latency target).
         """
 
 
@@ -93,6 +96,7 @@ class FakeTranscriber:
         language: str,
         *,
         use_prompt: bool = True,
+        beam_size: int | None = None,
     ) -> TranscriptionResult:
         self.calls.append((samples, language))
         if self.delay_seconds:
@@ -213,6 +217,7 @@ class WhisperTranscriber:
         language: str,
         *,
         use_prompt: bool = True,
+        beam_size: int | None = None,
     ) -> TranscriptionResult:
         sample_count = int(samples.size)
         initial_prompt = (
@@ -234,7 +239,11 @@ class WhisperTranscriber:
                 model_language = None if language == AUTO_LANGUAGE else language
                 transcribe_kwargs: dict[str, Any] = {
                     "language": model_language,
-                    "beam_size": self._settings.asr_beam_size,
+                    "beam_size": (
+                        self._settings.asr_beam_size
+                        if beam_size is None
+                        else beam_size
+                    ),
                     "vad_filter": self._settings.asr_vad_filter,
                 }
                 if initial_prompt:

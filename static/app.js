@@ -495,6 +495,13 @@
     return `${detail}${code}`;
   }
 
+  function describeRequestError(error) {
+    if (error instanceof TypeError) {
+      return "无法连接后端，请确认服务仍在运行后重试。";
+    }
+    return error && error.message ? error.message : "未知错误，请稍后重试。";
+  }
+
   async function submitAudio(blob, filename, note = "") {
     if (state.requestInFlight) {
       return;
@@ -546,9 +553,7 @@
       stopProcessingTimer();
       setPipelineStep(elements.stepUpload, "error");
       setStatus("识别失败", "error");
-      showError(
-        `识别失败：${error && error.message ? error.message : "无法连接后端，请确认服务仍在运行。"}`
-      );
+      showError(`识别失败：${describeRequestError(error)}`);
     } finally {
       state.requestInFlight = false;
       if (state.phase !== "error") {
@@ -868,12 +873,21 @@
     clearError();
     if (state.phase === "error") {
       setPhase("idle");
-      setStatus("准备就绪，可以开始录音或上传音频。", "idle");
+      setStatus(
+        state.selectedFile
+          ? "已选择音频文件，点击 Upload & Transcribe 开始识别。"
+          : "准备就绪，可以开始录音或上传音频。",
+        "idle"
+      );
     }
   }
 
   function retryLastAction() {
     clearError();
+    if (state.selectedFile) {
+      void submitAudio(state.selectedFile, state.selectedFile.name);
+      return;
+    }
     if (state.lastSubmission) {
       void submitAudio(
         state.lastSubmission.blob,

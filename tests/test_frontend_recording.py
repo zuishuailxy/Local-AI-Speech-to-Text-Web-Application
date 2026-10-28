@@ -104,3 +104,14 @@ def test_copy_contract() -> None:
     assert "已复制" in JS
     assert "复制失败" in JS
     assert 'elements.copyButton.disabled = true' in JS
+
+
+def test_request_error_and_retry_contract() -> None:
+    assert "parseApiError" in JS
+    assert "describeRequestError" in JS
+    assert "无法连接后端" in JS
+    assert "retryLastAction" in JS
+    assert "state.selectedFile" in JS
+    assert "state.lastSubmission" in JS
+    assert "dismissError" in JS
+    assert "识别失败：" in JS

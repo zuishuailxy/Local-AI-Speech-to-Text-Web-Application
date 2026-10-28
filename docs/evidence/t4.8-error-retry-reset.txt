@@ -1,0 +1,89 @@
+# T4.8 错误展示、重试与重置验证
+
+- 日期：2026-10-28
+- 文件：`static/app.js`
+- 浏览器：Review 面板 Chromium
+- 说明：通过拦截 fetch 模拟后端 503/网络异常，再恢复成功响应；不伪造后端识别文本
+
+## 实现
+
+- 后端错误解析 `detail` + `code`，显示为：
+  `识别失败：<detail> (<code>)`
+- 网络错误（fetch TypeError）转换为：
+  `无法连接后端，请确认服务仍在运行后重试。`
+- 请求失败后：
+  - error 状态，错误面板可见
+  - Start 恢复可用
+  - 语言选择保留
+  - 已选文件保留，Upload 可用
+  - `lastSubmission` 保留，重试可复用
+- 重试按钮：
+  - 优先重试当前已选文件
+  - 否则重试最近一次录音提交
+  - 都没有时启动麦克风
+- 关闭提示：
+  - 隐藏错误面板
+  - 回到 idle
+  - 有已选文件时状态提示 Upload
+- 成功后 Start/Upload 重新可用，可继续识别
+- 语言选择在请求期间禁用，失败/成功恢复
+- 空文本仍走 200 结果分支，不进入错误面板
+- Copy 错误与掩码不涉及后端状态
+
+## 浏览器验证
+
+### 后端 503 → 重试成功
+
+第一次 fetch 返回：
+
+```text
+503 {"detail":"本地识别模型不可用","code":"model_unavailable"}
+```
+
+页面状态：
+
+```text
+phase: error
+error: 识别失败：本地识别模型不可用 (model_unavailable)
+language: en（保留）
+selectedFile: retry.wav（保留）
+uploadDisabled: false
+startDisabled: false
+errorVisible: true
+```
+
+点击重试（第二次返回 200）：
+
+```text
+phase: success
+error hidden: true
+resultText: retry ok
+resultLanguage: English（en）
+calls: 2
+uploadDisabled: false
+startDisabled: false
+```
+
+### 网络连接失败
+
+```text
+phase: error
+error: 识别失败：无法连接后端，请确认服务仍在运行后重试。
+selectedFile: network.wav（保留）
+startDisabled: false
+```
+
+## 测试
+
+```text
+11 passed   (tests/test_frontend_recording.py)
+168 passed  (全量)
+```
+
+JS 语法：`node --check static/app.js` 通过。
+
+## 待手动
+
+- 后端停止/模型目录改名后的真实网络恢复：T6.7
+- 成功后的再次录音/上传：T6.1/T6.3
+- Edge：T6.11

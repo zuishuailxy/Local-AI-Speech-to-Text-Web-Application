@@ -1,0 +1,88 @@
+# T5.4 Playwright 浏览器 E2E
+
+- 日期：2026-10-28
+- 环境：macOS arm64 / Apple M1 / Python 3.12.13
+- 浏览器：Google Chrome 156.0.8078.49（Playwright `channel=chrome`，headless）
+- 服务：真实 uvicorn + FastAPI + `FakeTranscriber`（不需要模型权重）
+- 新增：`tests/e2e/test_browser.py`、`requirements-e2e.txt`、`.github/workflows/windows.yml` 的浏览器步骤
+- 截图：`docs/evidence/t5.4-e2e-upload.png`、`docs/evidence/t5.4-e2e-microphone.png`
+
+## 测试设计
+
+- `e2e` 标记，默认 `pytest -q` 不执行。
+- 模块级 fixture 启动真实 uvicorn（随机端口），注入 `FakeTranscriber(text="E2E browser transcription result.")`。
+- Playwright Chromium/Chrome 启动参数：
+  - `--use-fake-ui-for-media-stream`
+  - `--use-fake-device-for-media-stream`
+  - `--use-file-for-fake-audio-capture=samples/english.wav`
+- 上下文授予 `microphone` 权限。
+- 覆盖三项：
+  1. 页面加载：标题、idle、语言默认 zh、Start 可用、Upload 禁用、无相关控制台错误。
+  2. 文件上传：选 en → `samples/english.wav` → Upload → success；检查文本、语言、9.0 s 时长、Copy 可用、音频预览可见。
+  3. 假麦克风录音：Start → recording → 录制 ≥1.2 s → Stop → success；检查 `lastRecording` 为 `audio/webm`、大小 >1000 bytes、时长 ≥1 s；结果字段与语言正确。
+
+## 运行
+
+```bash
+PLAYWRIGHT_CHANNEL=chrome E2E_SCREENSHOT_DIR=docs/evidence \
+  .venv/bin/python -m pytest -q -m e2e tests/e2e/test_browser.py -v
+```
+
+```text
+platform darwin -- Python 3.12.13, pytest-9.1.1, pluggy-1.7.0
+collected 3 items
+
+tests/e2e/test_browser.py ...                                            [100%]
+
+============================== 3 passed in 5.49s ===============================
+```
+
+本机未安装 Playwright 自带 Chromium（`playwright install chromium` 下载超时），因此本地使用系统 Chrome：
+
+```text
+Google Chrome 156.0.8078.49
+```
+
+未安装浏览器时测试会 skip 并给出安装命令，不会伪装成通过：
+
+```text
+sss                                                                      [100%]
+3 skipped
+Playwright Chromium 未安装：python -m playwright install chromium；或设置 PLAYWRIGHT_CHANNEL=chrome
+```
+
+## 默认隔离
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+```text
+196 passed, 8 deselected in 1.67s
+```
+
+8 个 deselected = 5 个 `real_model` + 3 个 `e2e`。
+
+## Windows CI
+
+`.github/workflows/windows.yml` 新增：
+
+```yaml
+- name: Install browser E2E dependencies
+  run: |
+    python -m pip install -r requirements-e2e.txt
+    python -m playwright install chromium
+
+- name: Run browser E2E
+  run: python -m pytest -q -m e2e
+```
+
+`requirements-e2e.txt` 不进入运行依赖，只固定 `playwright==1.64.1`。CI 使用自带 Chromium，不设置 `PLAYWRIGHT_CHANNEL`。
+
+## 隐私与边界
+
+- 使用 Chromium 假麦克风与固定 WAV，不是真实麦克风；真实麦克风验证仍属 T6.1/T6.2。
+- 使用 `FakeTranscriber`，不证明真实模型准确率；真实模型由 T5.2/T5.3 覆盖。
+- 页面加载只忽略 favicon 404，其他 console error / pageerror 均视为失败。
+- 截图由 `E2E_SCREENSHOT_DIR` 控制，默认不写文件。
+- 未覆盖 60 秒自动停止、权限拒绝、Edge；分别由 T4.3/T4.4 单测、T6.5、T6.11 覆盖。

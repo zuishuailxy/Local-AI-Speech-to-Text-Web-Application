@@ -1,0 +1,5 @@
+# Optional browser end-to-end dependencies (not part of runtime requirements).
+# Install with:
+#   python -m pip install -r requirements-e2e.txt
+#   python -m playwright install chromium
+playwright==1.64.1

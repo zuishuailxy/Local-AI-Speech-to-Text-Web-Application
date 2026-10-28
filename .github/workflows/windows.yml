@@ -49,5 +49,14 @@ jobs:
         shell: pwsh
         run: python -m pytest -q
 
-      # The health-check and real-model smoke steps are added in T1.4/T6.10
-      # once app.main and the model download script exist.
+      - name: Install browser E2E dependencies
+        shell: pwsh
+        run: |
+          python -m pip install -r requirements-e2e.txt
+          python -m playwright install chromium
+
+      - name: Run browser E2E
+        shell: pwsh
+        run: python -m pytest -q -m e2e
+
+      # The real-model smoke steps are added in T6.10.

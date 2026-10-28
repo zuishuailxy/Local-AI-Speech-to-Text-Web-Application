@@ -430,12 +430,14 @@
   - 结果：已完成（2026-10-28）；新增本人录音派生的 `speech-en.webm`（PyAV/libopus），真实语音 WebM 走完整后端并得到非空文本。
   - 备注：TestClient 不经过真实 TCP/浏览器；真实浏览器上传仍以 T4.6/T6 为准。Windows CI 不跑真实模型。
 
-- [ ] **T5.4 Playwright 浏览器 E2E（Windows CI 需要，默认不随 `pytest -q` 执行）**
+- [x] **T5.4 Playwright 浏览器 E2E（Windows CI 需要，默认不随 `pytest -q` 执行）**
   - 目标：自动验证页面加载、文件上传、假麦克风录音，作为无 Windows 实机时的浏览器证据。
-  - 文件：`tests/e2e/test_browser.py`、`requirements-e2e.txt`、`docs/evidence/e2e.txt`。
+  - 文件：`tests/e2e/test_browser.py`、`requirements-e2e.txt`、`.github/workflows/windows.yml`、`docs/evidence/e2e.txt`、截图。
   - 前置：T5.3、T4.6。
   - 完成标准：`e2e` 标记，默认不执行；Chromium/Edge 使用 `--use-fake-device-for-media-stream` 与 WAV；覆盖页面加载 + 上传成功 + 录音后停止；不进入主 requirements；CI 中可单独执行。
-  - 验证：`pytest -q -m e2e`（本地或 CI）；失败时记录原因并保留 HTTP 上传流程作为兜底，但不能把“未跑”写成“通过”。
+  - 验证：本地 Chrome 156 3 passed；页面无相关 console error；上传结果字段正确；假麦克风录音 WebM/Opus 1.2 s+ 并成功；默认 196 passed、8 deselected；无浏览器时 3 skipped 且提示安装命令。
+  - 结果：已完成（2026-10-28）；使用真实 uvicorn + FakeTranscriber，不依赖模型；Windows CI 增加安装 Chromium 与 `pytest -m e2e` 步骤。
+  - 备注：假麦克风/FakeTranscriber 不等于真实麦克风/真实模型；真实麦克风在 T6.1/T6.2，真实模型在 T5.2/T5.3，Edge 在 T6.11。本机 Chromium 下载超时，本地用 `PLAYWRIGHT_CHANNEL=chrome`。
 
 - [ ] **T5.5 验证默认测试的隔离性与合规静态检查**
   - 目标：证明 `pytest -q` 不依赖模型/麦克风/外网，并确认未使用被禁止的云端 ASR/Web Speech。

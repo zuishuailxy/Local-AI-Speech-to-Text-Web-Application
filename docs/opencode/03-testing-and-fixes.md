@@ -17,6 +17,7 @@
 | 质量指标/样本完整性 | 是 | 否 | CER/WER 归一化、编辑距离、脚本占比、WAV 参数与参考文本一致性 |
 | 真实模型 pytest | 手动 | 是 | 中英文样本转写、脚本占比、CER/WER、耗时 |
 | 真实上传 API | 手动 | 是 | TestClient + 真实后端/模型上传 WAV/WebM、字段与耗时 |
+| 浏览器 E2E | 手动 | 否 | Playwright 页面加载、WAV 上传、假麦克风录音（FakeTranscriber） |
 | 真实模型 CLI | 手动 | 是 | 两份 WAV 的中英文转写、耗时、CER/WER |
 | 真实浏览器上传 | 手动 | 是 | 真实 uvicorn + 本地模型，上传样本并检查四字段 |
 | Windows CI | GitHub | 否 | Python 3.12 安装、导入、pytest |
@@ -89,6 +90,7 @@
 - 真实模型：`model-download.txt`、`asr-baseline.md`、`t3.7-real-api.txt`、`t5.2-real-model.txt`、`t5.3-real-api.txt`、`model-failure.txt`
 - 前端：`t4.1-frontend-structure.txt`、`t4.2-media-recorder.txt`、`t4.3-timer-state.txt`、`t4.4-error-handling.txt`、`t4.5-file-selection.txt`、`t4.6-request-result.txt`、`t4.7-copy.txt`、`t4.8-error-retry-reset.txt`
 - 语言/日志：`t5.8-language-and-logging.txt`
+- 浏览器 E2E：`e2e.txt`、`t5.4-e2e-upload.png`、`t5.4-e2e-microphone.png`
 - Windows CI：各 evidence 文件中记录 run ID；GitHub Actions 页面可复核
 
 ## 5. 真实浏览器验证摘要

@@ -435,9 +435,9 @@
   - 文件：`tests/e2e/test_browser.py`、`requirements-e2e.txt`、`.github/workflows/windows.yml`、`docs/evidence/e2e.txt`、截图。
   - 前置：T5.3、T4.6。
   - 完成标准：`e2e` 标记，默认不执行；Chromium/Edge 使用 `--use-fake-device-for-media-stream` 与 WAV；覆盖页面加载 + 上传成功 + 录音后停止；不进入主 requirements；CI 中可单独执行。
-  - 验证：本地 Chrome 156 3 passed；页面无相关 console error；上传结果字段正确；假麦克风录音 WebM/Opus 1.2 s+ 并成功；默认 196 passed、8 deselected；无浏览器时 3 skipped 且提示安装命令。
+  - 验证：本地 Chrome 156 3 passed；页面无相关 console error；上传结果字段正确；假麦克风录音 WebM/Opus 1.2 s+ 并成功；默认 196 passed、8 deselected；无浏览器时 3 skipped 且提示安装命令；Windows CI run `40633358118` 的 Run tests / Install browser E2E / Run browser E2E 均 success。
   - 结果：已完成（2026-10-28）；使用真实 uvicorn + FakeTranscriber，不依赖模型；Windows CI 增加安装 Chromium 与 `pytest -m e2e` 步骤。
-  - 备注：假麦克风/FakeTranscriber 不等于真实麦克风/真实模型；真实麦克风在 T6.1/T6.2，真实模型在 T5.2/T5.3，Edge 在 T6.11。本机 Chromium 下载超时，本地用 `PLAYWRIGHT_CHANNEL=chrome`。
+  - 备注：首次 CI run `40633226986` 因默认测试收集 e2e 模块时缺少 playwright 而失败，已用 `pytest.importorskip("playwright.sync_api")` 修复并复跑通过。假麦克风/FakeTranscriber 不等于真实麦克风/真实模型；真实麦克风在 T6.1/T6.2，真实模型在 T5.2/T5.3，Edge 在 T6.11。本机 Chromium 下载超时，本地用 `PLAYWRIGHT_CHANNEL=chrome`。
 
 - [ ] **T5.5 验证默认测试的隔离性与合规静态检查**
   - 目标：证明 `pytest -q` 不依赖模型/麦克风/外网，并确认未使用被禁止的云端 ASR/Web Speech。

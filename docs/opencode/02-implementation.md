@@ -361,6 +361,18 @@ python -m pytest -q
 
 结果：`196 passed`。
 
+另有 5 个 `real_model` 与 3 个 `e2e` 用例默认排除。浏览器 E2E 使用 Playwright + 假麦克风 + FakeTranscriber：
+
+```bash
+PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
+```
+
+```text
+3 passed
+```
+
+Windows CI run `40633358118` 同时通过默认测试、Chromium 安装和浏览器 E2E。
+
 P2/P3/P4 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc9587c`、`8722b7e`、`d5f97d4`、`46c75ed`、`02829b9`、`7c15d98`、`b0a402e`、`9038ef3`、`586da57`、`d90c04a`、`286d9e3`、`3d6d045`、`6565c68`、`4365d89`、`c426b7e`、`fb40bb1`、`a365144`、`b542b9c` 均有 green run；具体 run ID 见证据目录。
 
 ## 8. 遇到的问题与处理

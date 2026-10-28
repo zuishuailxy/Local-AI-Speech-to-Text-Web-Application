@@ -81,6 +81,7 @@
 | 12 | 上传失败后需保留上下文 | T4.8 浏览器拦截 503/网络错误 | 保留语言/文件/最近提交；重试优先当前文件 | 503→200、网络失败提示均验证 |
 | 13 | 多次 GitHub 443 超时 | push/fetch | 仅以成功 push / Actions run 为准；失败重试 | 所有已推送 commit 的 Windows run success |
 | 14 | 语言选择未强制输出目标语言 | 同一音频强制 zh/en/ja 对照 | 记录 requested/detected/output script；不改变契约；页面提示与 mismatch 警告 | 正常中/英匹配路径通过；错配可在日志中定位 |
+| 15 | 默认 Windows CI 因 e2e 模块导入 playwright 失败 | run `40633226986` 的 Run tests；模块导入早于 marker 过滤 | e2e 模块加 `pytest.importorskip("playwright.sync_api")` | run `40633358118` 默认测试、Chromium 安装、浏览器 E2E 全部 success |
 
 ## 4. 测试证据索引
 
@@ -91,7 +92,7 @@
 - 前端：`t4.1-frontend-structure.txt`、`t4.2-media-recorder.txt`、`t4.3-timer-state.txt`、`t4.4-error-handling.txt`、`t4.5-file-selection.txt`、`t4.6-request-result.txt`、`t4.7-copy.txt`、`t4.8-error-retry-reset.txt`
 - 语言/日志：`t5.8-language-and-logging.txt`
 - 浏览器 E2E：`e2e.txt`、`t5.4-e2e-upload.png`、`t5.4-e2e-microphone.png`
-- Windows CI：各 evidence 文件中记录 run ID；GitHub Actions 页面可复核
+- Windows CI：Run `40633358118`（含 Chromium 安装与 3 项浏览器 E2E）；其他 run ID 见各 evidence 文件
 
 ## 5. 真实浏览器验证摘要
 

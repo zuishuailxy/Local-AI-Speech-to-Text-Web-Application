@@ -79,6 +79,32 @@ Playwright Chromium 未安装：python -m playwright install chromium；或设�
 
 `requirements-e2e.txt` 不进入运行依赖，只固定 `playwright==1.64.1`。CI 使用自带 Chromium，不设置 `PLAYWRIGHT_CHANNEL`。
 
+### CI 结果
+
+首次加入 e2e 步骤的 run `40633226986` 失败在默认 `Run tests`：
+
+```text
+ModuleNotFoundError: No module named 'playwright'
+```
+
+原因：默认 CI 只安装 `requirements.txt`，但 pytest 收集 `tests/e2e/test_browser.py` 时会先执行模块导入，即使 3 个用例会被 `-m "not e2e"` 排除。
+
+修复：在 e2e 模块导入 Playwright 前增加
+
+```python
+pytest.importorskip("playwright.sync_api")
+```
+
+第二次 run `40633358118`：
+
+```text
+Run tests                      success
+Install browser E2E dependencies success
+Run browser E2E                success
+```
+
+`windows-latest` 上实际跑通 3 项浏览器 E2E；这仍不是 Windows 11 真实桌面/麦克风验证。
+
 ## 隐私与边界
 
 - 使用 Chromium 假麦克风与固定 WAV，不是真实麦克风；真实麦克风验证仍属 T6.1/T6.2。

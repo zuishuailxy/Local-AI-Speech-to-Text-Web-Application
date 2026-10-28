@@ -649,12 +649,13 @@
   - 验证：17 个已修复问题含 GitHub 提交；4 个重点案例（PyAV/Windows 编码/e2e 导入/繁体）；8 个未关闭项；与 ai-development、Git 时间线对应。
   - 结果：已完成（2026-10-28）；README、test-report、OpenCode 03 已链接 issue log。
 
-- [ ] **T7.8 最终 Git 整理与回归**
+- [x] **T7.8 最终 Git 整理与回归**
   - 目标：交付干净、可复现的仓库。
-  - 文件：Git 历史、tag、`.gitignore`。
+  - 文件：Git 历史、tag、`.gitignore`、`docs/evidence/git-final.txt`。
   - 前置：T7.1–T7.7。
   - 完成标准：分阶段提交可读；配置 GitHub remote（D4）；无模型权重/venv/缓存/密钥/大文件；最终 `pytest -q` 全绿；打必做版 tag（如 `v1.0-must-have`）；若进入 P8，P9 再打最终 tag（如 `v1.0-submission`）。
-  - 验证：`git status`、`git ls-files`、`git count-objects -vH`；干净克隆后跑测试；远程仓库可访问。
+  - 验证：工作区干净；150 个跟踪文件；无 models/venv/cache；最大 512 KB；干净克隆 203 passed、8 deselected；tag `v1.0-must-have` 已推送；敏感词仅 CSS mask 误报。
+  - 结果：已完成（2026-10-28）；F6 未进入 P8，最终 tag 留待 T9/若 P8 完成。
 
 - [ ] **T7.9 打包交付（如需压缩包）**
   - 目标：提供无需 Git 也可运行的交付物。

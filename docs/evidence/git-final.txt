@@ -1,0 +1,110 @@
+# T7.8 最终 Git 整理与回归
+
+- 日期：2026-10-28
+- 仓库：`https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application`
+- 分支：`main`
+- 版本标签：`v1.0-must-have`（本提交后创建）
+- 范围：P1–P7 必做版；F6/P8 未启动
+
+## 1. 工作区
+
+```bash
+git status -sb
+```
+
+```text
+## main...origin/main
+```
+
+提交历史按阶段拆分：脚手架、音频、接口、真实模型、前端、E2E、手动验证、文档。
+
+## 2. 未跟踪/大文件检查
+
+```bash
+git ls-files | grep -E '^(models/|\.venv/|\.wheelhouse-check/|.*__pycache__|\.pytest_cache/)'
+```
+
+```text
+(no output)
+```
+
+- `models/` 本地 464 MB，Git 忽略
+- `.venv/`、`__pycache__/`、`.pytest_cache/`、`.wheelhouse-check/` 忽略
+- `samples/*.m4a` 原始录音忽略
+- 已跟踪文件 150 个
+
+最大已跟踪文件：
+
+```text
+512K docs/evidence/offline-zh.png
+448K docs/evidence/offline-en.png
+376K samples/chinese.wav
+320K docs/evidence/t5.4-e2e-upload.png
+...
+```
+
+没有模型权重或 >1 MB 的临时文件。
+
+## 3. 仓库体积
+
+```bash
+git count-objects -vH
+```
+
+```text
+count: 514
+size: 8.03 MiB
+in-pack: 245
+packs: 1
+size-pack: 134.78 KiB
+prune-packable: 0
+garbage: 0
+```
+
+## 4. 敏感信息检查
+
+```bash
+git grep -nE 'sk-[A-Za-z0-9]|ghp_|GITHUB_TOKEN|/Users/magicyoung|-----BEGIN'
+```
+
+- 仅命中 CSS 的 `mask-image`（`sk-` 子串误报），不是密钥。
+- `docs/opencode/` 与文档无用户名、主目录、token、密码。
+- 证据截图不含聊天/账号/通讯录。
+
+## 5. 干净克隆回归
+
+```bash
+git clone --quiet . /tmp/stt-final-clone
+cd /tmp/stt-final-clone
+python -m pytest -q
+```
+
+```text
+203 passed, 8 deselected in 1.89s
+```
+
+- 克隆内没有 `models/`：默认测试仍全绿
+- 克隆后 `git status` 干净
+- 默认测试不加载模型、不访问麦克风/外网
+
+## 6. 远程与标签
+
+```bash
+git remote -v
+git push origin main
+git tag -a v1.0-must-have -m "Local AI Speech-to-Text: must-have F1-F5"
+git push origin v1.0-must-have
+```
+
+- remote：GitHub（D6）
+- 标签指向本提交；F6 若进入 P8，将在 P9 另打 `v1.0-submission`
+- 不把 Windows Server CI 写成 Windows 11 实机通过
+
+## 7. 交付状态
+
+- 默认：203 passed, 8 deselected
+- 真实模型：5 passed
+- E2E：3 passed
+- Windows CI：真实模型 + Chromium + Edge 通过
+- 文档：README / requirements / design / test-report / ai-development / issue-log / OpenCode 三阶段齐全
+- 未完成/未验证：F6、Windows 11 实机、桌面 Edge、真实无设备、60 s 时长差异，已在测试报告披露

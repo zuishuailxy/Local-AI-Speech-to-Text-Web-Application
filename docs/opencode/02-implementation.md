@@ -1,6 +1,6 @@
 # 阶段二：功能开发与集成
 
-> 状态：P1–P6 已完成；P7 文档与交付进行中。
+> 状态：P1–P7 已完成（F6/P8 未启动）。
 > 本文是 OpenCode 实现阶段的关键步骤记录，不是完整对话；P7 细节见阶段三记录。
 > 会话：`ses_e838f4101ffet1mEwSYEGuuSMK`（OpenCode Desktop，`deepseek-flash` high）
 > 日期：2026-10-27
@@ -397,10 +397,11 @@ P2/P3/P4 的 Windows CI：`2c55fe5`、`30991d7`、`8f31ebc`、`52b41d4`、`cc958
 17. **T4.7 复制兼容性**：Clipboard API 可能被权限拒绝；增加 textarea + execCommand 回退并实测。
 18. **用户修改 CSS**：保留用户对 header 宽度/格式的修改，不回退或重写。
 
-## 9. 待补充
+## 9. 交付状态
 
-- 交付文档已完成 T7.1–T7.6；剩余 T7.7 issue log、T7.8 tag/终验；
-- 条件项 F6 实时识别（受 G5 门禁）。
+- P7 文档已完成：README、requirements、design、test-report、ai-development、issue-log、OpenCode 三阶段。
+- T7.8：干净克隆回归、Git 检查、`v1.0-must-have` tag。
+- 条件项 F6 实时识别（受 G5 门禁，未启动）。
 
 ## 10. 备注
 

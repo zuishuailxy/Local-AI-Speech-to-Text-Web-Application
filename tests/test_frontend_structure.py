@@ -73,7 +73,7 @@ def test_initial_control_states_and_labels() -> None:
 
     assert page.ids["stop-button"].get("disabled") is not None
     assert page.ids["copy-button"].get("disabled") is not None
-    assert page.ids["upload-button"].get("disabled") is None
+    assert page.ids["upload-button"].get("disabled") is not None
     assert page.ids["start-button"].get("type") == "button"
 
     assert page.ids["language-select"]["tag"] == "select"

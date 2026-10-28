@@ -11,6 +11,17 @@
 
   const MAX_RECORDING_MS = 60_000;
   const TIMER_INTERVAL_MS = 200;
+  const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+  const ALLOWED_UPLOAD_EXTENSIONS = new Set([
+    ".wav",
+    ".webm",
+    ".ogg",
+    ".oga",
+    ".mp3",
+    ".m4a",
+    ".mp4",
+    ".flac",
+  ]);
   const ACTIVE_PHASES = new Set(["requesting", "recording", "transcribing"]);
 
   const elements = {
@@ -22,6 +33,9 @@
     recordingTimer: document.getElementById("recording-timer"),
     pipelineState: document.getElementById("pipeline-state"),
     stepCapture: document.getElementById("step-capture"),
+    fileInput: document.getElementById("file-input"),
+    uploadButton: document.getElementById("upload-button"),
+    fileName: document.getElementById("file-name"),
     permissionNote: document.getElementById("permission-note"),
     errorPanel: document.getElementById("error-panel"),
     errorMessage: document.getElementById("error-message"),
@@ -42,6 +56,7 @@
     stoppedByLimit: false,
     recordedMs: 0,
     recordingFailed: false,
+    selectedFile: null,
   };
 
   function chooseMimeType() {
@@ -116,6 +131,9 @@
     }
     if (elements.stopButton) {
       elements.stopButton.disabled = nextState !== "recording";
+    }
+    if (elements.fileInput) {
+      elements.fileInput.disabled = busy;
     }
     if (elements.pipelineState) {
       elements.pipelineState.textContent =
@@ -192,6 +210,80 @@
       return "麦克风启动被中止，请关闭占用设备的程序后重试。";
     }
     return `录音失败：${error && error.message ? error.message : name}`;
+  }
+
+  function extensionForName(name) {
+    const dot = name.lastIndexOf(".");
+    return dot >= 0 ? name.slice(dot).toLowerCase() : "";
+  }
+
+  function setFileMessage(text) {
+    if (elements.fileName) {
+      elements.fileName.textContent = text;
+    }
+  }
+
+  function selectFile(file) {
+    if (!file) {
+      state.selectedFile = null;
+      if (elements.uploadButton) {
+        elements.uploadButton.disabled = true;
+      }
+      setFileMessage("尚未选择文件。");
+      return false;
+    }
+
+    const extension = extensionForName(file.name);
+    if (!ALLOWED_UPLOAD_EXTENSIONS.has(extension)) {
+      state.selectedFile = null;
+      if (elements.uploadButton) {
+        elements.uploadButton.disabled = true;
+      }
+      setFileMessage("未选择有效文件。");
+      setStatus("文件格式不支持", "error");
+      showError("不支持该文件格式，请上传 WAV、WebM、OGG、MP3、M4A、MP4 或 FLAC。");
+      return false;
+    }
+    if (file.size === 0) {
+      state.selectedFile = null;
+      if (elements.uploadButton) {
+        elements.uploadButton.disabled = true;
+      }
+      setFileMessage("未选择有效文件。");
+      setStatus("文件为空", "error");
+      showError("上传文件为空，请选择包含语音的音频文件。");
+      return false;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      state.selectedFile = null;
+      if (elements.uploadButton) {
+        elements.uploadButton.disabled = true;
+      }
+      setFileMessage("未选择有效文件。");
+      setStatus("文件超过大小限制", "error");
+      showError("上传文件超过 10 MB 限制，请选择更短的音频。");
+      return false;
+    }
+
+    state.selectedFile = file;
+    clearError();
+    if (state.phase === "error") {
+      setPhase("idle");
+    }
+    if (elements.uploadButton) {
+      elements.uploadButton.disabled = false;
+    }
+    setFileMessage(`${file.name} · ${formatBytes(file.size)}`);
+    setStatus("已选择音频文件，点击 Upload & Transcribe 开始识别。", "idle");
+    return true;
+  }
+
+  function handleFileSelection(event) {
+    const file = event.target.files && event.target.files[0];
+    const accepted = selectFile(file);
+    if (!accepted && elements.fileInput) {
+      elements.fileInput.value = "";
+    }
   }
 
   function releaseStream() {
@@ -444,6 +536,9 @@
   if (elements.dismissErrorButton) {
     elements.dismissErrorButton.addEventListener("click", dismissError);
   }
+  if (elements.fileInput) {
+    elements.fileInput.addEventListener("change", handleFileSelection);
+  }
 
   // Exposed for upload/timer tasks and browser smoke tests.
   window.recordingApp = {
@@ -461,6 +556,15 @@
       elapsedMs: state.startTimeMs ? Date.now() - state.startTimeMs : 0,
       recordedMs: state.recordedMs,
       stoppedByLimit: state.stoppedByLimit,
+      selectedFile: state.selectedFile
+        ? {
+            name: state.selectedFile.name,
+            size: state.selectedFile.size,
+            type: state.selectedFile.type,
+          }
+        : null,
     }),
+    getSelectedFile: () => state.selectedFile,
+    selectFile,
   };
 })();

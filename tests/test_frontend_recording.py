@@ -66,3 +66,14 @@ def test_error_recovery_hooks_and_guards() -> None:
     assert "OverconstrainedError" in JS
     assert "AbortError" in JS
     assert "没有录到音频" in JS
+
+
+def test_file_selection_validation_contract() -> None:
+    assert "MAX_UPLOAD_BYTES = 10 * 1024 * 1024" in JS
+    assert '".wav"' in JS and '".webm"' in JS and '".m4a"' in JS
+    assert 'getElementById("file-input")' in JS
+    assert 'addEventListener("change", handleFileSelection)' in JS
+    assert "file.size === 0" in JS
+    assert "file.size > MAX_UPLOAD_BYTES" in JS
+    assert "不支持的" in JS or "不支持该文件格式" in JS
+    assert "上传文件超过 10 MB" in JS

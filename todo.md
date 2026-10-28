@@ -355,12 +355,14 @@
   - 结果：已完成（2026-10-27）；新增 retry/dismiss 事件、recordingFailed 防覆盖、安全上下文检查。
   - 备注：真实 Chrome 权限/设备异常手动验收在 T6.5/T6.6；模拟不替代真实硬件。
 
-- [ ] **T4.5 实现文件上传**
+- [x] **T4.5 实现文件上传**
   - 目标：选择 WAV/webm 等文件并提交，客户端预检。
-  - 文件：`static/index.html`、`static/app.js`。
+  - 文件：`static/index.html`、`static/app.js`、`tests/test_frontend_recording.py`、`docs/evidence/t4.5-file-selection.txt`。
   - 前置：T4.1。
   - 完成标准：`accept` 覆盖格式；空文件/超 10 MB 前端提示；显示文件名/大小；上传复用 `/api/transcribe`；不因扩展名误判而绕过服务端校验。
-  - 验证：上传 `samples/*.wav`、webm fixture、`.txt`、大文件。
+  - 验证：浏览器模拟 wav/webm 选择成功；.txt/空文件/10MB+1 均被拒绝并可恢复；8 前端测试/全量 165 passed。
+  - 结果：已完成（2026-10-27）；Upload 按钮默认 disabled，选中合法文件后启用；客户端校验仅作提示，服务端仍独立校验。
+  - 备注：实际 `/api/transcribe` 请求/结果显示在 T4.6；本轮不发送网络请求。
 
 - [ ] **T4.6 实现请求、状态与结果展示**
   - 目标：调用 API 并展示全部必填字段。

@@ -18,8 +18,8 @@ from app.services.transcriber import Transcriber, TranscriptionResult
 SAMPLE_RATE = 16_000
 BYTES_PER_SAMPLE = 2
 F6_MAX_SECONDS = 60.0
-F6_WINDOW_SECONDS = 8.0
-F6_PARTIAL_INTERVAL_SECONDS = 2.0
+F6_WINDOW_SECONDS = 3.0
+F6_PARTIAL_INTERVAL_SECONDS = 1.5
 
 
 def pcm16le_to_float32(pcm: bytes) -> np.ndarray:

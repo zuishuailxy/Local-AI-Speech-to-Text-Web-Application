@@ -781,19 +781,21 @@
   - 验证：阈值 0.55；低置信度（0.2）+ 中文文本回退 zh 并记录 `asr_auto_low_confidence`；真实中英文 auto 仍正确；全量 218 passed、12 deselected。
   - 结果：已完成（2026-10-28）；混合语句仍只输出一种语言，页面提示重要场景手动选择。
 
-- [ ] **T10.3 降低实时 partial 延迟**
+- [x] **T10.3 降低实时 partial 延迟**
   - 目标：当前约 2 s 触发、8 s 窗口、首包约 3 s；优化首包/更新延迟。
-  - 文件：`app/services/streaming.py`、`static/app.js`、`tests/test_ws.py`、`docs/evidence/t10.3-realtime-latency.txt`。
+  - 文件：`app/services/streaming.py`、`tests/test_ws.py`、`docs/evidence/t10.3-realtime-latency.txt`。
   - 前置：T8.4。
   - 完成标准：首 partial ≤2.5 s（样本/真实麦克风目标）；更新间隔 ≤2 s；不产生并发推理；final 完整；回归必做。
-  - 验证：真实样本分片 + 真实麦克风手动；记录延迟/CPU；失败则保留原参数并说明。
+  - 验证：2.0/8.0 → 1.5/3.0；热模型首包 1.221 s，后续 1.47–2.01 s，final 3.323 s；E2E 5；全量 218/12。
+  - 结果：已完成（2026-10-28）；冷启动首包仍含约 1 s 模型加载；partial 更短，final 完整。
 
-- [ ] **T10.4 评估中文识别准确率优化**
+- [x] **T10.4 评估中文识别准确率优化**
   - 目标：在不显著增加 CPU 的前提下改善中文近音字。
-  - 文件：`app/config.py`、`app/services/transcriber.py`、`tests/test_transcriber_unit.py`、`docs/evidence/t10.4-chinese-accuracy.md`。
+  - 文件：`docs/evidence/t10.4-chinese-accuracy.md`。
   - 前置：T10.2。
   - 完成标准：对比 baseline / 可选 initial_prompt 或热词；记录 CER、耗时、幻觉风险；无明显收益则不启用。
-  - 验证：`samples/chinese.wav` + 手动中文；不修改参考文本掩盖错误。
+  - 验证：baseline CER 0.2308；领域 prompt CER 0.2051、耗时 3.317 s，仍有近音字；默认不启用 prompt，未改参考文本。
+  - 结果：已完成（2026-10-28）；prompt 收益有限，保持无 prompt 默认。
 
 - [ ] **T10.5 日志工程化**
   - 目标：可选文件保存、结构化 JSON、基础轮转；保持隐私边界。

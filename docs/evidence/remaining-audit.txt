@@ -3,13 +3,13 @@
 - 日期：2026-10-28
 - 范围：`todo.md`、`plan.md`、README、docs、Git/tag、CI
 - 当前：默认 233 passed / 12 deselected；真实模型 7；E2E 5；Windows CI `40694704464` success
-- Tag：`v1.0-submission`（F1–F6 基线）、`v1.0.1-optimizations`（T10 优化版）、`v1.0-must-have`（回滚）
+- Tag：`v1.0-submission`、`v1.0.1-optimizations`、`v1.0.2-accuracy`、`v1.0.3-realtime`、`v1.0-must-have`（回滚）
 
 ## 已完成
 
 - T0–T9 必做任务、F6、自动语言检测、AudioWorklet 主路径、日志 `outcome` 标记
 - 6 项指定手动验证、离线识别、Windows CI（Server）、Chromium/Edge E2E
-- T10.1–T10.7：计时对齐、auto 低置信度回退、实时 partial 调优、中文 prompt 评估、日志工程化、回归与 tag、medium 模型评估
+- T10.1–T10.8：计时对齐、auto 低置信度回退、实时 partial 调优、中文 prompt 评估、日志工程化、回归与 tag、medium 模型评估、首字延迟
 - 文档一致性：README/requirements/design/test-report/issue-log/final-delivery/checklist 的 60 s 与 CI 记录已更新
 
 ## 仍开放/未验证
@@ -21,7 +21,7 @@
 | 真实无设备/占用 | 模拟 | 内置麦克风无法安全禁用；T6.6 为 DevTools 注入 |
 | 短音频/噪声/混合语言 auto | 部分覆盖 | 低置信度回退已实现；混合语句仍只输出一种语言，未做逐词语言标记 |
 | AudioWorklet 回退 | 未实机 | 主路径 E2E 无 warning；旧浏览器 ScriptProcessor 回退未在旧浏览器验证 |
-| 实时首个非空文本 ≤2.5 s | 未完全达标 | 真实麦克风首个非空文本 3.0 s；后续 partial ≤1.38 s，final 1.970 s |
+| 实时首个非空文本 ≤2.5 s | 基本达标 | 12.8 s 录音 2.343 s；首窗为空时 2.984 s；后续 partial 1.0–1.3 s |
 | 压缩包 | 按用户要求跳过 | 只交 Git；T9.1 clone 已验证 |
 
 ## 已知限制（不是未完成任务）
@@ -35,7 +35,7 @@
 
 1. **Windows 11/桌面 Edge/真实麦克风补验**：唯一环境阻塞项。
 2. **中文准确率**：medium 已评估并作为批量可选（CER 0.0769）；进一步可做领域微调。
-3. **实时体验**：首字已降至 2.24–2.27 s；可继续做重叠窗口/增量拼接，改善中间文本稳定性。
+3. **实时体验**：样本 2.22–2.27 s、真实麦克风 2.343 s；可继续做重叠窗口/增量拼接，改善中间文本稳定性。
 4. **样本覆盖**：噪声、远场、中英混合、数字/专有名词。
 5. **测试补充**：AudioWorklet 回退、auto 混合语句、真实 60 s 音频。
 6. **CI 成本**：real-model job 每次 push 都跑；可按路径过滤或手动触发。

@@ -312,9 +312,9 @@ docs/test-report.md        测试结果
 - Playwright for Python：https://playwright.dev/python/
 - ModelScope：https://www.modelscope.cn/
 
-## 14. F6 实时识别（开发分支）
+## 14. F6 实时识别（已合并）
 
-> 状态：T8.2/T8.3/T8.4 已实现并验证；已合并到 `main`，Windows CI 通过。
+> 状态：已合并到 `main`；T10.8 后首字延迟约 2.2–2.3 s（样本/真实麦克风），Windows CI 通过。
 
 ### 14.1 WebSocket 协议
 
@@ -343,13 +343,14 @@ ws://127.0.0.1:8000/ws/transcribe?language=zh|en|auto
 - 非法语言/消息/PCM 返回 error 后关闭。
 - `language=auto` 使用 Whisper 自动检测；final 返回检测到的 zh/en。
 - 复用现有 `Transcriber`；Mock 测试不加载模型。
+- 日志只记录时长、耗时、`text_chars`，不记录识别文本。
 - 不改变 `/api/transcribe` 和现有页面录音/上传路径。
 
 ### 14.2 模块
 
 - `app/services/streaming.py`：PCM16→float32、滚动缓冲、窗口/间隔、上限。
 - `static/pcm-worklet.js`：AudioWorklet 采集帧；主路径不再使用 ScriptProcessor。
-- `app/api/ws.py`：WebSocket 协议、partial/final/error、线程池调用。
+- `app/api/ws.py`：WebSocket 协议、partial/final/error、线程池调用；记录 `first_partial_seconds`/`first_text_seconds`。
 - `app/main.py`：注册 WebSocket 路由。
 - `tests/test_ws.py`：协议、partial/final、空音频、非法语言/消息、无模型、超长/PCM 校验。
 

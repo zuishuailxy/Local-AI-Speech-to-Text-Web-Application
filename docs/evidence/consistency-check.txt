@@ -1,7 +1,7 @@
 # T9.3 文档/代码/任务一致性检查
 
 - 日期：2026-10-28
-- 分支：`feature/f6-realtime`（待合并）
+- 分支：`main`（T10 后更新；初版在 `feature/f6-realtime`）
 - 范围：启动命令、接口字段、错误码、限制值、模型名、测试命令、任务状态
 
 ## 关键值
@@ -47,9 +47,9 @@ README、design、test-report、requirements 中的命令一致。
 
 ## F6 状态
 
-- 代码/测试/手动演示：完成（分支）
+- 代码/测试/手动演示：完成并合并到 `main`
 - Windows CI：最新 run `40694704464` 通过（F6 + auto + T10，Edge 5）
-- 主分支/tag：`v1.0-must-have` 未改变
+- tag：`v1.0-submission`、`v1.0.1-optimizations`、`v1.0.2-accuracy`、`v1.0.3-realtime`
 - 文档已更新为 F6 已合并、Windows CI 通过
 
 ## 历史数字
@@ -63,4 +63,4 @@ README、design、test-report、requirements 中的命令一致。
 
 ## 结论
 
-未发现启动命令、接口字段、限制值、模型名或当前测试命令的矛盾。F6 分支状态在所有文档中一致；Windows 11 实机/桌面 Edge/无设备模拟均未冒充通过。
+未发现启动命令、接口字段、限制值、模型名或当前测试命令的矛盾。F6 已合并到 `main`；Windows 11 实机/桌面 Edge/无设备模拟均未冒充通过。

@@ -25,6 +25,9 @@
 | I-15 | 高 | Windows 真实模型下载步骤 exit 1 | annotation: cp1252 `UnicodeEncodeError` | `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`；HF/hf-mirror 回退 | Run `40651179705`/`40651812439` success | `bc82522` |
 | I-16 | 高 | 默认 Windows CI 收集 e2e 时缺 Playwright | `ModuleNotFoundError` | Playwright 导入移到 fixture 内延迟执行 | Run `40633358118` 通过 | `7e1d302` |
 | I-17 | 低 | T6.4 首次截图误存中文结果 | 截图内容与文件名不符 | 重新截当前英文结果并核对 | 语言/文件/时长正确 | `b338e9d` |
+| I-18 | 中 | auto 低置信度可能静默误判 | T10.2 构造低概率用例 | 概率 <0.55 时按输出脚本回退并记录 warning | 单测 + 真实中英文仍正确 | `b83f98b` |
+| I-19 | 中 | opt-in prompt 可能进入 3 s 实时 partial | T10.4 代码审查 | WebSocket partial 显式 `use_prompt=False` | 单测断言 prompt 不传 | `770da2d` |
+| I-20 | 中 | 真实麦克风首字 3.59 s | `first_text_seconds` 日志 | 首个 partial 1.2 s、空结果 0.5 s 重试、partial beam 1 | 12.8 s 录音首字 2.343 s | `a99da8c`、`569cb99` |
 
 ## 2. 重点案例
 
@@ -70,13 +73,13 @@
 | ID | 级别 | 问题 | 状态/处理 |
 | --- | --- | --- | --- |
 | O-01 | 中 | 60 s 计时 60.0 s，服务端音频 57.18 s | **已关闭（2026-10-28）**：复测 5.3/5.2、10.2/10.1、60.0/59.8，最大差 0.2 s；历史 57.18 s 未复现，见 `t10.1-60s-alignment.txt` |
-| O-02 | 中 | 中文 small 近音字错误 | 模型能力限制；CER 0.18–0.23，未超过阈值；不修改参考文本 |
+| O-02 | 中 | 中文 small 近音字错误 | 模型能力限制；CER 0.2308，未超过阈值；medium 可选 0.0769；不修改参考文本 |
 | O-03 | 中 | Windows 11 实机/真实麦克风未验证 | 无环境；Windows Server CI 替代，报告中披露 |
 | O-04 | 低 | 桌面 Edge 未手动验证 | 仅 Windows CI headless Edge；待桌面 Edge 环境 |
 | O-05 | 低 | 无设备/占用为 DevTools 模拟 | 内置麦克风无法安全禁用；待可拔设备补验 |
 | O-06 | 低 | 语言选择不强制目标脚本 | 错配时可能输出源语言；日志有 `asr_language_mismatch` |
 | O-07 | 低 | 样本覆盖有限 | 单人/安静/正常语速；噪声/远场/混合语言未覆盖 |
-| O-08 | 加分 | F6 实时识别 | 已完成、真实麦克风演示并合并；Windows CI run `40682285556` 通过 |
+| O-08 | 加分 | F6 实时识别 | 已完成、真实麦克风演示并合并；Windows CI run `40694704464` 通过 |
 
 ## 4. 处理原则
 

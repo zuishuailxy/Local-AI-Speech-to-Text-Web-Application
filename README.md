@@ -458,16 +458,21 @@ netstat -ano | findstr :8000       # Windows
 │   ├── config.py               # 环境变量配置
 │   ├── errors.py               # 统一错误模型
 │   ├── schemas.py              # 响应模型
-│   ├── api/routes.py           # POST /api/transcribe
+│   ├── logging_config.py       # text/json 文件日志 + 轮转
+│   ├── api/
+│   │   ├── routes.py           # POST /api/transcribe
+│   │   └── ws.py               # /ws/transcribe 实时识别
 │   └── services/
 │       ├── audio.py            # 上传/流式大小/解码/清理
+│       ├── streaming.py        # PCM 滚动缓冲 / partial 策略
 │       ├── transcriber.py      # faster-whisper 适配器
 │       ├── metrics.py          # CER/WER
 │       └── text.py             # 繁转简
-├── static/                     # index.html / styles.css / app.js / favicon
+├── static/                     # index.html / styles.css / app.js / pcm-worklet.js
 ├── scripts/
 │   ├── download_model.py       # 模型准备（唯一联网入口）
-│   └── verify_asr.py           # CLI 冒烟
+│   ├── verify_asr.py           # CLI 冒烟
+│   └── benchmark_models.py     # small/medium 对比基准
 ├── samples/                    # chinese.wav / english.wav / reference.txt
 ├── tests/                      # 默认/真实模型/E2E
 ├── docs/
@@ -492,6 +497,8 @@ netstat -ano | findstr :8000       # Windows
 - OpenCode 三阶段记录：[`docs/opencode/`](docs/opencode/)
 - Windows CI：[`docs/evidence/windows-ci.txt`](docs/evidence/windows-ci.txt)
 - 真实模型基线：[`docs/evidence/asr-baseline.md`](docs/evidence/asr-baseline.md)
+- 实时首字延迟：[`docs/evidence/t10.8-realtime-first-text.txt`](docs/evidence/t10.8-realtime-first-text.txt)
+- medium 评估：[`docs/evidence/t10.7-medium-model.txt`](docs/evidence/t10.7-medium-model.txt)
 
 自动化结果：
 
@@ -503,3 +510,16 @@ Windows CI：Chromium + Edge + 真实模型通过（最新 run `40694704464`，E
 ```
 
 Windows CI 不能替代 Windows 11 实机验证；真实桌面/麦克风项在测试报告中单列为未验证。F6 已在本地真实麦克风和 Windows CI 验证。
+
+## 14. 版本记录
+
+| Tag | 内容 |
+| --- | --- |
+| `v1.0-must-have` | P7 必做基线（F1–F5、真实模型、离线、Windows CI） |
+| `v1.0-submission` | 交付基线：F1–F6 + 自动语言检测 + AudioWorklet |
+| `v1.0.1-optimizations` | 计时对齐、auto 回退、实时调优、prompt 评估、日志工程化 |
+| `v1.0.2-accuracy` | medium 可选批量模式 + 模型基准脚本 |
+| `v1.0.3-realtime` | 首字延迟 2.2–2.3 s、空 partial 快速重试 |
+| `v1.0.4-cleanup` | 文档/代码整理，无行为变更 |
+
+回滚优先使用 `v1.0-must-have`；日常开发以 `main` 为准。

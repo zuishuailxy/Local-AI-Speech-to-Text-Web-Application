@@ -81,8 +81,8 @@ def transcribe(
         )
         text = to_simplified("".join(segment.text for segment in segments).strip())
         times.append(round(time.perf_counter() - started, 3))
-    _, _, metric = REFERENCES[language]
-    return CaseResult(language, times, round(metric(REFERENCES[language][1], text), 4), text)
+    reference, metric = REFERENCES[language][1], REFERENCES[language][2]
+    return CaseResult(language, times, round(metric(reference, text), 4), text)
 
 
 def benchmark(model_size: str, runs: int, model_path: Path | None) -> dict[str, Any]:
@@ -142,8 +142,10 @@ def benchmark(model_size: str, runs: int, model_path: Path | None) -> dict[str, 
 
 
 def print_report(report: dict[str, Any]) -> None:
-    print(f"model={report['model']} load={report['load_seconds']:.2f}s "
-          f"rss={report['max_rss_mb']:.0f}MB")
+    print(
+        f"model={report['model']} load={report['load_seconds']:.2f}s "
+        f"rss={report['max_rss_mb']:.0f}MB"
+    )
     for language in ("zh", "en"):
         item = report[language]
         label = "CER" if language == "zh" else "WER"
@@ -164,8 +166,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=["small", "medium"],
         help="model sizes under models/faster-whisper-<size>",
     )
-    parser.add_argument("--runs", type=int, default=2, help="measured runs per language")
-    parser.add_argument("--json", type=Path, help="also write raw results to this path")
+    parser.add_argument(
+        "--runs", type=int, default=2, help="measured runs per language"
+    )
+    parser.add_argument(
+        "--json", type=Path, help="also write raw results to this path"
+    )
     args = parser.parse_args(argv)
 
     reports = [benchmark(size, max(1, args.runs), None) for size in args.models]

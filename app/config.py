@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Mapping
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_MODEL_PATH = Path("models") / "faster-whisper-small"
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("zh", "en")
 
 _TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
@@ -155,7 +154,6 @@ class Settings:
 
 
 __all__ = [
-    "DEFAULT_MODEL_PATH",
     "PROJECT_ROOT",
     "SUPPORTED_LANGUAGES",
     "Settings",

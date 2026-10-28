@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import time
 from pathlib import Path
-from typing import Any
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from starlette.concurrency import run_in_threadpool
@@ -15,6 +14,7 @@ from app.errors import (
 )
 from app.schemas import TranscriptionResponse
 from app.services.audio import process_audio_upload, validate_language
+from app.services.transcriber import Transcriber
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,9 @@ async def transcribe(
         audio.samples.size,
     )
 
-    transcriber: Any = getattr(request.app.state, "transcriber", None)
+    transcriber: Transcriber | None = getattr(
+        request.app.state, "transcriber", None
+    )
     if transcriber is None:
         logger.warning(
             "transcribe_unavailable request_id=%s reason=no_transcriber",

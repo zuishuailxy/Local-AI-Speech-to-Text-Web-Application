@@ -27,14 +27,17 @@ from app.services.text import to_simplified
 
 logger = logging.getLogger(__name__)
 AUTO_LANGUAGE = "auto"
+# Below this probability, auto detection is treated as unreliable and the
+# output script decides the reported language.
 AUTO_MIN_PROBABILITY = 0.55
+SAMPLE_RATE = 16_000
 # Short clips are where an initial prompt most often leaks prompt words into
 # the output, so the opt-in prompt is only used for clips of this length.
 PROMPT_MIN_AUDIO_SECONDS = 3.0
 
 
 def _output_language_hint(text: str) -> str:
-    """Best-effort script hint for observability; never changes the result."""
+    """Best-effort script hint, used for logging and auto fallback."""
 
     cjk = cjk_ratio(text)
     latin = latin_ratio(text)
@@ -207,7 +210,7 @@ class WhisperTranscriber:
         prompt = self._settings.asr_initial_prompt
         if not prompt or language != "zh":
             return None
-        if sample_count < int(PROMPT_MIN_AUDIO_SECONDS * 16000):
+        if sample_count < int(PROMPT_MIN_AUDIO_SECONDS * SAMPLE_RATE):
             return None
         return prompt
 

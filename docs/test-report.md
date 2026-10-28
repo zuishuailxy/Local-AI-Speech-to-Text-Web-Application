@@ -2,8 +2,8 @@
 
 - 日期：2026-10-28
 - 项目：Local AI Speech-to-Text Web Application
-- 范围：必做功能 F1–F5、真实模型、离线、Windows CI、Edge、手动验证
-- 结论：必做项与 6 项指定手动验证通过；Windows 11 实机/真实桌面 Edge 未验证，已单独披露
+- 范围：必做 F1–F5、F6、自动语言、真实模型、离线、Windows CI、Edge、手动验证、T10 优化
+- 结论：必做项、F6、6 项指定手动验证通过；T10 优化已验证；Windows 11 实机/真实桌面 Edge 未验证，已单独披露
 
 ## 1. 测试环境
 
@@ -141,8 +141,12 @@ PLAYWRIGHT_CHANNEL=chrome python -m pytest -q -m e2e
 | `40651179705` | 首次真实模型下载 + 测试 + Edge | success |
 | `40651812439` | 缓存命中；Python/Edge 版本与模型耗时 | success |
 | `40658826426` | Edge 复制断言补充后复跑 | success |
-| `40680120089` | T10 优化 + 计时标签 + 截图 | success |
-| `40694704464` | T10.4 prompt opt-in | success |
+| `40680120089` | T10 计时标签 + 截图 | success |
+| `40682285556` | T10.4 prompt opt-in | success |
+| `40684188857` | prompt 不进入实时 partial | success |
+| `40687099376` | T10.7 medium 可选模式 | success |
+| `40690657742` | T10.8 首字延迟 | success |
+| `40694704464` | 空 partial 快速重试 | success |
 
 Windows 真实模型耗时：
 
@@ -167,6 +171,17 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - 真实麦克风中文：14.08 s、6 partials、final 1.742 s、CER 0.0455；迁移 AudioWorklet 后实时 E2E 无 ScriptProcessor deprecation warning。
 - 回滚基线 `v1.0-must-have` 保留；F6 分支已合并，合并后 Windows CI run `40694704464` 成功。
 - 自动语言检测（`language=auto`）已实现：HTTP/WS/页面；中英文真实样本检测通过。
+
+### T10 优化结果
+
+| 项 | 结果 | 证据 |
+| --- | --- | --- |
+| 60 s 计时 | 60.0 s → 59.8 s，差 0.2 s；旧 57.18 s 未复现 | `t10.1-60s-alignment.txt` |
+| auto 鲁棒性 | 低置信度按输出脚本回退，记录 warning | `t10.2-auto-robustness.txt` |
+| 实时首字 | 样本 2.22–2.27 s；真实麦克风 2.343 s；首窗为空时 2.984 s | `t10.8-realtime-first-text.txt` |
+| 中文准确率 | medium CER 0.0769，默认仍 small | `t10.7-medium-model.txt` |
+| 日志 | `LOG_FILE`、text/json、轮转；不记录原文 | `t10.5-logging.txt` |
+| prompt | 默认关闭；仅 zh 且 ≥3 s，partial 不传 | `t10.4-prompt-default-analysis.md` |
 
 ### medium 模型评估（T10.7）
 
@@ -193,7 +208,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 | 低 | 语言选择不强制目标脚本 | 音频与所选语言不一致时可能输出源语言；日志有 `asr_language_mismatch` |
 | 低 | 无设备验证为模拟 | macOS 内置麦克风无法安全禁用；真实 NotFound/NotReadable 待其他设备 |
 | 低 | 样本覆盖有限 | 单人、安静、正常语速；噪声/远场/混合语言未覆盖 |
-| 低 | 实时首个非空文本 3.0 s | 未完全达到 ≤2.5 s 目标；后续 partial ≤1.38 s，final 1.970 s |
+| 低 | 首窗为空时首字约 3.0 s | 12.8 s 录音首字 2.343 s；6.4 s 首窗为空时 2.984 s |
 | 低 | AudioWorklet 兼容 fallback | 主路径 AudioWorklet；旧浏览器回退 ScriptProcessor，可能有 deprecation warning |
 
 ## 8. G4 检查
@@ -229,6 +244,7 @@ CI 环境是 Windows Server，不是 Windows 11 桌面；浏览器 E2E 使用 he
 - 错误/边界：`error-cases.txt`、`auto-stop-60s.png`、`upload-webm.txt`
 - CI：`windows-ci.txt`、`edge.txt`
 - 准确率：`t10.7-medium-model.txt`、`t10.7-medium-benchmark.json`
+- 实时：`t10.8-realtime-first-text.txt`
 - 优化：`t10.1-60s-alignment.txt`、`t10.2-auto-robustness.txt`、`t10.3-realtime-latency.txt`、`t10.4-prompt-default-analysis.md`、`t10.5-logging.txt`、`t10.6-regression.txt`
 - 问题记录：`docs/issue-log.md`
 - 需求逐项核对：`docs/evidence/requirements-checklist.md`

@@ -522,5 +522,6 @@ Windows CI 不能替代 Windows 11 实机验证；第三方 Windows 11 + Chrome 
 | `v1.0.3-realtime` | 首字延迟 2.2–2.3 s、空 partial 快速重试 |
 | `v1.0.4-cleanup` | 文档/代码整理，无行为变更 |
 | `v1.0.5-windows` | 第三方 Windows 11 实机测试记录 |
+| `v1.0.6-final` | 最终提交版（文档/样式收口） |
 
 回滚优先使用 `v1.0-must-have`；日常开发以 `main` 为准。

@@ -5,7 +5,7 @@
 - 仓库：`https://github.com/zuishuailxy/Local-AI-Speech-to-Text-Web-Application`
 - 分支：`main`
 - 必做回滚 tag：`v1.0-must-have`
-- 最终 tag：`v1.0-submission`（必做/F6 基线）、`v1.0.1-optimizations`、`v1.0.2-accuracy`、`v1.0.3-realtime`、`v1.0.4-cleanup`、`v1.0.5-windows`
+- 最终 tag：`v1.0-submission`（必做/F6 基线）、`v1.0.1-optimizations`、`v1.0.2-accuracy`、`v1.0.3-realtime`、`v1.0.4-cleanup`、`v1.0.5-windows`、`v1.0.6-final`
 
 ## 交付内容
 
